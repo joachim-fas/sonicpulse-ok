@@ -58,3 +58,12 @@
 - [x] SpotifyEmbed-Komponente mit robustem iframe-Rendering (display:none → block nach onLoad)
 - [x] Vitest-Tests für MusicBrainz-Fallback (5 Tests bestanden)
 - [x] Alle 14 Tests bestanden (Spotify + MusicBrainz + Auth)
+
+## Echte Artist-IDs (kein Search-Link)
+- [x] Backend: MusicBrainz als primäre ID-Quelle (kein Spotify-Search-Fallback mehr)
+- [x] Backend: Spotify API nur wenn Token vorhanden und kein 403
+- [x] Backend: Wenn keine ID gefunden → null zurückgeben, kein Link konstruieren
+- [x] Frontend: Alle Links prüfen – kein open.spotify.com/search/ erlaubt
+- [x] Frontend: KI-Empfehlungen über MusicBrainz validieren
+- [x] Frontend: Fallback-UI wenn keine ID gefunden (neutraler Text, kein Link)
+- [x] Tests aktualisieren (23 Tests bestanden)

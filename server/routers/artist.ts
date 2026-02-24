@@ -1,8 +1,7 @@
 import { z } from "zod";
 import { publicProcedure, router } from "../_core/trpc";
 import { invokeLLM } from "../_core/llm";
-import { searchSpotifyArtist, searchMultipleArtists, getArtistTopTrack } from "../spotify";
-import { searchMusicBrainzArtist } from "../musicbrainz";
+import { resolveArtist, resolveMultipleArtists } from "../artistService";
 import { searchDiscogsArtist } from "../discogs";
 import {
   getArtistBySpotifyId,
@@ -14,15 +13,17 @@ import {
 
 export const artistRouter = router({
   /**
-   * Sucht einen Künstler auf Spotify und cached das Ergebnis.
-   * Gibt null zurück wenn kein Treffer gefunden wird (kein kaputter Link).
+   * Sucht einen Künstler und gibt ein validiertes Profil mit echter Spotify-ID zurück.
+   *
+   * GARANTIE: directLink ist immer open.spotify.com/artist/{ID} oder null.
+   * NIEMALS: open.spotify.com/search/...
    */
   search: publicProcedure
     .input(z.object({ query: z.string().min(1).max(200) }))
     .mutation(async ({ input }) => {
       const { query } = input;
 
-      // 1. Cache prüfen
+      // 1. Datenbank-Cache prüfen (bereits aufgelöste IDs)
       const cached = await searchCachedArtists(query);
       if (cached.length > 0) {
         await logSearch(query, cached.length);
@@ -33,78 +34,53 @@ export const artistRouter = router({
             genres: cached[0].genres ? JSON.parse(cached[0].genres) : [],
           },
           fromCache: true,
+          source: "cache" as const,
         };
       }
 
-      // 2. Spotify API aufrufen (mit MusicBrainz-Fallback bei 403)
-      let result = null;
-      let usedFallback = false;
+      // 2. Echte Artist-ID beschaffen (Spotify → MusicBrainz Fallback)
+      const profile = await resolveArtist(query);
 
-      try {
-        result = await searchSpotifyArtist(query);
-      } catch (spotifyErr: unknown) {
-        const msg = spotifyErr instanceof Error ? spotifyErr.message : String(spotifyErr);
-        // Bei 403 (Development Mode / Quota) MusicBrainz als Fallback nutzen
-        if (msg.includes("403")) {
-          usedFallback = true;
-          const mbResult = await searchMusicBrainzArtist(query);
-          if (mbResult && mbResult.spotify_id) {
-            result = {
-              spotify_id: mbResult.spotify_id,
-              display_name: query,
-              spotify_name: mbResult.name,
-              direct_link: mbResult.spotify_url ?? `https://open.spotify.com/artist/${mbResult.spotify_id}`,
-              image_url: null,
-              genres: mbResult.genres,
-              followers: null as unknown as number,
-              popularity: null as unknown as number,
-            };
-          }
-        } else {
-          throw spotifyErr;
-        }
-      }
-
-      if (!result) {
+      if (!profile) {
         await logSearch(query, 0);
-        return { found: false as const, artist: null, fromCache: false };
+        return { found: false as const, artist: null, fromCache: false, source: null };
       }
 
-      // 3. In DB cachen
+      // 3. In DB cachen für zukünftige Anfragen
       await upsertArtist({
-        spotifyId: result.spotify_id,
-        displayName: result.display_name,
-        spotifyName: result.spotify_name,
-        directLink: result.direct_link,
-        imageUrl: result.image_url,
-        genres: JSON.stringify(result.genres),
-        followers: result.followers ?? 0,
-        popularity: result.popularity ?? 0,
+        spotifyId:   profile.spotify_id,
+        displayName: profile.display_name,
+        spotifyName: profile.spotify_name,
+        directLink:  profile.direct_link,
+        imageUrl:    profile.image_url,
+        genres:      JSON.stringify(profile.genres),
+        followers:   profile.followers ?? 0,
+        popularity:  profile.popularity ?? 0,
       });
 
       await logSearch(query, 1);
 
       return {
-        found: true as const,
+        found:     true as const,
         fromCache: false,
-        usedFallback,
+        source:    profile.source,
         artist: {
-          spotifyId: result.spotify_id,
-          displayName: result.display_name,
-          spotifyName: result.spotify_name,
-          directLink: result.direct_link,
-          imageUrl: result.image_url,
-          genres: result.genres,
-          followers: result.followers ?? 0,
-          popularity: result.popularity ?? 0,
-          discogsId: null,
-          discogsBio: null,
+          spotifyId:   profile.spotify_id,
+          displayName: profile.display_name,
+          spotifyName: profile.spotify_name,
+          directLink:  profile.direct_link,
+          imageUrl:    profile.image_url,
+          genres:      profile.genres,
+          followers:   profile.followers,
+          popularity:  profile.popularity,
+          discogsId:   null,
+          discogsBio:  null,
         },
       };
     }),
 
   /**
-   * Holt Discogs-Daten für einen Künstler und aktualisiert den Cache.
+   * Holt Discogs-Daten für einen Künstler.
    */
   discogs: publicProcedure
     .input(z.object({ artistName: z.string().min(1), spotifyId: z.string().optional() }))
@@ -113,14 +89,13 @@ export const artistRouter = router({
 
       if (!data) return { found: false as const, data: null };
 
-      // Cache aktualisieren falls Spotify-ID bekannt
       if (input.spotifyId) {
         const existing = await getArtistBySpotifyId(input.spotifyId);
         if (existing) {
           await upsertArtist({
             ...existing,
-            genres: existing.genres ?? "[]",
-            discogsId: data.discogs_id,
+            genres:     existing.genres ?? "[]",
+            discogsId:  data.discogs_id,
             discogsBio: data.profile.slice(0, 2000),
           });
         }
@@ -130,23 +105,26 @@ export const artistRouter = router({
     }),
 
   /**
-   * KI-generierte Künstlerempfehlungen basierend auf einem Referenz-Künstler.
-   * Validiert alle Empfehlungen gegen Spotify.
+   * KI-generierte Künstlerempfehlungen – alle mit echter Spotify-ID validiert.
+   *
+   * GARANTIE: Jeder Eintrag mit found=true hat eine echte spotify_id und
+   *           einen direct_link der Form open.spotify.com/artist/{ID}.
+   *           Einträge ohne ID haben found=false und KEINEN Link.
    */
   recommendations: publicProcedure
     .input(
       z.object({
         artistName: z.string().min(1),
-        genres: z.array(z.string()).optional(),
-        mood: z.string().optional(),
+        genres:     z.array(z.string()).optional(),
+        mood:       z.string().optional(),
       })
     )
     .mutation(async ({ input }) => {
       const { artistName, genres = [], mood } = input;
 
-      // LLM nach ähnlichen Künstlern fragen
+      // LLM nach ähnlichen Künstlernamen fragen
       const genreContext = genres.length > 0 ? `Genres: ${genres.join(", ")}` : "";
-      const moodContext = mood ? `Stimmung: ${mood}` : "";
+      const moodContext  = mood ? `Stimmung: ${mood}` : "";
 
       const llmResponse = await invokeLLM({
         messages: [
@@ -185,7 +163,7 @@ Antworte NUR mit einem JSON-Array, z.B.: ["Künstler 1", "Künstler 2", "Künstl
       let recommendedNames: string[] = [];
       try {
         const rawContent = llmResponse.choices[0]?.message?.content;
-        const content = typeof rawContent === 'string' ? rawContent : null;
+        const content = typeof rawContent === "string" ? rawContent : null;
         if (content) {
           const parsed = JSON.parse(content) as { artists: string[] };
           recommendedNames = parsed.artists?.slice(0, 6) ?? [];
@@ -195,34 +173,34 @@ Antworte NUR mit einem JSON-Array, z.B.: ["Künstler 1", "Künstler 2", "Künstl
         return { recommendations: [] };
       }
 
-      // Alle Empfehlungen gegen Spotify validieren
-      const spotifyResults = await searchMultipleArtists(recommendedNames);
+      // Alle Empfehlungen gegen echte Spotify-IDs validieren (Spotify → MusicBrainz)
+      const profiles = await resolveMultipleArtists(recommendedNames);
 
-      const validated = spotifyResults
-        .map((result, i) => {
-          if (!result) {
-            // Fallback: Kein Link, nur Name (kein kaputter Link)
-            return {
-              found: false as const,
-              display_name: recommendedNames[i] ?? "",
-              spotify_name: null,
-              spotify_id: null,
-              direct_link: null,
-              image_url: null,
-              genres: [] as string[],
-            };
-          }
+      const validated = profiles.map((profile, i) => {
+        if (!profile) {
+          // Kein Treffer → neutraler Eintrag OHNE Link
           return {
-            found: true as const,
-            display_name: result.display_name,
-            spotify_name: result.spotify_name,
-            spotify_id: result.spotify_id,
-            direct_link: result.direct_link,
-            image_url: result.image_url,
-            genres: result.genres,
+            found:        false as const,
+            display_name: recommendedNames[i] ?? "",
+            spotify_name: null,
+            spotify_id:   null,
+            direct_link:  null, // KEIN /search/-Link
+            image_url:    null,
+            genres:       [] as string[],
+            source:       null,
           };
-        })
-        .filter((r) => r.display_name);
+        }
+        return {
+          found:        true as const,
+          display_name: profile.display_name,
+          spotify_name: profile.spotify_name,
+          spotify_id:   profile.spotify_id,
+          direct_link:  profile.direct_link, // Immer open.spotify.com/artist/{ID}
+          image_url:    profile.image_url,
+          genres:       profile.genres,
+          source:       profile.source,
+        };
+      });
 
       // Gefundene Künstler cachen
       await Promise.all(
@@ -230,12 +208,12 @@ Antworte NUR mit einem JSON-Array, z.B.: ["Künstler 1", "Künstler 2", "Künstl
           .filter((r) => r.found && r.spotify_id)
           .map((r) =>
             upsertArtist({
-              spotifyId: r.spotify_id!,
+              spotifyId:   r.spotify_id!,
               displayName: r.display_name,
               spotifyName: r.spotify_name!,
-              directLink: r.direct_link!,
-              imageUrl: r.image_url,
-              genres: JSON.stringify(r.genres),
+              directLink:  r.direct_link!,
+              imageUrl:    r.image_url,
+              genres:      JSON.stringify(r.genres),
             })
           )
       );
@@ -244,17 +222,7 @@ Antworte NUR mit einem JSON-Array, z.B.: ["Künstler 1", "Künstler 2", "Künstl
     }),
 
   /**
-   * Holt den ersten Top-Track eines Künstlers mit 30s-Preview-URL.
-   */
-  topTrack: publicProcedure
-    .input(z.object({ artistId: z.string().min(1) }))
-    .query(async ({ input }) => {
-      const track = await getArtistTopTrack(input.artistId);
-      return { found: !!track, track };
-    }),
-
-  /**
-   * Gibt zuletzt gesuchte/gecachte Künstler zurück (für die Startseite).
+   * Gibt zuletzt gesuchte/gecachte Künstler zurück.
    */
   recent: publicProcedure
     .input(z.object({ limit: z.number().min(1).max(20).optional() }))
