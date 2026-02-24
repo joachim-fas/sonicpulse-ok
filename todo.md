@@ -1,0 +1,32 @@
+# Spotify Artist Enrichment App – TODO
+
+## Phase 1: Setup
+- [x] Projekt initialisiert
+- [x] Secrets setzen (SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, DISCOGS_TOKEN)
+- [x] Datenbankschema: artists-Cache-Tabelle anlegen
+- [x] Migration ausführen
+
+## Phase 2: Backend
+- [x] Spotify Token-Caching (getSpotifyToken Hilfsfunktion)
+- [x] Spotify Search API Integration (searchArtist)
+- [x] Discogs Artist API Integration (getDiscogsArtist)
+- [x] LLM-basierte Künstlerempfehlungen (getAIRecommendations)
+- [x] tRPC Router: artist.search Prozedur
+- [x] tRPC Router: artist.recommendations Prozedur
+- [x] tRPC Router: artist.discogs Prozedur
+- [x] tRPC Router: artist.cached (gespeicherte Künstler abrufen)
+
+## Phase 3: Frontend
+- [x] Globales Styling (Dark Theme, Spotify-Grün, elegante Typografie)
+- [x] Mobile-First Layout in App.tsx
+- [x] Suchfeld mit Debounce
+- [x] ArtistCard Komponente (Bild, Name, Deep-Link, Genres)
+- [x] KI-Empfehlungen Sektion
+- [x] Discogs-Daten Sektion (Diskografie, Biografie)
+- [x] Fehlerbehandlung & Fallbacks (keine kaputten Links)
+- [x] Loading-States und Skeleton-Animationen
+
+## Phase 4: Qualität
+- [x] Vitest-Tests für Spotify-Logik
+- [x] Vitest-Tests für tRPC-Router
+- [x] Checkpoint erstellen

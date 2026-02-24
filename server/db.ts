@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, desc, like, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, artists, searchHistory, InsertArtist, Artist } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,57 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// ─── Artist Cache helpers ─────────────────────────────────────────────────────
+
+export async function getArtistBySpotifyId(spotifyId: string): Promise<Artist | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(artists).where(eq(artists.spotifyId, spotifyId)).limit(1);
+  return result[0] ?? null;
+}
+
+export async function upsertArtist(data: InsertArtist): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(artists).values(data).onDuplicateKeyUpdate({
+    set: {
+      displayName: data.displayName,
+      spotifyName: data.spotifyName,
+      directLink: data.directLink,
+      imageUrl: data.imageUrl,
+      genres: data.genres,
+      followers: data.followers,
+      popularity: data.popularity,
+      discogsId: data.discogsId,
+      discogsBio: data.discogsBio,
+      cachedAt: new Date(),
+    },
+  });
+}
+
+export async function searchCachedArtists(query: string): Promise<Artist[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(artists)
+    .where(
+      or(
+        like(artists.spotifyName, `%${query}%`),
+        like(artists.displayName, `%${query}%`)
+      )
+    )
+    .limit(5);
+}
+
+export async function getRecentArtists(limit = 10): Promise<Artist[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(artists).orderBy(desc(artists.cachedAt)).limit(limit);
+}
+
+export async function logSearch(query: string, resultCount: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(searchHistory).values({ query, resultCount });
+}
