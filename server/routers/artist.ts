@@ -2,6 +2,7 @@ import { z } from "zod";
 import { publicProcedure, router } from "../_core/trpc";
 import { invokeLLM } from "../_core/llm";
 import { searchSpotifyArtist, searchMultipleArtists, getArtistTopTrack } from "../spotify";
+import { searchMusicBrainzArtist } from "../musicbrainz";
 import { searchDiscogsArtist } from "../discogs";
 import {
   getArtistBySpotifyId,
@@ -35,8 +36,34 @@ export const artistRouter = router({
         };
       }
 
-      // 2. Spotify API aufrufen
-      const result = await searchSpotifyArtist(query);
+      // 2. Spotify API aufrufen (mit MusicBrainz-Fallback bei 403)
+      let result = null;
+      let usedFallback = false;
+
+      try {
+        result = await searchSpotifyArtist(query);
+      } catch (spotifyErr: unknown) {
+        const msg = spotifyErr instanceof Error ? spotifyErr.message : String(spotifyErr);
+        // Bei 403 (Development Mode / Quota) MusicBrainz als Fallback nutzen
+        if (msg.includes("403")) {
+          usedFallback = true;
+          const mbResult = await searchMusicBrainzArtist(query);
+          if (mbResult && mbResult.spotify_id) {
+            result = {
+              spotify_id: mbResult.spotify_id,
+              display_name: query,
+              spotify_name: mbResult.name,
+              direct_link: mbResult.spotify_url ?? `https://open.spotify.com/artist/${mbResult.spotify_id}`,
+              image_url: null,
+              genres: mbResult.genres,
+              followers: null as unknown as number,
+              popularity: null as unknown as number,
+            };
+          }
+        } else {
+          throw spotifyErr;
+        }
+      }
 
       if (!result) {
         await logSearch(query, 0);
@@ -51,14 +78,16 @@ export const artistRouter = router({
         directLink: result.direct_link,
         imageUrl: result.image_url,
         genres: JSON.stringify(result.genres),
-        followers: result.followers,
-        popularity: result.popularity,
+        followers: result.followers ?? 0,
+        popularity: result.popularity ?? 0,
       });
 
       await logSearch(query, 1);
 
       return {
         found: true as const,
+        fromCache: false,
+        usedFallback,
         artist: {
           spotifyId: result.spotify_id,
           displayName: result.display_name,
@@ -66,12 +95,11 @@ export const artistRouter = router({
           directLink: result.direct_link,
           imageUrl: result.image_url,
           genres: result.genres,
-          followers: result.followers,
-          popularity: result.popularity,
+          followers: result.followers ?? 0,
+          popularity: result.popularity ?? 0,
           discogsId: null,
           discogsBio: null,
         },
-        fromCache: false,
       };
     }),
 

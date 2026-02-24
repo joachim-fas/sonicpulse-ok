@@ -51,3 +51,10 @@
 - [x] AudioPlayer.tsx durch SpotifyEmbed.tsx ersetzen (iframe-basiert, kein API-Token nötig)
 - [x] Embed in Home.tsx einbinden
 - [x] Visuell elegant in Dark Theme integrieren
+
+## MusicBrainz Fallback (Spotify 403 Fix)
+- [x] Diagnose: Spotify 403 Fehlerursache bestimmen (Development Mode / Quota)
+- [x] MusicBrainz-Fallback implementieren (liefert Spotify-ID ohne API-Token)
+- [x] SpotifyEmbed-Komponente mit robustem iframe-Rendering (display:none → block nach onLoad)
+- [x] Vitest-Tests für MusicBrainz-Fallback (5 Tests bestanden)
+- [x] Alle 14 Tests bestanden (Spotify + MusicBrainz + Auth)
