@@ -30,3 +30,6 @@
 - [x] Vitest-Tests für Spotify-Logik
 - [x] Vitest-Tests für tRPC-Router
 - [x] Checkpoint erstellen
+
+## Bugfixes
+- [x] Spotify invalid_client Fehler beheben (Client Secret korrigiert auf echten Hex-Wert aus Spotify Dashboard)
