@@ -40,3 +40,14 @@
 - [x] Frontend: AudioPlayer-Komponente mit Play/Pause, Fortschrittsbalken, Track-Info
 - [x] Frontend: Integration in ArtistCard unterhalb der Hauptinfos
 - [x] Fallback wenn kein Preview verfügbar (Hinweis statt kaputter Button)
+
+## Pre-Listening Neuimplementierung
+- [ ] Diagnose: Preview-URL von Spotify API live testen
+- [ ] AudioPlayer komplett neu schreiben (robuste Audio-Logik)
+- [ ] CORS/Autoplay-Probleme behandeln
+- [ ] Live-Test mit echtem Künstler
+
+## Spotify Embed Pre-Listening
+- [x] AudioPlayer.tsx durch SpotifyEmbed.tsx ersetzen (iframe-basiert, kein API-Token nötig)
+- [x] Embed in Home.tsx einbinden
+- [x] Visuell elegant in Dark Theme integrieren

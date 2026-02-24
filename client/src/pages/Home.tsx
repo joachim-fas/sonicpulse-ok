@@ -7,7 +7,7 @@ import ArtistCard from "@/components/ArtistCard";
 import ArtistCardSkeleton from "@/components/ArtistCardSkeleton";
 import AIRecommendations from "@/components/AIRecommendations";
 import DiscogsPanel from "@/components/DiscogsPanel";
-import AudioPlayer from "@/components/AudioPlayer";
+import SpotifyEmbed from "@/components/SpotifyEmbed";
 
 function SpotifyWordmark() {
   return (
@@ -170,7 +170,7 @@ export default function Home() {
                   popularity={artist.popularity}
                   fromCache={searchResult.fromCache}
                 />
-                <AudioPlayer
+                <SpotifyEmbed
                   artistId={artist.spotifyId}
                   artistName={artist.spotifyName}
                 />
