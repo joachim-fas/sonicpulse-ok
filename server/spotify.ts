@@ -148,3 +148,68 @@ export async function searchMultipleArtists(
 ): Promise<(SpotifyArtistResult | null)[]> {
   return Promise.all(names.map((name) => searchSpotifyArtist(name)));
 }
+
+export interface SpotifyTopTrack {
+  id: string;
+  name: string;
+  preview_url: string | null;
+  duration_ms: number;
+  album_name: string;
+  album_image_url: string | null;
+  track_number: number;
+  external_url: string;
+}
+
+/**
+ * Holt die Top-Tracks eines Künstlers und gibt den ersten mit Preview-URL zurück.
+ * Gibt null zurück wenn kein Track mit Preview verfügbar ist.
+ */
+export async function getArtistTopTrack(
+  artistId: string
+): Promise<SpotifyTopTrack | null> {
+  const token = await getSpotifyToken();
+
+  const response = await fetch(
+    `${SPOTIFY_API_BASE}/artists/${artistId}/top-tracks?market=DE`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Spotify Top-Tracks Fehler: ${response.status}`);
+  }
+
+  const data = (await response.json()) as {
+    tracks: Array<{
+      id: string;
+      name: string;
+      preview_url: string | null;
+      duration_ms: number;
+      album: { name: string; images: SpotifyArtistImage[] };
+      track_number: number;
+      external_urls: { spotify: string };
+    }>;
+  };
+
+  const tracks = data.tracks ?? [];
+
+  // Ersten Track mit Preview-URL bevorzugen
+  const trackWithPreview = tracks.find((t) => t.preview_url) ?? tracks[0] ?? null;
+
+  if (!trackWithPreview) return null;
+
+  const albumImage =
+    trackWithPreview.album.images.find((img) => img.height >= 300 && img.height <= 640)?.url ??
+    trackWithPreview.album.images[0]?.url ??
+    null;
+
+  return {
+    id: trackWithPreview.id,
+    name: trackWithPreview.name,
+    preview_url: trackWithPreview.preview_url,
+    duration_ms: trackWithPreview.duration_ms,
+    album_name: trackWithPreview.album.name,
+    album_image_url: albumImage,
+    track_number: trackWithPreview.track_number,
+    external_url: trackWithPreview.external_urls.spotify,
+  };
+}

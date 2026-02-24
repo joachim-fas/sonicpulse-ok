@@ -7,6 +7,7 @@ import ArtistCard from "@/components/ArtistCard";
 import ArtistCardSkeleton from "@/components/ArtistCardSkeleton";
 import AIRecommendations from "@/components/AIRecommendations";
 import DiscogsPanel from "@/components/DiscogsPanel";
+import AudioPlayer from "@/components/AudioPlayer";
 
 function SpotifyWordmark() {
   return (
@@ -168,6 +169,10 @@ export default function Home() {
                   followers={artist.followers}
                   popularity={artist.popularity}
                   fromCache={searchResult.fromCache}
+                />
+                <AudioPlayer
+                  artistId={artist.spotifyId}
+                  artistName={artist.spotifyName}
                 />
                 <AIRecommendations
                   artistName={artist.spotifyName}

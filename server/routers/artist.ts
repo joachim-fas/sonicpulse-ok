@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { publicProcedure, router } from "../_core/trpc";
 import { invokeLLM } from "../_core/llm";
-import { searchSpotifyArtist, searchMultipleArtists } from "../spotify";
+import { searchSpotifyArtist, searchMultipleArtists, getArtistTopTrack } from "../spotify";
 import { searchDiscogsArtist } from "../discogs";
 import {
   getArtistBySpotifyId,
@@ -213,6 +213,16 @@ Antworte NUR mit einem JSON-Array, z.B.: ["Künstler 1", "Künstler 2", "Künstl
       );
 
       return { recommendations: validated };
+    }),
+
+  /**
+   * Holt den ersten Top-Track eines Künstlers mit 30s-Preview-URL.
+   */
+  topTrack: publicProcedure
+    .input(z.object({ artistId: z.string().min(1) }))
+    .query(async ({ input }) => {
+      const track = await getArtistTopTrack(input.artistId);
+      return { found: !!track, track };
     }),
 
   /**

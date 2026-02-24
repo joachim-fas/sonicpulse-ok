@@ -33,3 +33,10 @@
 
 ## Bugfixes
 - [x] Spotify invalid_client Fehler beheben (Client Secret korrigiert auf echten Hex-Wert aus Spotify Dashboard)
+
+## Pre-Listening Feature
+- [x] Backend: Spotify Top-Tracks Endpunkt (GET /artists/{id}/top-tracks)
+- [x] Backend: tRPC-Prozedur artist.topTrack
+- [x] Frontend: AudioPlayer-Komponente mit Play/Pause, Fortschrittsbalken, Track-Info
+- [x] Frontend: Integration in ArtistCard unterhalb der Hauptinfos
+- [x] Fallback wenn kein Preview verfügbar (Hinweis statt kaputter Button)
