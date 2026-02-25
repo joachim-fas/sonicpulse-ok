@@ -116,3 +116,8 @@
 - [x] Bild-Fallback-Kette: Discogs als Fallback wenn Spotify 403 gibt
 - [x] Bilder in Explore-Karten anzeigen
 - [x] Bilder in Party-Karten anzeigen
+
+## Party Mode Playlist-Link
+- [x] Spotify Deep-Link auf jeder Track-Karte im Party Mode einbauen
+- [x] Link führt direkt zum Künstler-Profil (open.spotify.com/artist/{id})
+- [x] Fallback: kein Link wenn keine spotify_id vorhanden
