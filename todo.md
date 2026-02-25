@@ -136,3 +136,15 @@
 - [x] Frontend: "Playlist auf Spotify erstellen"-Button nach Playlist-Generierung
 - [x] Frontend: Erfolgs-Feedback mit Link zur erstellten Playlist
 - [x] Frontend: Logout-Möglichkeit
+
+## Mood Mode (Emotionale Intelligenz)
+- [x] Backend: tRPC-Prozedur sonicpulse.mood – Freitext-Analyse mit emotionaler KI
+- [x] Backend: Emotionale Tiefenanalyse (Anlass, Kernemotion, Intensität, Subtext)
+- [x] Backend: Song-Empfehlungen mit emotionaler Begründung (warum dieser Song für diesen Moment)
+- [x] Backend: Artist-Enrichment für Mood-Songs (Spotify-ID, Bild, Embed)
+- [x] Frontend: Mood Mode als dritter Tab in der Navbar
+- [x] Frontend: Freitext-Eingabe mit Placeholder-Beispielen (Anlass/Emotion)
+- [x] Frontend: Emotionsprofil-Karte (KI-Analyse des Textes visualisieren)
+- [x] Frontend: Song-Karten mit emotionaler Begründung und SpotifyEmbedCard
+- [x] Frontend: "Als Playlist speichern"-Button (Spotify OAuth)
+- [x] Frontend: Mood-Intensitäts-Indikator (visuell)

@@ -10,6 +10,7 @@ import { resolveArtist, resolveMultipleArtists } from "../artistService";
  * - enrichTrack: Spotify-Daten für einen Track (Party Mode)
  * - explore: KI-Empfehlungen basierend auf Lieblingsbands
  * - party: KI-generierte Party-Playlist
+ * - mood: Emotionale Intelligenz – Songs nach Anlass/Gefühl
  */
 export const sonicpulseRouter = router({
 
@@ -265,5 +266,129 @@ Respond with a JSON object containing a "tracks" array with keys: title, artist,
       });
 
       return { tracks };
+    }),
+
+  /**
+   * Mood Mode: Emotionale Intelligenz
+   * Analysiert einen Freitext (Anlass, Emotion, Situation) und empfiehlt
+   * Songs mit emotionaler Tiefenbegründung.
+   *
+   * Gibt zurück:
+   * - emotionalProfile: KI-Analyse der Emotion (Kernemotion, Intensität, Subtext, Anlass)
+   * - songs: 6 Songs mit Titel, Künstler, emotionaler Begründung
+   */
+  mood: publicProcedure
+    .input(z.object({
+      prompt:    z.string().min(3).max(1000),
+      songCount: z.number().min(3).max(10).default(6),
+    }))
+    .mutation(async ({ input }) => {
+      const llmResponse = await invokeLLM({
+        messages: [
+          {
+            role: "system",
+            content: `You are an emotionally intelligent music therapist and curator with deep knowledge of how music affects human emotions.
+Your task is to analyze the emotional subtext of what a person describes, then recommend songs that resonate with that emotional state.
+You understand nuance: grief mixed with gratitude, excitement tinged with anxiety, nostalgia that is bittersweet.
+Always respond only with valid JSON. No explanations outside the JSON.`,
+          },
+          {
+            role: "user",
+            content: `A person wrote: "${input.prompt}"
+
+First, deeply analyze the emotional landscape of this message:
+- What is the core emotion or emotional blend?
+- What is the occasion or life situation?
+- What does this person need from music right now (catharsis, comfort, energy, reflection, celebration, courage...)?
+- What is the emotional intensity (subtle/moderate/intense)?
+
+Then recommend ${input.songCount} songs that are emotionally aligned with this state.
+For each song, explain WHY it resonates with this specific emotional moment – not just the genre, but the emotional journey the song takes the listener on.
+
+Respond with a JSON object with keys: emotionalProfile and songs.`,
+          },
+        ],
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "mood_response",
+            strict: true,
+            schema: {
+              type: "object",
+              properties: {
+                emotionalProfile: {
+                  type: "object",
+                  properties: {
+                    coreEmotion:   { type: "string", description: "Primary emotion or emotional blend, e.g. 'bittersweet nostalgia' or 'anxious excitement'" },
+                    occasion:      { type: "string", description: "Life situation or occasion described" },
+                    musicNeed:     { type: "string", description: "What the person needs from music right now" },
+                    intensity:     { type: "string", enum: ["subtle", "moderate", "intense"] },
+                    emotionalNote: { type: "string", description: "A short empathetic note acknowledging the person's emotional state (1-2 sentences, warm and human)" },
+                  },
+                  required: ["coreEmotion", "occasion", "musicNeed", "intensity", "emotionalNote"],
+                  additionalProperties: false,
+                },
+                songs: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      title:          { type: "string" },
+                      artist:         { type: "string" },
+                      emotionalBridge: { type: "string", description: "Why this song connects to the person's emotional state – the emotional journey it offers" },
+                      genre:          { type: "string" },
+                      lyricMoment:    { type: "string", description: "One key lyric or musical moment that captures the emotion (or describe the instrumental moment if no lyrics)" },
+                    },
+                    required: ["title", "artist", "emotionalBridge", "genre", "lyricMoment"],
+                    additionalProperties: false,
+                  },
+                },
+              },
+              required: ["emotionalProfile", "songs"],
+              additionalProperties: false,
+            },
+          },
+        },
+      });
+
+      type RawSong = { title: string; artist: string; emotionalBridge: string; genre: string; lyricMoment: string };
+      type RawProfile = { coreEmotion: string; occasion: string; musicNeed: string; intensity: string; emotionalNote: string };
+
+      let rawSongs: RawSong[] = [];
+      let rawProfile: RawProfile | null = null;
+
+      try {
+        const content = llmResponse.choices[0]?.message?.content;
+        if (typeof content === "string") {
+          const parsed = JSON.parse(content) as { emotionalProfile: RawProfile; songs: RawSong[] };
+          rawProfile = parsed.emotionalProfile ?? null;
+          rawSongs   = parsed.songs?.slice(0, input.songCount) ?? [];
+        }
+      } catch {
+        return { emotionalProfile: null, songs: [] };
+      }
+
+      // Alle Künstler mit echten Spotify-IDs anreichern
+      const profiles = await resolveMultipleArtists(rawSongs.map((s) => s.artist));
+
+      const songs = rawSongs.map((song, i) => {
+        const profile = profiles[i];
+        return {
+          title:           song.title,
+          artist:          song.artist,
+          emotionalBridge: song.emotionalBridge,
+          genre:           song.genre,
+          lyricMoment:     song.lyricMoment,
+          enriched: profile
+            ? {
+                image:     profile.image_url,
+                url:       profile.direct_link,
+                spotifyId: profile.spotify_id,
+              }
+            : undefined,
+        };
+      });
+
+      return { emotionalProfile: rawProfile, songs };
     }),
 });

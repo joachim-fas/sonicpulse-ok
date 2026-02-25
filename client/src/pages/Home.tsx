@@ -15,6 +15,8 @@ import {
   CheckCircle2,
   LogOut,
   User,
+  Heart,
+  Quote,
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -40,6 +42,23 @@ interface Track {
   artist: string;
   reason: string;
   enriched?: { image?: string | null; url?: string | null; previewUrl?: string | null; uri?: string | null };
+}
+
+interface MoodSong {
+  title: string;
+  artist: string;
+  emotionalBridge: string;
+  genre: string;
+  lyricMoment: string;
+  enriched?: { image?: string | null; url?: string | null; spotifyId?: string | null };
+}
+
+interface EmotionalProfile {
+  coreEmotion: string;
+  occasion: string;
+  musicNeed: string;
+  intensity: "subtle" | "moderate" | "intense";
+  emotionalNote: string;
 }
 
 interface MBSuggestion { id: string; name: string; country?: string | null; }
@@ -236,15 +255,9 @@ const ArtistInput = ({
 
 // ─── Playlist Success Modal ───────────────────────────────────────────────────
 const PlaylistSuccessModal = ({
-  playlistUrl,
-  tracksAdded,
-  tracksNotFound,
-  onClose,
+  playlistUrl, tracksAdded, tracksNotFound, onClose,
 }: {
-  playlistUrl: string;
-  tracksAdded: number;
-  tracksNotFound: string[];
-  onClose: () => void;
+  playlistUrl: string; tracksAdded: number; tracksNotFound: string[]; onClose: () => void;
 }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
     <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
@@ -286,10 +299,7 @@ const PlaylistSuccessModal = ({
           <SpotifyLogo size={18} />
           Playlist auf Spotify öffnen
         </a>
-        <button
-          onClick={onClose}
-          className="text-white/30 text-xs hover:text-white/60 transition-colors"
-        >
+        <button onClick={onClose} className="text-white/30 text-xs hover:text-white/60 transition-colors">
           Schließen
         </button>
       </div>
@@ -297,24 +307,55 @@ const PlaylistSuccessModal = ({
   </div>
 );
 
+// ─── Intensity Badge ──────────────────────────────────────────────────────────
+const IntensityBadge = ({ intensity }: { intensity: "subtle" | "moderate" | "intense" }) => {
+  const config = {
+    subtle:   { label: "Subtle",   color: "bg-sky-500/15 text-sky-300 border-sky-500/20",     dots: 1 },
+    moderate: { label: "Moderate", color: "bg-amber-500/15 text-amber-300 border-amber-500/20", dots: 2 },
+    intense:  { label: "Intense",  color: "bg-rose-500/15 text-rose-300 border-rose-500/20",   dots: 3 },
+  }[intensity];
+  return (
+    <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[9px] uppercase tracking-widest font-medium", config.color)}>
+      {Array.from({ length: 3 }).map((_, i) => (
+        <span key={i} className={cn("w-1 h-1 rounded-full", i < config.dots ? "bg-current" : "bg-current opacity-20")} />
+      ))}
+      {config.label}
+    </span>
+  );
+};
+
 // ─── Main App ─────────────────────────────────────────────────────────────────
 export default function Home() {
   const [hasStarted, setHasStarted] = useState(false);
-  const [mode, setMode] = useState<"explore" | "party">("explore");
+  const [mode, setMode] = useState<"explore" | "party" | "mood">("explore");
+
+  // Explore
   const [exploreBands, setExploreBands] = useState<string[]>(["", "", ""]);
+  const [discoveryLevel, setDiscoveryLevel] = useState<"mainstream" | "underground" | "exotics">("underground");
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+
+  // Party
   const [partyArtists, setPartyArtists] = useState<string[]>(["", "", ""]);
   const [partyLength, setPartyLength] = useState(10);
   const [partyEnergy, setPartyEnergy] = useState<"chill" | "medium" | "high">("high");
-  const [discoveryLevel, setDiscoveryLevel] = useState<"mainstream" | "underground" | "exotics">("underground");
-  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [partyPlaylist, setPartyPlaylist] = useState<Track[]>([]);
+  const [playlistName, setPlaylistName] = useState("SonicPulse Party Mix");
+  const [showPlaylistNameInput, setShowPlaylistNameInput] = useState(false);
+
+  // Mood
+  const [moodPrompt, setMoodPrompt] = useState("");
+  const [moodSongCount, setMoodSongCount] = useState(6);
+  const [moodSongs, setMoodSongs] = useState<MoodSong[]>([]);
+  const [emotionalProfile, setEmotionalProfile] = useState<EmotionalProfile | null>(null);
+  const [moodPlaylistName, setMoodPlaylistName] = useState("SonicPulse Mood Mix");
+  const [showMoodPlaylistInput, setShowMoodPlaylistInput] = useState(false);
+
+  // UI
   const [infoModal, setInfoModal] = useState<"privacy" | "terms" | "spotify" | null>(null);
   const [loadingMessage, setLoadingMessage] = useState("");
   const [playlistSuccess, setPlaylistSuccess] = useState<{
     url: string; tracksAdded: number; tracksNotFound: string[];
   } | null>(null);
-  const [playlistName, setPlaylistName] = useState("SonicPulse Party Mix");
-  const [showPlaylistNameInput, setShowPlaylistNameInput] = useState(false);
 
   // ─── Spotify Session ─────────────────────────────────────────────────────
   const [sessionId] = useState(() => getOrCreateSessionId());
@@ -348,9 +389,7 @@ export default function Home() {
     const params = new URLSearchParams(window.location.search);
     if (params.get("spotify_connected") === "true") {
       sessionQuery.refetch();
-      // URL bereinigen
       window.history.replaceState({}, "", window.location.pathname);
-      // Party Mode öffnen
       setHasStarted(true);
       setMode("party");
     }
@@ -366,14 +405,9 @@ export default function Home() {
     window.location.href = result.url;
   };
 
-  const handleCreatePlaylist = async () => {
-    const tracks = partyPlaylist.map((t) => ({ title: t.title, artist: t.artist }));
+  const handleCreatePlaylist = async (tracks: { title: string; artist: string }[], name: string) => {
     if (!tracks.length) return;
-    createPlaylistMutation.mutate({
-      sessionId,
-      playlistName,
-      tracks,
-    });
+    createPlaylistMutation.mutate({ sessionId, playlistName: name, tracks });
   };
 
   // ─── Mutations ────────────────────────────────────────────────────────────
@@ -383,9 +417,16 @@ export default function Home() {
   const partyMutation = trpc.sonicpulse.party.useMutation({
     onSuccess: (data) => setPartyPlaylist(data.tracks as Track[]),
   });
-  const isGenerating = exploreMutation.isPending || partyMutation.isPending;
+  const moodMutation = trpc.sonicpulse.mood.useMutation({
+    onSuccess: (data) => {
+      setMoodSongs(data.songs as MoodSong[]);
+      setEmotionalProfile(data.emotionalProfile as EmotionalProfile | null);
+    },
+  });
 
-  const handleModeSelect = (newMode: "explore" | "party") => {
+  const isGenerating = exploreMutation.isPending || partyMutation.isPending || moodMutation.isPending;
+
+  const handleModeSelect = (newMode: "explore" | "party" | "mood") => {
     setMode(newMode);
     setHasStarted(true);
   };
@@ -406,13 +447,36 @@ export default function Home() {
     partyMutation.mutate({ artists, energy: partyEnergy, trackCount: partyLength });
   }, [partyArtists, partyEnergy, partyLength, partyMutation]);
 
+  const generateMoodPlaylist = useCallback(() => {
+    if (!moodPrompt.trim()) return;
+    setMoodSongs([]);
+    setEmotionalProfile(null);
+    setLoadingMessage("Reading your emotional landscape...");
+    moodMutation.mutate({ prompt: moodPrompt.trim(), songCount: moodSongCount });
+  }, [moodPrompt, moodSongCount, moodMutation]);
+
+  // ─── Background Gradient ──────────────────────────────────────────────────
   const bgGradient = !hasStarted
     ? "radial-gradient(circle at 50% 0%, rgba(234,179,8,0.15) 0%, transparent 70%)"
     : mode === "explore"
     ? "radial-gradient(circle at 50% 0%, rgba(6,182,212,0.15) 0%, transparent 70%)"
-    : "radial-gradient(circle at 50% 0%, rgba(217,70,239,0.15) 0%, transparent 70%)";
-  const blob1 = !hasStarted ? "bg-yellow-900/40" : mode === "explore" ? "bg-cyan-900/40" : "bg-fuchsia-900/40";
-  const blob2 = !hasStarted ? "bg-amber-900/40" : mode === "explore" ? "bg-blue-900/40" : "bg-orange-900/40";
+    : mode === "party"
+    ? "radial-gradient(circle at 50% 0%, rgba(217,70,239,0.15) 0%, transparent 70%)"
+    : "radial-gradient(circle at 50% 0%, rgba(244,114,182,0.18) 0%, transparent 70%)";
+
+  const blob1 = !hasStarted ? "bg-yellow-900/40" : mode === "explore" ? "bg-cyan-900/40" : mode === "party" ? "bg-fuchsia-900/40" : "bg-rose-900/40";
+  const blob2 = !hasStarted ? "bg-amber-900/40" : mode === "explore" ? "bg-blue-900/40" : mode === "party" ? "bg-orange-900/40" : "bg-pink-900/30";
+
+  // ─── Mood Placeholder Examples ────────────────────────────────────────────
+  const moodExamples = [
+    "Ich habe gerade meinen Job gekündigt und fühle mich gleichzeitig befreit und verängstigt.",
+    "Es ist der erste Jahrestag nach dem Tod meiner Mutter.",
+    "Ich bin verliebt, aber die Person weiß es nicht.",
+    "Langer Roadtrip allein – ich brauche etwas für die Stille zwischen den Gedanken.",
+    "Mein bester Freund zieht in eine andere Stadt. Letzte gemeinsame Nacht.",
+    "Ich habe endlich etwas geschafft, woran ich jahrelang gearbeitet habe.",
+  ];
+  const [moodPlaceholder] = useState(() => moodExamples[Math.floor(Math.random() * moodExamples.length)]);
 
   return (
     <div className="min-h-screen bg-black text-white font-sans overflow-x-hidden relative">
@@ -449,7 +513,7 @@ export default function Home() {
         <div className="flex items-center gap-3">
           {hasStarted && (
             <div className="flex items-center gap-1 bg-black/40 p-1 rounded-full border border-white/5">
-              {(["explore", "party"] as const).map((m) => (
+              {(["explore", "party", "mood"] as const).map((m) => (
                 <button
                   key={m}
                   onClick={() => handleModeSelect(m)}
@@ -499,9 +563,9 @@ export default function Home() {
                 <span className="italic" style={{ fontFamily: "Georgia, serif" }}>reimagined.</span>
               </h1>
               <p className="text-white/40 max-w-md mb-12 text-lg font-light leading-relaxed">
-                Choose your journey. Explore new sounds manually or generate the perfect party mix.
+                Choose your journey. Explore new sounds, generate the perfect party mix, or find music for this exact moment.
               </p>
-              <div className="flex flex-col md:flex-row gap-6 justify-center w-full max-w-2xl">
+              <div className="flex flex-col md:flex-row gap-6 justify-center w-full max-w-3xl">
                 <button
                   onClick={() => handleModeSelect("explore")}
                   className="relative flex-1 group p-6 md:p-8 bg-zinc-900/30 border border-white/5 rounded-[32px] hover:bg-white hover:text-black transition-all duration-500 text-left"
@@ -522,6 +586,16 @@ export default function Home() {
                   <h3 className="text-2xl font-light mb-2">Party Mode</h3>
                   <p className="text-xs opacity-40 group-hover:opacity-60 uppercase tracking-widest">Generate high-energy playlists for any vibe</p>
                 </button>
+                <button
+                  onClick={() => handleModeSelect("mood")}
+                  className="relative flex-1 group p-6 md:p-8 bg-zinc-900/30 border border-white/5 rounded-[32px] hover:bg-white hover:text-black transition-all duration-500 text-left"
+                >
+                  <motion.div whileHover={{ scale: 1.15 }} className="inline-block mb-4">
+                    <Heart className="opacity-40 group-hover:opacity-100 text-rose-400 transition-colors" size={32} />
+                  </motion.div>
+                  <h3 className="text-2xl font-light mb-2">Mood Mode</h3>
+                  <p className="text-xs opacity-40 group-hover:opacity-60 uppercase tracking-widest">Music for this exact emotional moment</p>
+                </button>
               </div>
             </motion.div>
           ) : (
@@ -536,22 +610,22 @@ export default function Home() {
               <AnimatePresence mode="wait">
                 <motion.section
                   key={mode}
-                  initial={{ opacity: 0, x: mode === "explore" ? -20 : 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: mode === "explore" ? 20 : -20 }}
+                  initial={{ opacity: 0, x: mode === "explore" ? -20 : mode === "party" ? 20 : 0, y: mode === "mood" ? 20 : 0 }}
+                  animate={{ opacity: 1, x: 0, y: 0 }}
+                  exit={{ opacity: 0 }}
                   transition={{ duration: 0.4 }}
                 >
                   <div className="mb-12">
                     <span className="text-xs uppercase tracking-[0.3em] text-white/40 mb-4 block">
-                      {mode === "explore" ? "Manual Input" : "Party Vibes"}
+                      {mode === "explore" ? "Manual Input" : mode === "party" ? "Party Vibes" : "Emotional Intelligence"}
                     </span>
                     <h2 className="text-5xl font-light tracking-tight">
-                      {mode === "explore" ? "Explore New Sounds" : "Party Mode"}
+                      {mode === "explore" ? "Explore New Sounds" : mode === "party" ? "Party Mode" : "Mood Mode"}
                     </h2>
                   </div>
 
-                  {mode === "explore" ? (
-                    /* ── Explore ── */
+                  {/* ── Explore ── */}
+                  {mode === "explore" && (
                     <div className="space-y-8">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
                         {exploreBands.map((band, idx) => (
@@ -596,8 +670,10 @@ export default function Home() {
                         </div>
                       </div>
                     </div>
-                  ) : (
-                    /* ── Party ── */
+                  )}
+
+                  {/* ── Party ── */}
+                  {mode === "party" && (
                     <div className="space-y-12 max-w-4xl mx-auto">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {partyArtists.map((artist, idx) => (
@@ -638,7 +714,6 @@ export default function Home() {
                               ))}
                             </div>
                           </div>
-                          {/* Track Count */}
                           <div className="flex flex-col gap-2 items-center">
                             <span className="text-[8px] uppercase tracking-widest text-white/20">Tracks: {partyLength}</span>
                             <input
@@ -663,10 +738,7 @@ export default function Home() {
 
                       {/* Party Playlist */}
                       {(partyPlaylist.length > 0 || partyMutation.isPending) && (
-                        <motion.div
-                          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                          className="space-y-4"
-                        >
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
                           <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
                             <div>
                               <span className="text-xs uppercase tracking-[0.3em] text-white/40 mb-4 block">The Lineup</span>
@@ -674,18 +746,12 @@ export default function Home() {
                                 Your Party Playlist
                               </h2>
                             </div>
-
-                            {/* ── Spotify Playlist erstellen ── */}
                             {partyPlaylist.length > 0 && (
                               <div className="flex flex-col gap-3">
                                 {isSpotifyLoggedIn ? (
                                   <div className="flex flex-col gap-2">
                                     {showPlaylistNameInput && (
-                                      <motion.div
-                                        initial={{ opacity: 0, y: -8 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        className="flex items-center gap-2"
-                                      >
+                                      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2">
                                         <input
                                           type="text"
                                           value={playlistName}
@@ -696,15 +762,11 @@ export default function Home() {
                                       </motion.div>
                                     )}
                                     <div className="flex items-center gap-2">
-                                      <button
-                                        onClick={() => setShowPlaylistNameInput(!showPlaylistNameInput)}
-                                        className="text-white/30 hover:text-white/60 transition-colors text-xs"
-                                        title="Playlist-Name bearbeiten"
-                                      >
+                                      <button onClick={() => setShowPlaylistNameInput(!showPlaylistNameInput)} className="text-white/30 hover:text-white/60 transition-colors text-xs">
                                         {showPlaylistNameInput ? "▲" : "▼"} Name
                                       </button>
                                       <button
-                                        onClick={handleCreatePlaylist}
+                                        onClick={() => handleCreatePlaylist(partyPlaylist.map((t) => ({ title: t.title, artist: t.artist })), playlistName)}
                                         disabled={createPlaylistMutation.isPending}
                                         className={cn(
                                           "flex items-center gap-2 px-5 py-2.5 rounded-full font-medium text-xs uppercase tracking-widest transition-all active:scale-95",
@@ -712,10 +774,7 @@ export default function Home() {
                                           createPlaylistMutation.isPending && "animate-pulse"
                                         )}
                                       >
-                                        {createPlaylistMutation.isPending
-                                          ? <Loader2 size={14} className="animate-spin" />
-                                          : <ListMusic size={14} />
-                                        }
+                                        {createPlaylistMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <ListMusic size={14} />}
                                         {createPlaylistMutation.isPending ? "Erstelle..." : "Als Playlist speichern"}
                                       </button>
                                     </div>
@@ -727,15 +786,9 @@ export default function Home() {
                                   <button
                                     onClick={handleSpotifyLogin}
                                     disabled={getAuthUrlMutation.isPending}
-                                    className={cn(
-                                      "flex items-center gap-2 px-5 py-2.5 rounded-full font-medium text-xs uppercase tracking-widest transition-all active:scale-95",
-                                      "bg-[#1DB954] text-black hover:bg-[#1ed760] disabled:opacity-50 disabled:cursor-not-allowed"
-                                    )}
+                                    className="flex items-center gap-2 px-5 py-2.5 rounded-full font-medium text-xs uppercase tracking-widest bg-[#1DB954] text-black hover:bg-[#1ed760] transition-all active:scale-95 disabled:opacity-50"
                                   >
-                                    {getAuthUrlMutation.isPending
-                                      ? <Loader2 size={14} className="animate-spin" />
-                                      : <SpotifyLogo size={14} />
-                                    }
+                                    {getAuthUrlMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <SpotifyLogo size={14} />}
                                     Mit Spotify verbinden
                                   </button>
                                 )}
@@ -764,15 +817,9 @@ export default function Home() {
                                       <h4 className="text-xl font-light tracking-tight">{track.title}</h4>
                                       <p className="text-xs text-white/40 italic font-light leading-relaxed line-clamp-2">{track.reason}</p>
                                       {track.enriched?.url ? (
-                                        <a
-                                          href={track.enriched.url}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#1DB954]/10 border border-[#1DB954]/30 text-[#1DB954] text-[10px] uppercase tracking-widest hover:bg-[#1DB954]/20 transition-all w-fit"
-                                          aria-label={`${track.artist} auf Spotify öffnen`}
-                                        >
-                                          <SpotifyLogo size={12} />
-                                          Auf Spotify öffnen
+                                        <a href={track.enriched.url} target="_blank" rel="noopener noreferrer"
+                                          className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#1DB954]/10 border border-[#1DB954]/30 text-[#1DB954] text-[10px] uppercase tracking-widest hover:bg-[#1DB954]/20 transition-all w-fit">
+                                          <SpotifyLogo size={12} />Auf Spotify öffnen
                                         </a>
                                       ) : (
                                         <span className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 text-white/20 text-[10px] uppercase tracking-widest w-fit">
@@ -781,14 +828,9 @@ export default function Home() {
                                       )}
                                     </div>
                                   </motion.div>
-                                  {/* Spotify Embed unterhalb der Karte */}
                                   {extractSpotifyArtistId(track.enriched?.url) && (
                                     <div className="mt-2">
-                                      <SpotifyEmbedCard
-                                        artistId={extractSpotifyArtistId(track.enriched?.url)}
-                                        artistName={track.artist}
-                                        accentColor="fuchsia"
-                                      />
+                                      <SpotifyEmbedCard artistId={extractSpotifyArtistId(track.enriched?.url)} artistName={track.artist} accentColor="fuchsia" />
                                     </div>
                                   )}
                                 </div>
@@ -796,17 +838,11 @@ export default function Home() {
                             }
                           </div>
 
-                          {/* Floating "Playlist erstellen"-Button am Ende der Liste */}
                           {partyPlaylist.length > 0 && (
-                            <motion.div
-                              initial={{ opacity: 0, y: 20 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: 0.5 }}
-                              className="pt-8 flex justify-center"
-                            >
+                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="pt-8 flex justify-center">
                               {isSpotifyLoggedIn ? (
                                 <button
-                                  onClick={handleCreatePlaylist}
+                                  onClick={() => handleCreatePlaylist(partyPlaylist.map((t) => ({ title: t.title, artist: t.artist })), playlistName)}
                                   disabled={createPlaylistMutation.isPending}
                                   className={cn(
                                     "flex items-center gap-3 px-8 py-4 rounded-full font-medium text-sm uppercase tracking-widest transition-all active:scale-95 shadow-2xl",
@@ -814,29 +850,18 @@ export default function Home() {
                                     createPlaylistMutation.isPending && "animate-pulse"
                                   )}
                                 >
-                                  {createPlaylistMutation.isPending
-                                    ? <Loader2 size={18} className="animate-spin" />
-                                    : <ListMusic size={18} />
-                                  }
-                                  {createPlaylistMutation.isPending
-                                    ? "Playlist wird erstellt..."
-                                    : `Playlist auf Spotify speichern (${partyPlaylist.length} Tracks)`
-                                  }
+                                  {createPlaylistMutation.isPending ? <Loader2 size={18} className="animate-spin" /> : <ListMusic size={18} />}
+                                  {createPlaylistMutation.isPending ? "Playlist wird erstellt..." : `Playlist auf Spotify speichern (${partyPlaylist.length} Tracks)`}
                                 </button>
                               ) : (
                                 <div className="flex flex-col items-center gap-3">
-                                  <p className="text-white/40 text-xs uppercase tracking-widest">
-                                    Verbinde Spotify um diese Playlist zu speichern
-                                  </p>
+                                  <p className="text-white/40 text-xs uppercase tracking-widest">Verbinde Spotify um diese Playlist zu speichern</p>
                                   <button
                                     onClick={handleSpotifyLogin}
                                     disabled={getAuthUrlMutation.isPending}
                                     className="flex items-center gap-3 px-8 py-4 rounded-full font-medium text-sm uppercase tracking-widest bg-[#1DB954] text-black hover:bg-[#1ed760] transition-all active:scale-95 shadow-2xl disabled:opacity-50"
                                   >
-                                    {getAuthUrlMutation.isPending
-                                      ? <Loader2 size={18} className="animate-spin" />
-                                      : <SpotifyLogo size={18} />
-                                    }
+                                    {getAuthUrlMutation.isPending ? <Loader2 size={18} className="animate-spin" /> : <SpotifyLogo size={18} />}
                                     Mit Spotify verbinden & Playlist speichern
                                   </button>
                                 </div>
@@ -847,6 +872,269 @@ export default function Home() {
                       )}
                     </div>
                   )}
+
+                  {/* ── Mood Mode ── */}
+                  {mode === "mood" && (
+                    <div className="space-y-12 max-w-3xl mx-auto">
+
+                      {/* Eingabe-Bereich */}
+                      <div className="space-y-6">
+                        <p className="text-white/50 text-sm font-light leading-relaxed max-w-xl">
+                          Beschreibe deinen Moment. Für welchen Anlass suchst du Musik? Was möchtest du ausdrücken oder fühlen?
+                          Die KI liest die emotionale Tiefe deiner Worte und findet Songs, die wirklich passen.
+                        </p>
+
+                        <div className="relative">
+                          <textarea
+                            value={moodPrompt}
+                            onChange={(e) => setMoodPrompt(e.target.value)}
+                            placeholder={moodPlaceholder}
+                            rows={4}
+                            maxLength={1000}
+                            className="w-full bg-zinc-950 border border-rose-500/20 focus:border-rose-400/50 rounded-2xl px-5 py-4 text-sm font-light text-white/90 placeholder:text-white/25 focus:outline-none transition-all resize-none focus:shadow-[0_0_30px_rgba(244,114,182,0.12)] leading-relaxed"
+                          />
+                          <div className="absolute bottom-3 right-4 text-[9px] text-white/20 uppercase tracking-widest">
+                            {moodPrompt.length}/1000
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-between gap-4">
+                          <div className="flex flex-col gap-2">
+                            <span className="text-[8px] uppercase tracking-widest text-white/20">Songs: {moodSongCount}</span>
+                            <input
+                              type="range" min={3} max={10} value={moodSongCount}
+                              onChange={(e) => setMoodSongCount(Number(e.target.value))}
+                              className="w-28 accent-rose-400"
+                            />
+                          </div>
+
+                          <button
+                            onClick={generateMoodPlaylist}
+                            disabled={isGenerating || !moodPrompt.trim()}
+                            className={cn(
+                              "flex items-center justify-center gap-2 px-8 py-3 rounded-full font-medium transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-xs uppercase tracking-widest",
+                              "bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:from-rose-400 hover:to-pink-400",
+                              isGenerating && "animate-pulse"
+                            )}
+                          >
+                            {isGenerating ? <Loader2 size={18} className="animate-spin" /> : <Heart size={18} />}
+                            {isGenerating ? loadingMessage : "Find My Songs"}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Emotionales Profil */}
+                      <AnimatePresence>
+                        {(emotionalProfile || moodMutation.isPending) && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.5 }}
+                          >
+                            {moodMutation.isPending && !emotionalProfile ? (
+                              <div className="p-6 bg-zinc-900/60 border border-rose-500/10 rounded-3xl space-y-3">
+                                <div className="h-4 bg-zinc-800 rounded-full animate-pulse w-1/3" />
+                                <div className="h-3 bg-zinc-800 rounded-full animate-pulse w-2/3" />
+                                <div className="h-3 bg-zinc-800 rounded-full animate-pulse w-1/2" />
+                              </div>
+                            ) : emotionalProfile && (
+                              <div className="p-6 md:p-8 bg-gradient-to-br from-rose-950/40 to-zinc-900/60 border border-rose-500/15 rounded-3xl space-y-5">
+                                <div className="flex items-start justify-between gap-4 flex-wrap">
+                                  <div>
+                                    <span className="text-[9px] uppercase tracking-[0.3em] text-rose-400/60 block mb-1">Emotional Profile</span>
+                                    <h3 className="text-2xl font-light tracking-tight text-rose-100">{emotionalProfile.coreEmotion}</h3>
+                                  </div>
+                                  <IntensityBadge intensity={emotionalProfile.intensity} />
+                                </div>
+
+                                {/* Empathische Notiz */}
+                                <div className="flex gap-3 p-4 bg-rose-500/5 border border-rose-500/10 rounded-2xl">
+                                  <Quote size={14} className="text-rose-400/50 shrink-0 mt-0.5" />
+                                  <p className="text-sm text-white/70 font-light leading-relaxed italic">{emotionalProfile.emotionalNote}</p>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div className="space-y-1">
+                                    <span className="text-[8px] uppercase tracking-widest text-white/25">Occasion</span>
+                                    <p className="text-sm text-white/60 font-light">{emotionalProfile.occasion}</p>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <span className="text-[8px] uppercase tracking-widest text-white/25">Music Need</span>
+                                    <p className="text-sm text-white/60 font-light">{emotionalProfile.musicNeed}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      {/* Song-Karten */}
+                      {(moodSongs.length > 0 || moodMutation.isPending) && (
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+                          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+                            <div>
+                              <span className="text-xs uppercase tracking-[0.3em] text-white/40 mb-4 block">Curated for this moment</span>
+                              <h2 className="text-4xl font-light tracking-tight italic" style={{ fontFamily: "Georgia, serif" }}>
+                                Your Emotional Soundtrack
+                              </h2>
+                            </div>
+
+                            {/* Playlist speichern */}
+                            {moodSongs.length > 0 && (
+                              <div className="flex flex-col gap-2">
+                                {isSpotifyLoggedIn ? (
+                                  <div className="flex flex-col gap-2">
+                                    {showMoodPlaylistInput && (
+                                      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
+                                        <input
+                                          type="text"
+                                          value={moodPlaylistName}
+                                          onChange={(e) => setMoodPlaylistName(e.target.value)}
+                                          placeholder="Playlist-Name..."
+                                          className="bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-sm font-light focus:outline-none focus:border-rose-400/50 text-white placeholder:text-white/30 w-full md:w-64"
+                                        />
+                                      </motion.div>
+                                    )}
+                                    <div className="flex items-center gap-2">
+                                      <button onClick={() => setShowMoodPlaylistInput(!showMoodPlaylistInput)} className="text-white/30 hover:text-white/60 transition-colors text-xs">
+                                        {showMoodPlaylistInput ? "▲" : "▼"} Name
+                                      </button>
+                                      <button
+                                        onClick={() => handleCreatePlaylist(moodSongs.map((s) => ({ title: s.title, artist: s.artist })), moodPlaylistName)}
+                                        disabled={createPlaylistMutation.isPending}
+                                        className={cn(
+                                          "flex items-center gap-2 px-5 py-2.5 rounded-full font-medium text-xs uppercase tracking-widest transition-all active:scale-95",
+                                          "bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:from-rose-400 hover:to-pink-400 disabled:opacity-50 disabled:cursor-not-allowed",
+                                          createPlaylistMutation.isPending && "animate-pulse"
+                                        )}
+                                      >
+                                        {createPlaylistMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <ListMusic size={14} />}
+                                        {createPlaylistMutation.isPending ? "Erstelle..." : "Als Playlist speichern"}
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={handleSpotifyLogin}
+                                    disabled={getAuthUrlMutation.isPending}
+                                    className="flex items-center gap-2 px-5 py-2.5 rounded-full font-medium text-xs uppercase tracking-widest bg-[#1DB954] text-black hover:bg-[#1ed760] transition-all active:scale-95 disabled:opacity-50"
+                                  >
+                                    {getAuthUrlMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <SpotifyLogo size={14} />}
+                                    Mit Spotify verbinden
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="space-y-4">
+                            {moodMutation.isPending && moodSongs.length === 0
+                              ? [...Array(3)].map((_, i) => <div key={i} className="h-36 bg-zinc-900 rounded-3xl animate-pulse" />)
+                              : moodSongs.map((song, idx) => (
+                                <div key={idx}>
+                                  <motion.div
+                                    initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.07 }}
+                                    className="group p-6 bg-zinc-900/40 border border-white/5 rounded-3xl hover:bg-zinc-900/60 hover:border-rose-500/10 transition-all duration-400"
+                                  >
+                                    <div className="flex flex-col md:flex-row items-start gap-5">
+                                      {/* Artist Image */}
+                                      <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center text-white/20 overflow-hidden shrink-0 shadow-lg">
+                                        {song.enriched?.image
+                                          ? <img src={song.enriched.image} alt={song.artist} className="w-full h-full object-cover opacity-50 group-hover:opacity-80 transition-opacity" />
+                                          : <Heart size={20} className="text-rose-400/30" />
+                                        }
+                                      </div>
+
+                                      <div className="flex-1 space-y-3 w-full">
+                                        {/* Track Info */}
+                                        <div>
+                                          <div className="flex items-start justify-between gap-2 flex-wrap">
+                                            <div>
+                                              <p className="text-[10px] text-rose-400/70 uppercase tracking-widest font-medium mb-0.5">{song.artist}</p>
+                                              <h4 className="text-xl font-light tracking-tight">{song.title}</h4>
+                                            </div>
+                                            <span className="px-2 py-0.5 rounded-full bg-white/5 text-[8px] uppercase tracking-widest text-white/30 shrink-0">{song.genre}</span>
+                                          </div>
+                                        </div>
+
+                                        {/* Emotional Bridge */}
+                                        <p className="text-sm text-white/55 font-light leading-relaxed">{song.emotionalBridge}</p>
+
+                                        {/* Lyric Moment */}
+                                        <div className="flex gap-2 p-3 bg-rose-500/5 border border-rose-500/10 rounded-xl">
+                                          <Quote size={11} className="text-rose-400/40 shrink-0 mt-0.5" />
+                                          <p className="text-xs text-white/40 italic font-light leading-relaxed">{song.lyricMoment}</p>
+                                        </div>
+
+                                        {/* Spotify Link */}
+                                        {song.enriched?.url ? (
+                                          <a href={song.enriched.url} target="_blank" rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#1DB954]/10 border border-[#1DB954]/25 text-[#1DB954] text-[10px] uppercase tracking-widest hover:bg-[#1DB954]/20 transition-all w-fit">
+                                            <SpotifyLogo size={12} />Auf Spotify öffnen
+                                          </a>
+                                        ) : (
+                                          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 text-white/20 text-[10px] uppercase tracking-widest w-fit">
+                                            Kein Spotify-Link
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </motion.div>
+
+                                  {/* Spotify Embed */}
+                                  {(song.enriched?.spotifyId || extractSpotifyArtistId(song.enriched?.url)) && (
+                                    <div className="mt-2">
+                                      <SpotifyEmbedCard
+                                        artistId={song.enriched?.spotifyId ?? extractSpotifyArtistId(song.enriched?.url)}
+                                        artistName={song.artist}
+                                        accentColor="emerald"
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                              ))
+                            }
+                          </div>
+
+                          {/* Floating Save Button */}
+                          {moodSongs.length > 0 && (
+                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="pt-8 flex justify-center">
+                              {isSpotifyLoggedIn ? (
+                                <button
+                                  onClick={() => handleCreatePlaylist(moodSongs.map((s) => ({ title: s.title, artist: s.artist })), moodPlaylistName)}
+                                  disabled={createPlaylistMutation.isPending}
+                                  className={cn(
+                                    "flex items-center gap-3 px-8 py-4 rounded-full font-medium text-sm uppercase tracking-widest transition-all active:scale-95 shadow-2xl",
+                                    "bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:from-rose-400 hover:to-pink-400 disabled:opacity-50 disabled:cursor-not-allowed",
+                                    createPlaylistMutation.isPending && "animate-pulse"
+                                  )}
+                                >
+                                  {createPlaylistMutation.isPending ? <Loader2 size={18} className="animate-spin" /> : <ListMusic size={18} />}
+                                  {createPlaylistMutation.isPending ? "Playlist wird erstellt..." : `Mood Playlist speichern (${moodSongs.length} Songs)`}
+                                </button>
+                              ) : (
+                                <div className="flex flex-col items-center gap-3">
+                                  <p className="text-white/40 text-xs uppercase tracking-widest">Verbinde Spotify um diese Playlist zu speichern</p>
+                                  <button
+                                    onClick={handleSpotifyLogin}
+                                    disabled={getAuthUrlMutation.isPending}
+                                    className="flex items-center gap-3 px-8 py-4 rounded-full font-medium text-sm uppercase tracking-widest bg-[#1DB954] text-black hover:bg-[#1ed760] transition-all active:scale-95 shadow-2xl disabled:opacity-50"
+                                  >
+                                    {getAuthUrlMutation.isPending ? <Loader2 size={18} className="animate-spin" /> : <SpotifyLogo size={18} />}
+                                    Mit Spotify verbinden & Playlist speichern
+                                  </button>
+                                </div>
+                              )}
+                            </motion.div>
+                          )}
+                        </motion.div>
+                      )}
+                    </div>
+                  )}
+
                 </motion.section>
               </AnimatePresence>
 
@@ -869,7 +1157,6 @@ export default function Home() {
                           transition={{ delay: idx * 0.1 }}
                           className="group bg-zinc-900/30 border border-white/5 rounded-[32px] overflow-hidden hover:bg-zinc-900/50 transition-all duration-500 flex flex-col"
                         >
-                          {/* Image header */}
                           <div className="relative aspect-[16/10] overflow-hidden">
                             {rec.enriched?.image
                               ? <img src={rec.enriched.image} alt={rec.artist} className="w-full h-full object-cover opacity-40 group-hover:opacity-60 transition-all duration-700 group-hover:scale-110" />
@@ -877,10 +1164,7 @@ export default function Home() {
                             }
                             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
                             <div className="absolute bottom-0 left-0 p-6 w-full">
-                              <SpotifyLink
-                                url={rec.enriched?.url}
-                                className="group/name flex items-center gap-2 text-white hover:text-emerald-400 transition-colors text-left"
-                              >
+                              <SpotifyLink url={rec.enriched?.url} className="group/name flex items-center gap-2 text-white hover:text-emerald-400 transition-colors text-left">
                                 <h3 className="text-2xl font-light tracking-tight">{rec.artist}</h3>
                                 {rec.enriched?.url && (
                                   <div className="p-1 rounded-full bg-emerald-500/10 text-emerald-500 opacity-0 group-hover/name:opacity-100 transition-all">
@@ -891,7 +1175,6 @@ export default function Home() {
                               <span className="px-2 py-0.5 rounded-full bg-white/10 text-[8px] uppercase tracking-widest">{rec.genre}</span>
                             </div>
                           </div>
-                          {/* Body */}
                           <div className="p-6 flex-1 flex flex-col">
                             <div className="flex items-start gap-2 mb-4">
                               <motion.div
@@ -909,12 +1192,7 @@ export default function Home() {
                                   Similar to <span className="text-white/40">{rec.similarTo}</span>
                                 </span>
                               </div>
-                              {/* Spotify Embed – kein Login/Premium nötig */}
-                              <SpotifyEmbedCard
-                                artistId={extractSpotifyArtistId(rec.enriched?.url)}
-                                artistName={rec.artist}
-                                accentColor="cyan"
-                              />
+                              <SpotifyEmbedCard artistId={extractSpotifyArtistId(rec.enriched?.url)} artistName={rec.artist} accentColor="cyan" />
                             </div>
                           </div>
                         </motion.div>
