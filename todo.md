@@ -148,3 +148,10 @@
 - [x] Frontend: Song-Karten mit emotionaler Begründung und SpotifyEmbedCard
 - [x] Frontend: "Als Playlist speichern"-Button (Spotify OAuth)
 - [x] Frontend: Mood-Intensitäts-Indikator (visuell)
+
+## Language & Consistency Polish
+- [x] UI: Alle deutschen Texte auf Englisch umstellen (Buttons, Labels, Placeholders, Modals)
+- [x] UI: Mode-übergreifende Funktionen konsistent machen (Spotify Connect, Save Playlist, Success Modal)
+- [x] Mood Mode: Song-Anzahl auf 3 reduzieren (Default + Max)
+- [x] Mood Mode: Musikalische Referenz-Option hinzufügen (Artist/Band als Stilreferenz, nicht inhaltlich)
+- [x] Backend: mood-Prozedur um optionales musicReference-Feld erweitern

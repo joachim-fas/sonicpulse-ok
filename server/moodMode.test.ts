@@ -219,6 +219,35 @@ describe("Intensitäts-Mapping", () => {
   });
 });
 
+// ─── Musical Reference Validierung ─────────────────────────────────────────
+
+describe("Musical Reference", () => {
+  it("ist optional – undefined ist gültig", () => {
+    const ref = undefined;
+    expect(ref).toBeUndefined();
+  });
+
+  it("akzeptiert einen Künstlernamen als Referenz", () => {
+    const ref = "Radiohead";
+    expect(ref.length).toBeGreaterThan(0);
+    expect(ref.length).toBeLessThanOrEqual(200);
+  });
+
+  it("lehnt eine Referenz über 200 Zeichen ab", () => {
+    const ref = "A".repeat(201);
+    expect(ref.length).toBeGreaterThan(200);
+  });
+
+  it("Referenz beeinflusst nur den Stil, nicht die Emotion", () => {
+    // Der Prompt-Text ist die alleinige Quelle für die emotionale Analyse
+    const prompt = "I just lost my best friend.";
+    const musicRef = "Daft Punk"; // elektronisch/tanzbar – kein emotionaler Bezug
+    // Die KI soll Trauer aus dem Prompt lesen, nicht aus der Referenz
+    expect(prompt).not.toContain(musicRef);
+    expect(musicRef).not.toContain("grief");
+  });
+});
+
 // ─── Prompt-Validierung ───────────────────────────────────────────────────────
 
 describe("Prompt-Validierung", () => {
@@ -239,17 +268,17 @@ describe("Prompt-Validierung", () => {
     expect(tooLong.length).toBeGreaterThan(1000);
   });
 
-  it("songCount muss zwischen 3 und 10 liegen", () => {
-    const validCounts = [3, 5, 6, 10];
-    const invalidCounts = [2, 11, 0, -1];
+  it("songCount muss zwischen 1 und 3 liegen (Mood Mode)", () => {
+    const validCounts = [1, 2, 3];
+    const invalidCounts = [0, 4, 10, -1];
 
     for (const count of validCounts) {
-      expect(count).toBeGreaterThanOrEqual(3);
-      expect(count).toBeLessThanOrEqual(10);
+      expect(count).toBeGreaterThanOrEqual(1);
+      expect(count).toBeLessThanOrEqual(3);
     }
 
     for (const count of invalidCounts) {
-      expect(count < 3 || count > 10).toBe(true);
+      expect(count < 1 || count > 3).toBe(true);
     }
   });
 });

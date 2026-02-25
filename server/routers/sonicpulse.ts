@@ -279,8 +279,9 @@ Respond with a JSON object containing a "tracks" array with keys: title, artist,
    */
   mood: publicProcedure
     .input(z.object({
-      prompt:    z.string().min(3).max(1000),
-      songCount: z.number().min(3).max(10).default(6),
+      prompt:         z.string().min(3).max(1000),
+      songCount:      z.number().min(1).max(3).default(3),
+      musicReference: z.string().max(200).optional(), // optional: artist/band as musical style reference
     }))
     .mutation(async ({ input }) => {
       const llmResponse = await invokeLLM({
@@ -293,8 +294,9 @@ You understand nuance: grief mixed with gratitude, excitement tinged with anxiet
 Always respond only with valid JSON. No explanations outside the JSON.`,
           },
           {
-            role: "user",
-            content: `A person wrote: "${input.prompt}"
+          role: "user",
+          content: `A person wrote: "${input.prompt}"
+${input.musicReference ? `\nMusical style reference: The person wants songs that are musically inspired by or similar in style to "${input.musicReference}". Use this ONLY as a sonic/stylistic reference – do NOT interpret it as emotional context. The emotional analysis must come exclusively from the written text above.` : ""}
 
 First, deeply analyze the emotional landscape of this message:
 - What is the core emotion or emotional blend?
@@ -302,7 +304,7 @@ First, deeply analyze the emotional landscape of this message:
 - What does this person need from music right now (catharsis, comfort, energy, reflection, celebration, courage...)?
 - What is the emotional intensity (subtle/moderate/intense)?
 
-Then recommend ${input.songCount} songs that are emotionally aligned with this state.
+Then recommend exactly ${input.songCount} song${input.songCount === 1 ? "" : "s"} that are emotionally aligned with this state${input.musicReference ? ` and musically inspired by the style of "${input.musicReference}"` : ""}.
 For each song, explain WHY it resonates with this specific emotional moment – not just the genre, but the emotional journey the song takes the listener on.
 
 Respond with a JSON object with keys: emotionalProfile and songs.`,
