@@ -174,3 +174,7 @@
 - [x] Frontend: Musical Reference als optionaler Collapse statt immer sichtbar
 - [x] Frontend: Emotional Profile kompakter darstellen
 - [x] Frontend: Song-Cards schlanker – weniger Text, mehr Musik
+
+## Party Mode – Clean Playlist View
+- [x] Party Mode: Alle Spotify-Connect/Save-Elemente entfernen (FloatingSaveButton, SpotifySaveSection)
+- [x] Party Mode: Nur kuratierte Playlist anzeigen, kein OAuth-Flow

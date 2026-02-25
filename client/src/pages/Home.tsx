@@ -899,28 +899,11 @@ export default function Home() {
                       {/* Party Playlist */}
                       {(partyPlaylist.length > 0 || partyMutation.isPending) && (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-                          <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
-                            <div>
-                              <span className="text-xs uppercase tracking-[0.3em] text-white/40 mb-4 block">The Lineup</span>
-                              <h2 className="text-4xl font-light tracking-tight italic" style={{ fontFamily: "Georgia, serif" }}>
-                                Your Party Playlist
-                              </h2>
-                            </div>
-                            {partyPlaylist.length > 0 && (
-                              <SpotifySaveSection
-                                tracks={partyPlaylist.map((t) => ({ title: t.title, artist: t.artist }))}
-                                playlistName={partyPlaylistName}
-                                onPlaylistNameChange={setPartyPlaylistName}
-                                showNameInput={showPartyPlaylistInput}
-                                onToggleNameInput={() => setShowPartyPlaylistInput(!showPartyPlaylistInput)}
-                                onSave={() => handleCreatePlaylist(partyPlaylist.map((t) => ({ title: t.title, artist: t.artist })), partyPlaylistName)}
-                                onLogin={handleSpotifyLogin}
-                                isLoggedIn={isSpotifyLoggedIn}
-                                isLoginPending={getAuthUrlMutation.isPending}
-                                isSaving={createPlaylistMutation.isPending}
-                                saveError={saveError}
-                              />
-                            )}
+                          <div className="mb-8">
+                            <span className="text-xs uppercase tracking-[0.3em] text-white/40 mb-4 block">The Lineup</span>
+                            <h2 className="text-4xl font-light tracking-tight italic" style={{ fontFamily: "Georgia, serif" }}>
+                              Your Party Playlist
+                            </h2>
                           </div>
 
                           <div className="space-y-3">
@@ -965,17 +948,7 @@ export default function Home() {
                             }
                           </div>
 
-                          {partyPlaylist.length > 0 && (
-                            <FloatingSaveButton
-                              tracks={partyPlaylist.map((t) => ({ title: t.title, artist: t.artist }))}
-                              playlistName={partyPlaylistName}
-                              onSave={() => handleCreatePlaylist(partyPlaylist.map((t) => ({ title: t.title, artist: t.artist })), partyPlaylistName)}
-                              onLogin={handleSpotifyLogin}
-                              isLoggedIn={isSpotifyLoggedIn}
-                              isLoginPending={getAuthUrlMutation.isPending}
-                              isSaving={createPlaylistMutation.isPending}
-                            />
-                          )}
+
                         </motion.div>
                       )}
                     </div>
