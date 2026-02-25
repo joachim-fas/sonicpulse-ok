@@ -11,19 +11,10 @@ import {
   PartyPopper,
   Trash2,
   ExternalLink,
-  Play,
-  Pause,
-  LogIn,
-  LogOut,
-  Volume2,
-  VolumeX,
-  AlertCircle,
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { trpc } from "@/lib/trpc";
-import { useSpotifyPlayerContext } from "@/contexts/SpotifyPlayerContext";
-import { Slider } from "@/components/ui/slider";
 import { SpotifyEmbedCard } from "@/components/SpotifyEmbedCard";
 
 function cn(...inputs: ClassValue[]) {
@@ -71,248 +62,6 @@ const SpotifyLink = ({
     >
       {children}
     </a>
-  );
-};
-
-// ─── Spotify Navbar Button ────────────────────────────────────────────────────
-const SpotifyNavButton = () => {
-  const { status, isAuthenticated, login, logout, playbackState } = useSpotifyPlayerContext();
-  const currentTrack = playbackState?.track_window?.current_track;
-
-  if (!isAuthenticated) {
-    return (
-      <button
-        onClick={login}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#1DB954]/30 text-[#1DB954] hover:bg-[#1DB954]/10 transition-all text-[10px] uppercase tracking-widest"
-        title="Mit Spotify verbinden"
-      >
-        <LogIn size={12} />
-        <span className="hidden md:inline">Connect Spotify</span>
-      </button>
-    );
-  }
-
-  if (status === "premium_required") {
-    return (
-      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-yellow-500/30 text-yellow-400 text-[10px] uppercase tracking-widest">
-        <AlertCircle size={12} />
-        <span className="hidden md:inline">Premium required</span>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex items-center gap-2">
-      {currentTrack && (
-        <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-[#1DB954]/10 border border-[#1DB954]/20 max-w-[180px]">
-          <div className="flex gap-0.5 items-end h-3 shrink-0">
-            {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                className={cn(
-                  "w-0.5 bg-[#1DB954] rounded-full",
-                  status === "playing" ? "animate-pulse" : "opacity-40"
-                )}
-                style={{ height: `${40 + i * 20}%`, animationDelay: `${i * 0.15}s` }}
-              />
-            ))}
-          </div>
-          <span className="text-[9px] text-[#1DB954] truncate">{currentTrack.name}</span>
-        </div>
-      )}
-      <button
-        onClick={logout}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 text-white/40 hover:text-white/70 hover:border-white/20 transition-all text-[10px] uppercase tracking-widest"
-        title="Spotify trennen"
-      >
-        <LogOut size={12} />
-        <span className="hidden md:inline">Disconnect</span>
-      </button>
-    </div>
-  );
-};
-
-// ─── Inline Artist Player ─────────────────────────────────────────────────────
-const ArtistPlayButton = ({
-  artistUri,
-  artistName,
-  accentColor = "emerald",
-}: {
-  artistUri?: string | null;
-  artistName: string;
-  accentColor?: "emerald" | "fuchsia";
-}) => {
-  const { status, isAuthenticated, login, playArtist, togglePlay, playbackState, deviceId } = useSpotifyPlayerContext();
-  const [isThisPlaying, setIsThisPlaying] = useState(false);
-
-  const currentUri = playbackState?.track_window?.current_track?.uri;
-  const isCurrentArtistPlaying = status === "playing" && isThisPlaying;
-
-  const handlePlay = useCallback(async () => {
-    if (!isAuthenticated) {
-      login();
-      return;
-    }
-    if (!artistUri || !deviceId) return;
-
-    if (isThisPlaying && (status === "playing" || status === "paused")) {
-      await togglePlay();
-    } else {
-      setIsThisPlaying(true);
-      await playArtist(artistUri);
-    }
-  }, [isAuthenticated, login, artistUri, deviceId, isThisPlaying, status, togglePlay, playArtist]);
-
-  // Wenn ein anderer Künstler spielt, isThisPlaying zurücksetzen
-  useEffect(() => {
-    if (status === "ready" || status === "idle") {
-      setIsThisPlaying(false);
-    }
-  }, [status, currentUri]);
-
-  if (!artistUri) return null;
-
-  const colorClass = accentColor === "emerald"
-    ? "bg-emerald-500 hover:bg-emerald-400 text-black"
-    : "bg-fuchsia-500 hover:bg-fuchsia-400 text-white";
-
-  const isLoading = status === "loading" && isThisPlaying;
-
-  return (
-    <button
-      onClick={handlePlay}
-      className={cn(
-        "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] uppercase tracking-widest font-medium transition-all active:scale-95",
-        colorClass,
-        !isAuthenticated && "opacity-60"
-      )}
-      title={!isAuthenticated ? "Mit Spotify verbinden um abzuspielen" : isCurrentArtistPlaying ? "Pause" : "Play"}
-    >
-      {isLoading ? (
-        <Loader2 size={10} className="animate-spin" />
-      ) : isCurrentArtistPlaying ? (
-        <Pause size={10} className="fill-current" />
-      ) : (
-        <Play size={10} className="fill-current ml-0.5" />
-      )}
-      {!isAuthenticated ? "Connect" : isCurrentArtistPlaying ? "Pause" : "Play"}
-    </button>
-  );
-};
-
-// ─── Global Player Bar (erscheint wenn etwas spielt) ─────────────────────────
-const GlobalPlayerBar = () => {
-  const { status, playbackState, togglePlay, seek, setVolume } = useSpotifyPlayerContext();
-  const [volume, setVolumeState] = useState(70);
-  const [isMuted, setIsMuted] = useState(false);
-  const [localPosition, setLocalPosition] = useState(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const currentTrack = playbackState?.track_window?.current_track;
-  const duration = playbackState?.duration ?? 0;
-
-  useEffect(() => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    if (playbackState && !playbackState.paused) {
-      setLocalPosition(playbackState.position);
-      intervalRef.current = setInterval(() => {
-        setLocalPosition((prev) => Math.min(prev + 1000, duration));
-      }, 1000);
-    } else if (playbackState) {
-      setLocalPosition(playbackState.position);
-    }
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [playbackState, duration]);
-
-  const handleMute = useCallback(async () => {
-    if (isMuted) { setIsMuted(false); setVolumeState(70); await setVolume(0.7); }
-    else { setIsMuted(true); await setVolume(0); }
-  }, [isMuted, setVolume]);
-
-  const isVisible = status === "playing" || status === "paused";
-  if (!isVisible || !currentTrack) return null;
-
-  const albumImage = currentTrack.album.images[0]?.url;
-
-  return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ y: 100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 100, opacity: 0 }}
-        className="fixed bottom-0 left-0 right-0 z-50 bg-zinc-900/95 backdrop-blur-xl border-t border-white/10 px-4 py-3"
-      >
-        <div className="max-w-7xl mx-auto flex items-center gap-4">
-          {/* Album Cover */}
-          {albumImage && (
-            <img src={albumImage} alt={currentTrack.album.name} className="w-10 h-10 rounded-lg object-cover shrink-0" />
-          )}
-
-          {/* Track Info */}
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-white truncate">{currentTrack.name}</p>
-            <p className="text-[10px] text-white/40 truncate">
-              {currentTrack.artists.map((a) => a.name).join(", ")}
-            </p>
-          </div>
-
-          {/* Progress */}
-          {duration > 0 && (
-            <div className="hidden md:flex items-center gap-2 flex-1 max-w-xs">
-              <span className="text-[9px] text-white/30 tabular-nums w-8 text-right">
-                {Math.floor(localPosition / 60000)}:{String(Math.floor((localPosition % 60000) / 1000)).padStart(2, "0")}
-              </span>
-              <Slider
-                value={[localPosition]}
-                min={0}
-                max={duration}
-                step={1000}
-                onValueCommit={async (val) => await seek(val[0] ?? 0)}
-                className="flex-1 [&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:bg-[#1DB954]"
-              />
-              <span className="text-[9px] text-white/30 tabular-nums w-8">
-                {Math.floor(duration / 60000)}:{String(Math.floor((duration % 60000) / 1000)).padStart(2, "0")}
-              </span>
-            </div>
-          )}
-
-          {/* Controls */}
-          <div className="flex items-center gap-3 shrink-0">
-            <button
-              onClick={togglePlay}
-              className="w-9 h-9 rounded-full bg-[#1DB954] hover:bg-[#1ed760] flex items-center justify-center transition-colors"
-            >
-              {status === "playing"
-                ? <Pause className="w-4 h-4 text-black fill-black" />
-                : <Play className="w-4 h-4 text-black fill-black ml-0.5" />
-              }
-            </button>
-
-            {/* Volume (Desktop) */}
-            <div className="hidden md:flex items-center gap-2">
-              <button onClick={handleMute} className="text-white/40 hover:text-white/70 transition-colors">
-                {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
-              </button>
-              <div className="w-20">
-                <Slider
-                  value={[isMuted ? 0 : volume]}
-                  min={0}
-                  max={100}
-                  step={1}
-                  onValueChange={async (val) => {
-                    const v = val[0] ?? 70;
-                    setVolumeState(v);
-                    setIsMuted(v === 0);
-                    await setVolume(v / 100);
-                  }}
-                  className="[&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:bg-white"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-    </AnimatePresence>
   );
 };
 
@@ -477,8 +226,6 @@ export default function Home() {
   const [infoModal, setInfoModal] = useState<"privacy" | "terms" | "spotify" | null>(null);
   const [loadingMessage, setLoadingMessage] = useState("");
 
-  const { status: playerStatus, isAuthenticated } = useSpotifyPlayerContext();
-
   const exploreMutation = trpc.sonicpulse.explore.useMutation({
     onSuccess: (data) => setRecommendations(data.recommendations as Recommendation[]),
   });
@@ -564,8 +311,6 @@ export default function Home() {
             </div>
           )}
 
-          {/* Spotify Connect Button */}
-          <SpotifyNavButton />
         </div>
       </nav>
 
@@ -785,14 +530,7 @@ export default function Home() {
                                       <h4 className="text-xl font-light tracking-tight">{track.title}</h4>
                                       <p className="text-xs text-white/40 italic font-light leading-relaxed line-clamp-2">{track.reason}</p>
                                     </div>
-                                    {/* Play Button */}
-                                    <div className="shrink-0 flex flex-col gap-2 items-end">
-                                      <ArtistPlayButton
-                                        artistUri={track.enriched?.uri}
-                                        artistName={track.artist}
-                                        accentColor="fuchsia"
-                                      />
-                                    </div>
+
                                   </motion.div>
                                   {/* Spotify Embed unterhalb der Karte */}
                                   {extractSpotifyArtistId(track.enriched?.url) && (
@@ -873,13 +611,6 @@ export default function Home() {
                                 <span className="text-[8px] uppercase tracking-widest text-white/20">
                                   Similar to <span className="text-white/40">{rec.similarTo}</span>
                                 </span>
-                                <ArtistPlayButton
-                                  artistUri={rec.enriched?.url
-                                    ? `spotify:artist:${rec.enriched.url.split("/artist/")[1]?.split("?")[0]}`
-                                    : undefined}
-                                  artistName={rec.artist}
-                                  accentColor="emerald"
-                                />
                               </div>
                               {/* Spotify Embed – kein Login/Premium nötig */}
                               <SpotifyEmbedCard
@@ -899,9 +630,6 @@ export default function Home() {
           )}
         </AnimatePresence>
       </main>
-
-      {/* ── Global Player Bar ── */}
-      <GlobalPlayerBar />
 
       {/* ── Footer ── */}
       <footer className="relative z-10 border-t border-white/5 px-8 py-12 mt-20">

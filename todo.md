@@ -100,3 +100,13 @@
 - [x] Integration in Party-Karten
 - [x] Elegante Aufklapp-Animation mit framer-motion
 - [x] Fallback wenn keine spotify_id vorhanden
+
+## Bereinigung: OAuth/SDK entfernen
+- [x] Backend: spotifyAuth.ts entfernen
+- [x] Backend: spotifyOAuthRoutes.ts entfernen
+- [x] Backend: OAuth-Routen aus server/_core/index.ts entfernen
+- [x] Frontend: SpotifyPlayerContext.tsx entfernen
+- [x] Frontend: useSpotifyPlayer.ts entfernen
+- [x] Frontend: SpotifyPlayer.tsx entfernen
+- [x] Frontend: Connect-Button und ArtistPlayButton aus Home.tsx entfernen
+- [x] Frontend: SpotifyPlayerProvider aus App.tsx entfernen
