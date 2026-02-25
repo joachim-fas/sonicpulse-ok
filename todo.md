@@ -162,3 +162,7 @@
 - [x] Frontend: SpotifyEmbedCard auf Track-Embed umstellen (track statt artist)
 - [x] Frontend: Compact Track-Embed direkt unter jedem Song-Card im Mood Mode
 - [x] Frontend: Fallback wenn kein Track gefunden (Artist-Embed als Backup)
+
+## Mood Mode – Pre-Listening direkt integriert
+- [x] Track-Embed direkt in Song-Card sichtbar (kein Toggle, defaultOpen=true oder inline iframe)
+- [x] Embed lädt automatisch beim Erscheinen der Song-Cards

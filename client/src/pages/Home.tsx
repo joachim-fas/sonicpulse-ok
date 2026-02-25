@@ -1172,15 +1172,29 @@ export default function Home() {
                                     </div>
                                   </motion.div>
 
-                                  {/* Track-Embed (Priorität) oder Artist-Embed als Fallback */}
-                                  {(song.trackId || song.enriched?.spotifyId || extractSpotifyArtistId(song.enriched?.url)) && (
+                                  {/* Track-Embed direkt integriert – immer sichtbar */}
+                                  {song.trackId && (
+                                    <div className="mt-4 pt-4 border-t border-white/5">
+                                      <iframe
+                                        src={`https://open.spotify.com/embed/track/${song.trackId}?utm_source=generator&theme=0`}
+                                        width="100%"
+                                        height="80"
+                                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                                        loading="lazy"
+                                        title={`${song.title} – ${song.artist}`}
+                                        className="rounded-xl border-0 w-full"
+                                        style={{ minHeight: "80px" }}
+                                      />
+                                    </div>
+                                  )}
+                                  {/* Fallback: Artist-Embed wenn kein Track gefunden */}
+                                  {!song.trackId && (song.enriched?.spotifyId || extractSpotifyArtistId(song.enriched?.url)) && (
                                     <div className="mt-2">
                                       <SpotifyEmbedCard
-                                        trackId={song.trackId}
-                                        artistId={!song.trackId ? (song.enriched?.spotifyId ?? extractSpotifyArtistId(song.enriched?.url)) : undefined}
+                                        artistId={song.enriched?.spotifyId ?? extractSpotifyArtistId(song.enriched?.url)}
                                         artistName={song.artist}
                                         accentColor="rose"
-                                        compact={!!song.trackId}
+                                        defaultOpen={true}
                                       />
                                     </div>
                                   )}
