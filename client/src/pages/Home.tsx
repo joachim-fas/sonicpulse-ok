@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Music,
@@ -11,6 +11,10 @@ import {
   PartyPopper,
   Trash2,
   ExternalLink,
+  ListMusic,
+  CheckCircle2,
+  LogOut,
+  User,
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -40,6 +44,17 @@ interface Track {
 
 interface MBSuggestion { id: string; name: string; country?: string | null; }
 
+// ─── Spotify Session ID (zufällig pro Browser-Session) ───────────────────────
+function getOrCreateSessionId(): string {
+  const key = "sonicpulse_spotify_session";
+  let id = sessionStorage.getItem(key);
+  if (!id) {
+    id = crypto.randomUUID();
+    sessionStorage.setItem(key, id);
+  }
+  return id;
+}
+
 // ─── Hilfsfunktion: Spotify Artist-ID aus URL extrahieren ───────────────────
 function extractSpotifyArtistId(url?: string | null): string | null {
   if (!url) return null;
@@ -64,6 +79,13 @@ const SpotifyLink = ({
     </a>
   );
 };
+
+// ─── Spotify Logo SVG ─────────────────────────────────────────────────────────
+const SpotifyLogo = ({ size = 12 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+  </svg>
+);
 
 // ─── Info Modal ───────────────────────────────────────────────────────────────
 const InfoModal = ({ type, onClose }: { type: "privacy" | "terms" | "spotify"; onClose: () => void }) => {
@@ -92,8 +114,8 @@ const InfoModal = ({ type, onClose }: { type: "privacy" | "terms" | "spotify"; o
       title: "Spotify API Attribution",
       text: (
         <div className="space-y-4 text-sm text-white/70 font-light leading-relaxed">
-          <p>SonicPulse uses the <strong>Spotify Web API</strong>, <strong>Spotify Web Playback SDK</strong>, and <strong>MusicBrainz</strong> to retrieve artist metadata and power our recommendation engine.</p>
-          <p><strong>Playback:</strong> The in-app player uses the official Spotify Web Playback SDK and requires a Spotify Premium account.</p>
+          <p>SonicPulse uses the <strong>Spotify Web API</strong> and <strong>MusicBrainz</strong> to retrieve artist metadata and power our recommendation engine.</p>
+          <p><strong>Playlist Creation:</strong> When you connect your Spotify account, SonicPulse can create playlists in your account using the official Spotify Web API.</p>
           <p><strong>Disclaimer:</strong> SonicPulse is independent and <strong>not</strong> affiliated with, endorsed, or sponsored by Spotify AB.</p>
           <p>All music metadata and artist images are the property of their respective rightsholders.</p>
         </div>
@@ -212,6 +234,69 @@ const ArtistInput = ({
   );
 };
 
+// ─── Playlist Success Modal ───────────────────────────────────────────────────
+const PlaylistSuccessModal = ({
+  playlistUrl,
+  tracksAdded,
+  tracksNotFound,
+  onClose,
+}: {
+  playlistUrl: string;
+  tracksAdded: number;
+  tracksNotFound: string[];
+  onClose: () => void;
+}) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9, y: 30 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.9, y: 30 }}
+      className="relative w-full max-w-md bg-zinc-900 border border-[#1DB954]/30 rounded-3xl p-8 shadow-2xl"
+    >
+      <button onClick={onClose} className="absolute top-6 right-6 text-white/40 hover:text-white transition-colors">
+        <X size={20} />
+      </button>
+      <div className="flex flex-col items-center text-center gap-6">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 200, delay: 0.1 }}
+          className="w-20 h-20 rounded-full bg-[#1DB954]/20 flex items-center justify-center"
+        >
+          <CheckCircle2 size={40} className="text-[#1DB954]" />
+        </motion.div>
+        <div>
+          <h2 className="text-2xl font-light tracking-tight mb-2">Playlist erstellt!</h2>
+          <p className="text-white/50 text-sm font-light">
+            {tracksAdded} {tracksAdded === 1 ? "Track" : "Tracks"} wurden zu deiner Spotify-Playlist hinzugefügt.
+          </p>
+          {tracksNotFound.length > 0 && (
+            <p className="text-white/30 text-xs mt-2 font-light">
+              {tracksNotFound.length} {tracksNotFound.length === 1 ? "Track" : "Tracks"} nicht gefunden.
+            </p>
+          )}
+        </div>
+        <a
+          href={playlistUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 px-8 py-3 rounded-full bg-[#1DB954] text-black font-medium text-sm hover:bg-[#1ed760] transition-all active:scale-95"
+        >
+          <SpotifyLogo size={18} />
+          Playlist auf Spotify öffnen
+        </a>
+        <button
+          onClick={onClose}
+          className="text-white/30 text-xs hover:text-white/60 transition-colors"
+        >
+          Schließen
+        </button>
+      </div>
+    </motion.div>
+  </div>
+);
+
 // ─── Main App ─────────────────────────────────────────────────────────────────
 export default function Home() {
   const [hasStarted, setHasStarted] = useState(false);
@@ -225,7 +310,73 @@ export default function Home() {
   const [partyPlaylist, setPartyPlaylist] = useState<Track[]>([]);
   const [infoModal, setInfoModal] = useState<"privacy" | "terms" | "spotify" | null>(null);
   const [loadingMessage, setLoadingMessage] = useState("");
+  const [playlistSuccess, setPlaylistSuccess] = useState<{
+    url: string; tracksAdded: number; tracksNotFound: string[];
+  } | null>(null);
+  const [playlistName, setPlaylistName] = useState("SonicPulse Party Mix");
+  const [showPlaylistNameInput, setShowPlaylistNameInput] = useState(false);
 
+  // ─── Spotify Session ─────────────────────────────────────────────────────
+  const [sessionId] = useState(() => getOrCreateSessionId());
+
+  const sessionQuery = trpc.spotifyAuth.getSession.useQuery(
+    { sessionId },
+    { refetchOnWindowFocus: true, staleTime: 30_000 }
+  );
+
+  const getAuthUrlMutation = trpc.spotifyAuth.getAuthUrl.useMutation();
+  const logoutMutation = trpc.spotifyAuth.logout.useMutation({
+    onSuccess: () => sessionQuery.refetch(),
+  });
+  const createPlaylistMutation = trpc.spotifyAuth.createPlaylist.useMutation({
+    onSuccess: (data) => {
+      if (data.success) {
+        setPlaylistSuccess({
+          url: data.playlistUrl,
+          tracksAdded: data.tracksAdded,
+          tracksNotFound: data.tracksNotFound,
+        });
+      }
+    },
+  });
+
+  const isSpotifyLoggedIn = sessionQuery.data?.loggedIn ?? false;
+  const spotifyDisplayName = sessionQuery.data?.loggedIn ? sessionQuery.data.displayName : null;
+
+  // ─── URL-Parameter nach OAuth-Callback verarbeiten ───────────────────────
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("spotify_connected") === "true") {
+      sessionQuery.refetch();
+      // URL bereinigen
+      window.history.replaceState({}, "", window.location.pathname);
+      // Party Mode öffnen
+      setHasStarted(true);
+      setMode("party");
+    }
+    if (params.get("spotify_error")) {
+      console.error("[Spotify] OAuth-Fehler:", params.get("spotify_error"));
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
+
+  const handleSpotifyLogin = async () => {
+    const redirectUri = `${window.location.origin}/api/spotify/callback`;
+    const result = await getAuthUrlMutation.mutateAsync({ sessionId, redirectUri });
+    window.location.href = result.url;
+  };
+
+  const handleCreatePlaylist = async () => {
+    const tracks = partyPlaylist.map((t) => ({ title: t.title, artist: t.artist }));
+    if (!tracks.length) return;
+    createPlaylistMutation.mutate({
+      sessionId,
+      playlistName,
+      tracks,
+    });
+  };
+
+  // ─── Mutations ────────────────────────────────────────────────────────────
   const exploreMutation = trpc.sonicpulse.explore.useMutation({
     onSuccess: (data) => setRecommendations(data.recommendations as Recommendation[]),
   });
@@ -311,6 +462,22 @@ export default function Home() {
             </div>
           )}
 
+          {/* Spotify Login/Logout in Navbar */}
+          {isSpotifyLoggedIn ? (
+            <div className="flex items-center gap-2">
+              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#1DB954]/10 border border-[#1DB954]/20 text-[#1DB954] text-[10px] uppercase tracking-widest">
+                <User size={10} />
+                <span className="max-w-[100px] truncate">{spotifyDisplayName}</span>
+              </div>
+              <button
+                onClick={() => logoutMutation.mutate({ sessionId })}
+                title="Spotify trennen"
+                className="p-2 rounded-full text-white/30 hover:text-white/60 hover:bg-white/5 transition-all"
+              >
+                <LogOut size={14} />
+              </button>
+            </div>
+          ) : null}
         </div>
       </nav>
 
@@ -500,12 +667,82 @@ export default function Home() {
                           initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                           className="space-y-4"
                         >
-                          <div className="mb-8">
-                            <span className="text-xs uppercase tracking-[0.3em] text-white/40 mb-4 block">The Lineup</span>
-                            <h2 className="text-4xl font-light tracking-tight italic" style={{ fontFamily: "Georgia, serif" }}>
-                              Your Party Playlist
-                            </h2>
+                          <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                            <div>
+                              <span className="text-xs uppercase tracking-[0.3em] text-white/40 mb-4 block">The Lineup</span>
+                              <h2 className="text-4xl font-light tracking-tight italic" style={{ fontFamily: "Georgia, serif" }}>
+                                Your Party Playlist
+                              </h2>
+                            </div>
+
+                            {/* ── Spotify Playlist erstellen ── */}
+                            {partyPlaylist.length > 0 && (
+                              <div className="flex flex-col gap-3">
+                                {isSpotifyLoggedIn ? (
+                                  <div className="flex flex-col gap-2">
+                                    {showPlaylistNameInput && (
+                                      <motion.div
+                                        initial={{ opacity: 0, y: -8 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="flex items-center gap-2"
+                                      >
+                                        <input
+                                          type="text"
+                                          value={playlistName}
+                                          onChange={(e) => setPlaylistName(e.target.value)}
+                                          placeholder="Playlist-Name..."
+                                          className="bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-sm font-light focus:outline-none focus:border-[#1DB954]/50 text-white placeholder:text-white/30 w-full md:w-64"
+                                        />
+                                      </motion.div>
+                                    )}
+                                    <div className="flex items-center gap-2">
+                                      <button
+                                        onClick={() => setShowPlaylistNameInput(!showPlaylistNameInput)}
+                                        className="text-white/30 hover:text-white/60 transition-colors text-xs"
+                                        title="Playlist-Name bearbeiten"
+                                      >
+                                        {showPlaylistNameInput ? "▲" : "▼"} Name
+                                      </button>
+                                      <button
+                                        onClick={handleCreatePlaylist}
+                                        disabled={createPlaylistMutation.isPending}
+                                        className={cn(
+                                          "flex items-center gap-2 px-5 py-2.5 rounded-full font-medium text-xs uppercase tracking-widest transition-all active:scale-95",
+                                          "bg-[#1DB954] text-black hover:bg-[#1ed760] disabled:opacity-50 disabled:cursor-not-allowed",
+                                          createPlaylistMutation.isPending && "animate-pulse"
+                                        )}
+                                      >
+                                        {createPlaylistMutation.isPending
+                                          ? <Loader2 size={14} className="animate-spin" />
+                                          : <ListMusic size={14} />
+                                        }
+                                        {createPlaylistMutation.isPending ? "Erstelle..." : "Als Playlist speichern"}
+                                      </button>
+                                    </div>
+                                    {createPlaylistMutation.data && !createPlaylistMutation.data.success && (
+                                      <p className="text-red-400 text-xs">{createPlaylistMutation.data.error}</p>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={handleSpotifyLogin}
+                                    disabled={getAuthUrlMutation.isPending}
+                                    className={cn(
+                                      "flex items-center gap-2 px-5 py-2.5 rounded-full font-medium text-xs uppercase tracking-widest transition-all active:scale-95",
+                                      "bg-[#1DB954] text-black hover:bg-[#1ed760] disabled:opacity-50 disabled:cursor-not-allowed"
+                                    )}
+                                  >
+                                    {getAuthUrlMutation.isPending
+                                      ? <Loader2 size={14} className="animate-spin" />
+                                      : <SpotifyLogo size={14} />
+                                    }
+                                    Mit Spotify verbinden
+                                  </button>
+                                )}
+                              </div>
+                            )}
                           </div>
+
                           <div className="space-y-3">
                             {partyMutation.isPending && partyPlaylist.length === 0
                               ? [...Array(3)].map((_, i) => <div key={i} className="h-28 bg-zinc-900 rounded-2xl animate-pulse" />)
@@ -534,9 +771,7 @@ export default function Home() {
                                           className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#1DB954]/10 border border-[#1DB954]/30 text-[#1DB954] text-[10px] uppercase tracking-widest hover:bg-[#1DB954]/20 transition-all w-fit"
                                           aria-label={`${track.artist} auf Spotify öffnen`}
                                         >
-                                          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                                            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-                                          </svg>
+                                          <SpotifyLogo size={12} />
                                           Auf Spotify öffnen
                                         </a>
                                       ) : (
@@ -545,7 +780,6 @@ export default function Home() {
                                         </span>
                                       )}
                                     </div>
-
                                   </motion.div>
                                   {/* Spotify Embed unterhalb der Karte */}
                                   {extractSpotifyArtistId(track.enriched?.url) && (
@@ -561,6 +795,54 @@ export default function Home() {
                               ))
                             }
                           </div>
+
+                          {/* Floating "Playlist erstellen"-Button am Ende der Liste */}
+                          {partyPlaylist.length > 0 && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: 0.5 }}
+                              className="pt-8 flex justify-center"
+                            >
+                              {isSpotifyLoggedIn ? (
+                                <button
+                                  onClick={handleCreatePlaylist}
+                                  disabled={createPlaylistMutation.isPending}
+                                  className={cn(
+                                    "flex items-center gap-3 px-8 py-4 rounded-full font-medium text-sm uppercase tracking-widest transition-all active:scale-95 shadow-2xl",
+                                    "bg-[#1DB954] text-black hover:bg-[#1ed760] disabled:opacity-50 disabled:cursor-not-allowed",
+                                    createPlaylistMutation.isPending && "animate-pulse"
+                                  )}
+                                >
+                                  {createPlaylistMutation.isPending
+                                    ? <Loader2 size={18} className="animate-spin" />
+                                    : <ListMusic size={18} />
+                                  }
+                                  {createPlaylistMutation.isPending
+                                    ? "Playlist wird erstellt..."
+                                    : `Playlist auf Spotify speichern (${partyPlaylist.length} Tracks)`
+                                  }
+                                </button>
+                              ) : (
+                                <div className="flex flex-col items-center gap-3">
+                                  <p className="text-white/40 text-xs uppercase tracking-widest">
+                                    Verbinde Spotify um diese Playlist zu speichern
+                                  </p>
+                                  <button
+                                    onClick={handleSpotifyLogin}
+                                    disabled={getAuthUrlMutation.isPending}
+                                    className="flex items-center gap-3 px-8 py-4 rounded-full font-medium text-sm uppercase tracking-widest bg-[#1DB954] text-black hover:bg-[#1ed760] transition-all active:scale-95 shadow-2xl disabled:opacity-50"
+                                  >
+                                    {getAuthUrlMutation.isPending
+                                      ? <Loader2 size={18} className="animate-spin" />
+                                      : <SpotifyLogo size={18} />
+                                    }
+                                    Mit Spotify verbinden & Playlist speichern
+                                  </button>
+                                </div>
+                              )}
+                            </motion.div>
+                          )}
                         </motion.div>
                       )}
                     </div>
@@ -664,6 +946,14 @@ export default function Home() {
       {/* ── Modals ── */}
       <AnimatePresence>
         {infoModal && <InfoModal type={infoModal} onClose={() => setInfoModal(null)} />}
+        {playlistSuccess && (
+          <PlaylistSuccessModal
+            playlistUrl={playlistSuccess.url}
+            tracksAdded={playlistSuccess.tracksAdded}
+            tracksNotFound={playlistSuccess.tracksNotFound}
+            onClose={() => setPlaylistSuccess(null)}
+          />
+        )}
       </AnimatePresence>
     </div>
   );

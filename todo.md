@@ -121,3 +121,18 @@
 - [x] Spotify Deep-Link auf jeder Track-Karte im Party Mode einbauen
 - [x] Link führt direkt zum Künstler-Profil (open.spotify.com/artist/{id})
 - [x] Fallback: kein Link wenn keine spotify_id vorhanden
+
+## Party Mode – Zusammengefasste Playlist öffnen
+- [ ] Spotify Track-IDs für alle Songs in der Playlist beschaffen (via MusicBrainz/Wikidata)
+- [ ] "Playlist auf Spotify öffnen"-Button über der Trackliste
+- [ ] Fallback: Playlist als Text kopieren wenn keine Track-IDs verfügbar
+
+## Spotify Playlist-Generierung (OAuth)
+- [x] Backend: OAuth Authorization Code Flow mit Scope playlist-modify-public
+- [x] Backend: /api/spotify/auth Route (Login-Redirect)
+- [x] Backend: /api/spotify/callback Route (Token-Austausch)
+- [x] Backend: tRPC Prozedur spotify.createPlaylist (Track-Suche + Playlist erstellen)
+- [x] Frontend: "Mit Spotify verbinden"-Button im Party Mode
+- [x] Frontend: "Playlist auf Spotify erstellen"-Button nach Playlist-Generierung
+- [x] Frontend: Erfolgs-Feedback mit Link zur erstellten Playlist
+- [x] Frontend: Logout-Möglichkeit
