@@ -43,7 +43,9 @@ interface Track {
   title: string;
   artist: string;
   reason: string;
-  enriched?: { image?: string | null; url?: string | null; previewUrl?: string | null; uri?: string | null };
+  trackId?: string | null;    // Spotify Track-ID für Track-Embed
+  trackUrl?: string | null;   // https://open.spotify.com/track/{id}
+  enriched?: { image?: string | null; url?: string | null; spotifyId?: string | null; previewUrl?: string | null; uri?: string | null };
 }
 
 interface MoodSong {
@@ -938,11 +940,30 @@ export default function Home() {
                                       )}
                                     </div>
                                   </motion.div>
-                                  {extractSpotifyArtistId(track.enriched?.url) && (
-                                    <div className="mt-2">
-                                      <SpotifyEmbedCard artistId={extractSpotifyArtistId(track.enriched?.url)} artistName={track.artist} accentColor="fuchsia" />
+                                  {/* Track-Embed: Track-ID hat Priorität, Artist-Embed als Fallback */}
+                                  {track.trackId ? (
+                                    <div className="mt-3 pt-3 border-t border-white/5">
+                                      <iframe
+                                        src={`https://open.spotify.com/embed/track/${track.trackId}?utm_source=generator&theme=0`}
+                                        width="100%"
+                                        height="80"
+                                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                                        loading="lazy"
+                                        title={`${track.title} – ${track.artist}`}
+                                        className="rounded-xl border-0 w-full"
+                                        style={{ minHeight: "80px" }}
+                                      />
                                     </div>
-                                  )}
+                                  ) : extractSpotifyArtistId(track.enriched?.url) ? (
+                                    <div className="mt-2">
+                                      <SpotifyEmbedCard
+                                        artistId={extractSpotifyArtistId(track.enriched?.url)}
+                                        artistName={track.artist}
+                                        accentColor="fuchsia"
+                                        defaultOpen={true}
+                                      />
+                                    </div>
+                                  ) : null}
                                 </div>
                               ))
                             }

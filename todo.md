@@ -178,3 +178,8 @@
 ## Party Mode – Clean Playlist View
 - [x] Party Mode: Alle Spotify-Connect/Save-Elemente entfernen (FloatingSaveButton, SpotifySaveSection)
 - [x] Party Mode: Nur kuratierte Playlist anzeigen, kein OAuth-Flow
+
+## Party Mode – Pre-Listening
+- [x] Backend: party-Prozedur um trackId/trackUrl erweitern (searchSpotifyTrack)
+- [x] Frontend: Track-Embed direkt unter jede Party-Track-Card (80px iframe, kein Toggle)
+- [x] Frontend: Fallback auf Artist-Embed wenn kein Track gefunden

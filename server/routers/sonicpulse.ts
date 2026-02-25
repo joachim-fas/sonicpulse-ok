@@ -249,18 +249,42 @@ Respond with a JSON object containing a "tracks" array with keys: title, artist,
       // Alle Künstler anreichern
       const profiles = await resolveMultipleArtists(rawTracks.map((t) => t.artist));
 
+      // Spotify Track-IDs via Client Credentials (kein User-Login nötig)
+      let spotifyToken: string | null = null;
+      try { spotifyToken = await getSpotifyToken(); } catch { /* ignore */ }
+
+      async function searchPartyTrackId(artist: string, title: string): Promise<string | null> {
+        if (!spotifyToken) return null;
+        try {
+          const q = encodeURIComponent(`artist:${artist} track:${title}`);
+          const res = await fetch(`https://api.spotify.com/v1/search?q=${q}&type=track&limit=1`, {
+            headers: { Authorization: `Bearer ${spotifyToken}` },
+          });
+          if (!res.ok) return null;
+          const data = await res.json() as { tracks: { items: Array<{ id: string }> } };
+          return data.tracks?.items?.[0]?.id ?? null;
+        } catch { return null; }
+      }
+
+      // Track-IDs parallel suchen
+      const trackIds = await Promise.all(
+        rawTracks.map((t) => searchPartyTrackId(t.artist, t.title))
+      );
+
       const tracks = rawTracks.map((track, i) => {
         const profile = profiles[i];
+        const trackId = trackIds[i];
         return {
-          title:  track.title,
-          artist: track.artist,
-          reason: track.reason,
+          title:    track.title,
+          artist:   track.artist,
+          reason:   track.reason,
+          trackId:  trackId ?? null,
+          trackUrl: trackId ? `https://open.spotify.com/track/${trackId}` : null,
           enriched: profile
             ? {
                 image:      profile.image_url,
                 url:        profile.direct_link,
-                previewUrl: null,
-                uri:        `spotify:artist:${profile.spotify_id}`,
+                spotifyId:  profile.spotify_id,
               }
             : undefined,
         };
