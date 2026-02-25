@@ -4,6 +4,7 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { SpotifyPlayerProvider } from "./contexts/SpotifyPlayerContext";
 import Home from "./pages/Home";
 
 function Router() {
@@ -31,8 +32,10 @@ function App() {
         // switchable
       >
         <TooltipProvider>
-          <Toaster />
-          <Router />
+          <SpotifyPlayerProvider>
+            <Toaster />
+            <Router />
+          </SpotifyPlayerProvider>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

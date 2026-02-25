@@ -83,3 +83,13 @@
 - [x] Frontend: Info-Modals (Privacy, Terms, Spotify API)
 - [x] Frontend: Footer mit Links
 - [x] canvas-confetti installiert
+
+## Web Playback SDK
+- [ ] Backend: OAuth Authorization Code Flow mit PKCE (getAuthUrl, exchangeToken, refreshToken)
+- [ ] Backend: Spotify Player API – play track by URI (PUT /me/player/play)
+- [ ] Frontend: SpotifyAuthButton – Login-Flow starten
+- [ ] Frontend: SpotifyPlayer-Komponente mit Web Playback SDK (sdk.scdn.co/spotify-player.js)
+- [ ] Frontend: Play/Pause, Seek, Volume Controls
+- [ ] Frontend: Track-Info (Titel, Album-Cover, Künstler)
+- [ ] Integration in SonicPulse Artist-Karten
+- [ ] Redirect URI im Spotify Dashboard eintragen
