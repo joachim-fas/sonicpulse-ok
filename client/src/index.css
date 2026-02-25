@@ -193,6 +193,47 @@
     animation: pulse-dot 2s ease-in-out infinite;
   }
 
+  /* SonicPulse: Custom range slider */
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 9999px;
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    border: none;
+  }
+
+  /* SonicPulse: Selection */
+  ::selection {
+    background: white;
+    color: black;
+  }
+
+  /* SonicPulse: Line clamp */
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
   /* Shimmer Skeleton */
   @keyframes shimmer {
     0% { background-position: -200% 0; }

@@ -67,3 +67,19 @@
 - [x] Frontend: KI-Empfehlungen über MusicBrainz validieren
 - [x] Frontend: Fallback-UI wenn keine ID gefunden (neutraler Text, kein Link)
 - [x] Tests aktualisieren (23 Tests bestanden)
+
+## SonicPulse Rebuild
+- [x] Backend: MusicBrainz Artist-Suche Endpunkt (/api/musicbrainz/search)
+- [x] Backend: Spotify Artist-Enrichment Endpunkt (Bild, URL, Preview)
+- [x] Backend: Spotify Track-Enrichment Endpunkt (für Party Mode)
+- [x] Backend: tRPC Prozeduren für Explore und Party Mode
+- [x] Frontend: Landing Page mit animiertem Hintergrund (Explore/Party Auswahl)
+- [x] Frontend: Explore Mode (3 Band-Inputs, Discovery-Level, KI-Empfehlungen)
+- [x] Frontend: Party Mode (Künstler-Inputs, Energy-Level, Track-Slider, Playlist)
+- [x] Frontend: MusicBrainz Autocomplete-Dropdown
+- [x] Frontend: Recommendations Grid mit Bild, Genre, Reason, Spotify-Link
+- [x] Frontend: Party Playlist mit Track-Karten und Audio-Preview
+- [x] Frontend: Spotify-Status-Indikator in Navbar
+- [x] Frontend: Info-Modals (Privacy, Terms, Spotify API)
+- [x] Frontend: Footer mit Links
+- [x] canvas-confetti installiert
