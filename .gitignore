@@ -108,3 +108,12 @@ temp/
 
 # Webdev artifacts (checkpoint zips, migrations, etc.)
 .webdev/
+.manus/
+.manus-logs/
+
+# Temporary build artifacts & auto-generated docs
+artist-profile-code.md
+artist-profile-code.pdf
+
+# Local screenshots
+screenshots/
