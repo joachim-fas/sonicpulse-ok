@@ -155,3 +155,10 @@
 - [x] Mood Mode: Song-Anzahl auf 3 reduzieren (Default + Max)
 - [x] Mood Mode: Musikalische Referenz-Option hinzufügen (Artist/Band als Stilreferenz, nicht inhaltlich)
 - [x] Backend: mood-Prozedur um optionales musicReference-Feld erweitern
+
+## Mood Mode – Pre-Listening
+- [x] Backend: Spotify Track-ID für jeden Mood-Song ermitteln (searchSpotifyTrack)
+- [x] Backend: Track-Embed-URL in mood-Antwort zurückgeben (spotify:track:{id})
+- [x] Frontend: SpotifyEmbedCard auf Track-Embed umstellen (track statt artist)
+- [x] Frontend: Compact Track-Embed direkt unter jedem Song-Card im Mood Mode
+- [x] Frontend: Fallback wenn kein Track gefunden (Artist-Embed als Backup)

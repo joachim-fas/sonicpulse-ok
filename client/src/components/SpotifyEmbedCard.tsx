@@ -1,16 +1,17 @@
 /**
  * SpotifyEmbedCard
  *
- * Bettet den offiziellen Spotify Artist Embed-Player ein.
+ * Bettet den offiziellen Spotify Embed-Player ein.
+ * Unterstützt sowohl Artist-Embeds als auch Track-Embeds.
  * Funktioniert OHNE Login und OHNE Spotify Premium.
- * Zeigt automatisch den Top-Track mit 30s-Vorschau.
  *
- * URL-Schema: https://open.spotify.com/embed/artist/{artist_id}?utm_source=generator&theme=0
+ * Artist-URL: https://open.spotify.com/embed/artist/{artist_id}?utm_source=generator&theme=0
+ * Track-URL:  https://open.spotify.com/embed/track/{track_id}?utm_source=generator&theme=0
  */
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Headphones, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { Headphones, ChevronDown, Loader2 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -19,39 +20,53 @@ function cn(...inputs: ClassValue[]) {
 }
 
 interface SpotifyEmbedCardProps {
-  /** Spotify Artist ID, z.B. "4Z8W4fKeB5YxbusRsdQVPb" */
+  /** Spotify Artist ID – wird für Artist-Embed verwendet */
   artistId?: string | null;
   artistName: string;
+  /** Spotify Track ID – wenn gesetzt, wird Track-Embed statt Artist-Embed gezeigt */
+  trackId?: string | null;
   /** Akzentfarbe passend zum Mode */
-  accentColor?: "cyan" | "fuchsia" | "emerald";
+  accentColor?: "cyan" | "fuchsia" | "emerald" | "rose";
   /** Ob der Player initial aufgeklappt ist */
   defaultOpen?: boolean;
+  /** Kompakter Modus: kleinerer iframe (152px statt 352px) */
+  compact?: boolean;
 }
 
 export function SpotifyEmbedCard({
   artistId,
   artistName,
+  trackId,
   accentColor = "emerald",
   defaultOpen = false,
+  compact = false,
 }: SpotifyEmbedCardProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Wenn keine Artist-ID vorhanden → nichts rendern
-  if (!artistId) return null;
+  // Track-Embed hat Priorität über Artist-Embed
+  const hasTrack = !!trackId;
+  const hasArtist = !!artistId;
+  if (!hasTrack && !hasArtist) return null;
 
-  const embedUrl = `https://open.spotify.com/embed/artist/${artistId}?utm_source=generator&theme=0`;
+  const embedUrl = hasTrack
+    ? `https://open.spotify.com/embed/track/${trackId}?utm_source=generator&theme=0`
+    : `https://open.spotify.com/embed/artist/${artistId}?utm_source=generator&theme=0`;
+
+  const iframeHeight = compact ? 152 : hasTrack ? 152 : 352;
 
   const accentClasses = {
-    cyan: "text-cyan-400 border-cyan-500/20 hover:border-cyan-500/40 hover:bg-cyan-500/5",
+    cyan:    "text-cyan-400 border-cyan-500/20 hover:border-cyan-500/40 hover:bg-cyan-500/5",
     fuchsia: "text-fuchsia-400 border-fuchsia-500/20 hover:border-fuchsia-500/40 hover:bg-fuchsia-500/5",
     emerald: "text-emerald-400 border-emerald-500/20 hover:border-emerald-500/40 hover:bg-emerald-500/5",
+    rose:    "text-rose-400 border-rose-500/20 hover:border-rose-500/40 hover:bg-rose-500/5",
   };
 
   const iconClasses = {
-    cyan: "bg-cyan-500/10 text-cyan-400",
+    cyan:    "bg-cyan-500/10 text-cyan-400",
     fuchsia: "bg-fuchsia-500/10 text-fuchsia-400",
     emerald: "bg-emerald-500/10 text-emerald-400",
+    rose:    "bg-rose-500/10 text-rose-400",
   };
 
   return (
@@ -69,7 +84,11 @@ export function SpotifyEmbedCard({
             <Headphones size={12} />
           </div>
           <span className="text-[10px] uppercase tracking-widest font-medium">
-            {isOpen ? "Hide Preview" : "Listen Preview"}
+            {isOpen
+              ? "Hide Preview"
+              : hasTrack
+              ? "Listen to this track"
+              : "Artist Preview"}
           </span>
         </div>
         <motion.div
@@ -103,7 +122,7 @@ export function SpotifyEmbedCard({
               <iframe
                 src={embedUrl}
                 width="100%"
-                height="352"
+                height={iframeHeight}
                 allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                 loading="lazy"
                 onLoad={() => setIsLoaded(true)}
@@ -112,7 +131,7 @@ export function SpotifyEmbedCard({
                   "rounded-2xl border-0 transition-opacity duration-500",
                   isLoaded ? "opacity-100" : "opacity-0"
                 )}
-                style={{ minHeight: "352px" }}
+                style={{ minHeight: `${iframeHeight}px` }}
               />
             </div>
           </motion.div>

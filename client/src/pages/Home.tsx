@@ -51,6 +51,8 @@ interface MoodSong {
   emotionalBridge: string;
   genre: string;
   lyricMoment: string;
+  trackId?: string | null;    // Spotify Track-ID für Track-Embed
+  trackUrl?: string | null;   // https://open.spotify.com/track/{id}
   enriched?: { image?: string | null; url?: string | null; spotifyId?: string | null };
 }
 
@@ -1170,12 +1172,15 @@ export default function Home() {
                                     </div>
                                   </motion.div>
 
-                                  {(song.enriched?.spotifyId || extractSpotifyArtistId(song.enriched?.url)) && (
+                                  {/* Track-Embed (Priorität) oder Artist-Embed als Fallback */}
+                                  {(song.trackId || song.enriched?.spotifyId || extractSpotifyArtistId(song.enriched?.url)) && (
                                     <div className="mt-2">
                                       <SpotifyEmbedCard
-                                        artistId={song.enriched?.spotifyId ?? extractSpotifyArtistId(song.enriched?.url)}
+                                        trackId={song.trackId}
+                                        artistId={!song.trackId ? (song.enriched?.spotifyId ?? extractSpotifyArtistId(song.enriched?.url)) : undefined}
                                         artistName={song.artist}
-                                        accentColor="emerald"
+                                        accentColor="rose"
+                                        compact={!!song.trackId}
                                       />
                                     </div>
                                   )}

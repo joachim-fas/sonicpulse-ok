@@ -2,6 +2,7 @@ import { z } from "zod";
 import { publicProcedure, router } from "../_core/trpc";
 import { invokeLLM } from "../_core/llm";
 import { resolveArtist, resolveMultipleArtists } from "../artistService";
+import { getSpotifyToken } from "../spotify";
 
 /**
  * SonicPulse Router
@@ -373,14 +374,39 @@ Respond with a JSON object with keys: emotionalProfile and songs.`,
       // Alle Künstler mit echten Spotify-IDs anreichern
       const profiles = await resolveMultipleArtists(rawSongs.map((s) => s.artist));
 
+      // Spotify Track-IDs via Client Credentials (kein User-Login nötig)
+      let spotifyToken: string | null = null;
+      try { spotifyToken = await getSpotifyToken(); } catch { /* ignore */ }
+
+      async function searchTrackId(artist: string, title: string): Promise<string | null> {
+        if (!spotifyToken) return null;
+        try {
+          const q = encodeURIComponent(`artist:${artist} track:${title}`);
+          const res = await fetch(`https://api.spotify.com/v1/search?q=${q}&type=track&limit=1`, {
+            headers: { Authorization: `Bearer ${spotifyToken}` },
+          });
+          if (!res.ok) return null;
+          const data = await res.json() as { tracks: { items: Array<{ id: string }> } };
+          return data.tracks?.items?.[0]?.id ?? null;
+        } catch { return null; }
+      }
+
+      // Track-IDs parallel suchen
+      const trackIds = await Promise.all(
+        rawSongs.map((s) => searchTrackId(s.artist, s.title))
+      );
+
       const songs = rawSongs.map((song, i) => {
         const profile = profiles[i];
+        const trackId = trackIds[i];
         return {
           title:           song.title,
           artist:          song.artist,
           emotionalBridge: song.emotionalBridge,
           genre:           song.genre,
           lyricMoment:     song.lyricMoment,
+          trackId:         trackId ?? null,          // Spotify Track-ID für Track-Embed
+          trackUrl:        trackId ? `https://open.spotify.com/track/${trackId}` : null,
           enriched: profile
             ? {
                 image:     profile.image_url,

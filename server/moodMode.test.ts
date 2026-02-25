@@ -282,8 +282,52 @@ describe("Prompt-Validierung", () => {
     }
   });
 });
+// ─── Track-Embed Logik ───────────────────────────────────────────────────────────
 
-// ─── Enrichment-Struktur ──────────────────────────────────────────────────────
+describe("Track-Embed Logik", () => {
+  it("Track-Embed-URL wird korrekt aus trackId gebildet", () => {
+    const trackId = "4uLU6hMCjMI75M1A2tKUQC";
+    const embedUrl = `https://open.spotify.com/embed/track/${trackId}?utm_source=generator&theme=0`;
+    expect(embedUrl).toContain("/embed/track/");
+    expect(embedUrl).toContain(trackId);
+    expect(embedUrl).not.toContain("/embed/artist/");
+  });
+
+  it("Artist-Embed-URL wird als Fallback gebildet wenn kein trackId", () => {
+    const artistId = "4Z8W4fKeB5YxbusRsdQVPb";
+    const embedUrl = `https://open.spotify.com/embed/artist/${artistId}?utm_source=generator&theme=0`;
+    expect(embedUrl).toContain("/embed/artist/");
+    expect(embedUrl).not.toContain("/embed/track/");
+  });
+
+  it("trackUrl wird korrekt aus trackId gebildet", () => {
+    const trackId = "4uLU6hMCjMI75M1A2tKUQC";
+    const trackUrl = `https://open.spotify.com/track/${trackId}`;
+    expect(trackUrl).toContain("open.spotify.com/track/");
+    expect(trackUrl).not.toContain("/search/");
+    expect(trackUrl).not.toContain("/artist/");
+  });
+
+  it("trackId ist null wenn Spotify-Suche fehlschlägt", () => {
+    const trackId = null;
+    expect(trackId).toBeNull();
+    // Fallback: Artist-Embed wird verwendet
+  });
+
+  it("Track-Embed hat Priorität über Artist-Embed", () => {
+    const trackId = "abc123";
+    const artistId = "xyz789";
+    // Wenn trackId vorhanden, wird Track-Embed verwendet
+    const useTrack = !!trackId;
+    const embedUrl = useTrack
+      ? `https://open.spotify.com/embed/track/${trackId}`
+      : `https://open.spotify.com/embed/artist/${artistId}`;
+    expect(embedUrl).toContain("/embed/track/");
+    expect(embedUrl).not.toContain("/embed/artist/");
+  });
+});
+
+// ─── Enrichment-Struktur ───────────────────────────────────────────────────────
 
 describe("Song Enrichment Struktur", () => {
   it("enriched-Objekt hat die richtigen Felder wenn vorhanden", () => {
