@@ -1,38 +1,65 @@
 /**
  * Artist Service – Zentrale Logik für das Beschaffen echter Spotify Artist-IDs.
  *
- * REGEL: Ein Link der Form open.spotify.com/search/... ist VERBOTEN.
- * Erlaubt ist ausschließlich: open.spotify.com/artist/{ECHTE_ID}
+ * ╔══════════════════════════════════════════════════════════════════╗
+ * ║  REGEL: open.spotify.com/search/... ist ABSOLUT VERBOTEN.       ║
+ * ║  Erlaubt ist ausschließlich: open.spotify.com/artist/{ECHTE_ID} ║
+ * ╚══════════════════════════════════════════════════════════════════╝
  *
- * Workflow:
+ * Dreistufige Fallback-Kette:
  *  1. Spotify API (Client Credentials) – wenn verfügbar und nicht 403
- *  2. MusicBrainz URL-Relations – öffentlich, kein Token, immer verfügbar
- *  3. Wenn keine ID gefunden → null zurückgeben, KEIN Link konstruieren
+ *  2. MusicBrainz URL-Relations – öffentlich, kein Token, mit Retry
+ *  3. Wikidata Property P1902 – öffentlich, kein Token, sehr zuverlässig
+ *  4. Wenn keine ID gefunden → null, KEIN Link konstruieren
  */
 
-import { searchSpotifyArtist, type SpotifyArtistResult } from "./spotify";
+import { searchSpotifyArtist } from "./spotify";
 import { searchMusicBrainzArtist } from "./musicbrainz";
+import { searchWikidataArtist } from "./wikidata";
 
 export interface ArtistProfile {
-  display_name: string;      // Ursprüngliche Suchanfrage
-  spotify_name: string;      // Offizieller Name (aus Spotify oder MusicBrainz)
-  spotify_id: string;        // Echte 22-stellige Spotify Artist-ID
-  direct_link: string;       // https://open.spotify.com/artist/{spotify_id}
+  display_name: string;
+  spotify_name: string;
+  spotify_id: string;
+  direct_link: string;       // https://open.spotify.com/artist/{spotify_id} – NIEMALS /search/
   image_url: string | null;
   genres: string[];
   followers: number | null;
   popularity: number | null;
-  source: "spotify" | "musicbrainz";
+  source: "spotify" | "musicbrainz" | "wikidata";
+}
+
+/**
+ * Hilfsfunktion: Retry mit exponential backoff
+ */
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  retries = 3,
+  delayMs = 500
+): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      if (attempt < retries - 1) {
+        await new Promise((r) => setTimeout(r, delayMs * Math.pow(2, attempt)));
+      }
+    }
+  }
+  throw lastError;
 }
 
 /**
  * Beschafft ein vollständiges Artist-Profil mit echter Spotify-ID.
- *
- * Gibt null zurück wenn weder Spotify noch MusicBrainz eine ID liefern.
+ * Dreistufige Fallback-Kette: Spotify → MusicBrainz → Wikidata.
+ * Gibt null zurück wenn keine Quelle eine ID liefert.
  * Konstruiert NIEMALS einen Suche-Link (/search/...).
  */
 export async function resolveArtist(artistName: string): Promise<ArtistProfile | null> {
-  // ── Versuch 1: Spotify Web API ────────────────────────────────────────────
+
+  // ── Stufe 1: Spotify Web API ──────────────────────────────────────────────
   try {
     const spotifyResult = await searchSpotifyArtist(artistName);
     if (spotifyResult) {
@@ -48,67 +75,81 @@ export async function resolveArtist(artistName: string): Promise<ArtistProfile |
         source:       "spotify",
       };
     }
-    // Kein Treffer bei Spotify → MusicBrainz versuchen
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
-    // Nur bei 403 (Development Mode / Quota) auf MusicBrainz ausweichen
-    // Andere Fehler (Netzwerk, 5xx) ebenfalls mit Fallback abfangen
-    console.warn(`[ArtistService] Spotify nicht verfügbar (${msg}) – nutze MusicBrainz`);
+    console.warn(`[ArtistService] Spotify nicht verfügbar (${msg}) – versuche MusicBrainz`);
   }
 
-  // ── Versuch 2: MusicBrainz URL-Relations ─────────────────────────────────
-  // Kein Token erforderlich. MusicBrainz speichert Spotify-IDs als URL-Relations.
+  // ── Stufe 2: MusicBrainz URL-Relations (mit Retry) ───────────────────────
   try {
-    const mbResult = await searchMusicBrainzArtist(artistName);
+    const mbResult = await withRetry(() => searchMusicBrainzArtist(artistName), 3, 400);
 
-    if (!mbResult) return null; // Kein Treffer in MusicBrainz
-
-    if (!mbResult.spotify_id) {
-      // Künstler in MusicBrainz gefunden, aber keine Spotify-Verlinkung
-      // → null zurückgeben, KEIN /search/-Link konstruieren
-      console.info(`[ArtistService] "${artistName}" in MusicBrainz gefunden, aber ohne Spotify-ID`);
-      return null;
+    if (mbResult?.spotify_id) {
+      const direct_link = `https://open.spotify.com/artist/${mbResult.spotify_id}`;
+      return {
+        display_name: artistName,
+        spotify_name: mbResult.name,
+        spotify_id:   mbResult.spotify_id,
+        direct_link,
+        image_url:    null,
+        genres:       mbResult.genres,
+        followers:    null,
+        popularity:   null,
+        source:       "musicbrainz",
+      };
     }
 
-    // Echte ID vorhanden → Deep-Link konstruieren
-    const direct_link = `https://open.spotify.com/artist/${mbResult.spotify_id}`;
-
-    return {
-      display_name: artistName,
-      spotify_name: mbResult.name,
-      spotify_id:   mbResult.spotify_id,
-      direct_link,
-      image_url:    null, // MusicBrainz liefert keine Profilbilder
-      genres:       mbResult.genres,
-      followers:    null,
-      popularity:   null,
-      source:       "musicbrainz",
-    };
+    if (mbResult && !mbResult.spotify_id) {
+      console.info(`[ArtistService] "${artistName}" in MusicBrainz ohne Spotify-ID – versuche Wikidata`);
+    }
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error(`[ArtistService] MusicBrainz-Fehler für "${artistName}": ${msg}`);
-    return null;
+    console.warn(`[ArtistService] MusicBrainz nicht verfügbar für "${artistName}" (${msg}) – versuche Wikidata`);
   }
+
+  // ── Stufe 3: Wikidata Property P1902 (Spotify Artist ID) ─────────────────
+  try {
+    const wdResult = await withRetry(() => searchWikidataArtist(artistName), 3, 400);
+
+    if (wdResult?.spotify_id) {
+      return {
+        display_name: artistName,
+        spotify_name: wdResult.name,
+        spotify_id:   wdResult.spotify_id,
+        direct_link:  wdResult.direct_link, // https://open.spotify.com/artist/{id}
+        image_url:    null,
+        genres:       [],
+        followers:    null,
+        popularity:   null,
+        source:       "wikidata",
+      };
+    }
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn(`[ArtistService] Wikidata nicht verfügbar für "${artistName}" (${msg})`);
+  }
+
+  // ── Alle Quellen erschöpft ────────────────────────────────────────────────
+  console.info(`[ArtistService] Keine Spotify-ID für "${artistName}" gefunden – kein Link wird generiert`);
+  return null;
 }
 
 /**
- * Löst mehrere Künstler parallel auf.
- * Gibt für jeden Künstler entweder ein ArtistProfile oder null zurück.
+ * Löst mehrere Künstler sequenziell auf.
+ * Sequenziell wegen Rate-Limits bei MusicBrainz (1 req/s) und Wikidata.
  * Kein Eintrag wird einen /search/-Link enthalten.
  */
 export async function resolveMultipleArtists(
   names: string[]
 ): Promise<(ArtistProfile | null)[]> {
-  // Sequenziell für MusicBrainz (Rate-Limit: 1 req/s)
-  // Bei Spotify-Erfolg können wir parallel arbeiten
   const results: (ArtistProfile | null)[] = [];
 
   for (const name of names) {
     const result = await resolveArtist(name);
     results.push(result);
-    // Kurze Pause zwischen Requests um MusicBrainz Rate-Limit zu respektieren
+    // Pause zwischen Requests für Rate-Limits
     if (results.length < names.length) {
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 350));
     }
   }
 
