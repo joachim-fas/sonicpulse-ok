@@ -20,10 +20,17 @@ vi.mock("./wikidata", () => ({
   searchWikidataArtist: vi.fn(),
 }));
 
+vi.mock("./artistImage", () => ({
+  getArtistImageFromDiscogs: vi.fn().mockResolvedValue("https://i.discogs.com/test.jpg"),
+}));
+
 import { searchSpotifyArtist } from "./spotify";
 import { searchMusicBrainzArtist } from "./musicbrainz";
 import { searchWikidataArtist } from "./wikidata";
+import { getArtistImageFromDiscogs } from "./artistImage";
 import { resolveArtist, resolveMultipleArtists } from "./artistService";
+
+const mockDiscogs = vi.mocked(getArtistImageFromDiscogs);
 
 const mockSpotify = vi.mocked(searchSpotifyArtist);
 const mockMB = vi.mocked(searchMusicBrainzArtist);
@@ -96,6 +103,18 @@ describe("resolveArtist – Stufe 2: MusicBrainz Fallback", () => {
     expect(result!.source).toBe("musicbrainz");
     expect(result!.direct_link).not.toContain("/search/");
     expect(mockWD).not.toHaveBeenCalled();
+  });
+
+  it("lädt Bild über Discogs wenn MusicBrainz kein Bild liefert", async () => {
+    mockSpotify.mockRejectedValueOnce(new Error("403"));
+    mockMB.mockResolvedValue(MB_RESULT);
+    mockDiscogs.mockResolvedValueOnce("https://i.discogs.com/coldplay.jpg");
+
+    const result = await resolveArtist("Coldplay");
+
+    expect(result).not.toBeNull();
+    expect(result!.image_url).toBe("https://i.discogs.com/coldplay.jpg");
+    expect(mockDiscogs).toHaveBeenCalledWith("Coldplay");
   });
 
   it("gibt null zurück wenn MusicBrainz Künstler ohne Spotify-ID findet", async () => {

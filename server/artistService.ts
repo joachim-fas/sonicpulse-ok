@@ -16,6 +16,7 @@
 import { searchSpotifyArtist } from "./spotify";
 import { searchMusicBrainzArtist } from "./musicbrainz";
 import { searchWikidataArtist } from "./wikidata";
+import { getArtistImageFromDiscogs } from "./artistImage";
 
 export interface ArtistProfile {
   display_name: string;
@@ -86,12 +87,14 @@ export async function resolveArtist(artistName: string): Promise<ArtistProfile |
 
     if (mbResult?.spotify_id) {
       const direct_link = `https://open.spotify.com/artist/${mbResult.spotify_id}`;
+      // Bild über Discogs holen, da MusicBrainz keine Bilder liefert
+      const image_url = await getArtistImageFromDiscogs(artistName).catch(() => null);
       return {
         display_name: artistName,
         spotify_name: mbResult.name,
         spotify_id:   mbResult.spotify_id,
         direct_link,
-        image_url:    null,
+        image_url,
         genres:       mbResult.genres,
         followers:    null,
         popularity:   null,
@@ -112,12 +115,14 @@ export async function resolveArtist(artistName: string): Promise<ArtistProfile |
     const wdResult = await withRetry(() => searchWikidataArtist(artistName), 3, 400);
 
     if (wdResult?.spotify_id) {
+      // Bild über Discogs holen, da Wikidata keine Bilder liefert
+      const image_url = await getArtistImageFromDiscogs(artistName).catch(() => null);
       return {
         display_name: artistName,
         spotify_name: wdResult.name,
         spotify_id:   wdResult.spotify_id,
         direct_link:  wdResult.direct_link, // https://open.spotify.com/artist/{id}
-        image_url:    null,
+        image_url,
         genres:       [],
         followers:    null,
         popularity:   null,

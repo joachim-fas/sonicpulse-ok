@@ -110,3 +110,9 @@
 - [x] Frontend: SpotifyPlayer.tsx entfernen
 - [x] Frontend: Connect-Button und ArtistPlayButton aus Home.tsx entfernen
 - [x] Frontend: SpotifyPlayerProvider aus App.tsx entfernen
+
+## Künstlerbilder
+- [x] Diagnose: Warum fehlen Bilder (image_url = null bei MusicBrainz/Wikidata)
+- [x] Bild-Fallback-Kette: Discogs als Fallback wenn Spotify 403 gibt
+- [x] Bilder in Explore-Karten anzeigen
+- [x] Bilder in Party-Karten anzeigen
