@@ -93,3 +93,10 @@
 - [ ] Frontend: Track-Info (Titel, Album-Cover, Künstler)
 - [ ] Integration in SonicPulse Artist-Karten
 - [ ] Redirect URI im Spotify Dashboard eintragen
+
+## Spotify Embed (Option 1 – kein Login/Premium)
+- [x] SpotifyEmbedCard-Komponente: aufklappbarer iframe mit artist_id
+- [x] Integration in Explore Recommendation-Karten
+- [x] Integration in Party-Karten
+- [x] Elegante Aufklapp-Animation mit framer-motion
+- [x] Fallback wenn keine spotify_id vorhanden

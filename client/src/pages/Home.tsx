@@ -24,6 +24,7 @@ import { twMerge } from "tailwind-merge";
 import { trpc } from "@/lib/trpc";
 import { useSpotifyPlayerContext } from "@/contexts/SpotifyPlayerContext";
 import { Slider } from "@/components/ui/slider";
+import { SpotifyEmbedCard } from "@/components/SpotifyEmbedCard";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -47,6 +48,13 @@ interface Track {
 }
 
 interface MBSuggestion { id: string; name: string; country?: string | null; }
+
+// ─── Hilfsfunktion: Spotify Artist-ID aus URL extrahieren ───────────────────
+function extractSpotifyArtistId(url?: string | null): string | null {
+  if (!url) return null;
+  const match = url.match(/open\.spotify\.com\/artist\/([A-Za-z0-9]+)/);
+  return match?.[1] ?? null;
+}
 
 // ─── SpotifyLink: nur echte Artist-Profile, niemals /search/ ─────────────────
 const SpotifyLink = ({
@@ -757,35 +765,46 @@ export default function Home() {
                             {partyMutation.isPending && partyPlaylist.length === 0
                               ? [...Array(3)].map((_, i) => <div key={i} className="h-28 bg-zinc-900 rounded-2xl animate-pulse" />)
                               : partyPlaylist.map((track, idx) => (
-                                <motion.div
-                                  key={idx}
-                                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                                  transition={{ delay: idx * 0.05 }}
-                                  className="group flex flex-col md:flex-row items-start md:items-center gap-6 p-6 bg-zinc-900/50 border border-white/5 rounded-2xl hover:bg-zinc-800/50 transition-all duration-300"
-                                >
-                                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-xl bg-white/5 flex items-center justify-center text-white/20 overflow-hidden relative shrink-0 shadow-lg">
-                                    {track.enriched?.image
-                                      ? <img src={track.enriched.image} alt={track.artist} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" />
-                                      : <span className="text-xl font-mono opacity-50">{String(idx + 1).padStart(2, "0")}</span>
-                                    }
-                                  </div>
-                                  <div className="flex-1 flex flex-col gap-1.5 w-full">
-                                    <SpotifyLink url={track.enriched?.url} className="hover:text-emerald-400 transition-colors inline-flex items-center gap-2 text-left">
-                                      <p className="text-sm text-fuchsia-400 uppercase tracking-widest font-medium">{track.artist}</p>
-                                      {track.enriched?.url && <ExternalLink size={12} className="opacity-50" />}
-                                    </SpotifyLink>
-                                    <h4 className="text-xl font-light tracking-tight">{track.title}</h4>
-                                    <p className="text-xs text-white/40 italic font-light leading-relaxed line-clamp-2">{track.reason}</p>
-                                  </div>
-                                  {/* Play Button */}
-                                  <div className="shrink-0">
-                                    <ArtistPlayButton
-                                      artistUri={track.enriched?.uri}
-                                      artistName={track.artist}
-                                      accentColor="fuchsia"
-                                    />
-                                  </div>
-                                </motion.div>
+                                <div key={idx}>
+                                  <motion.div
+                                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.05 }}
+                                    className="group flex flex-col md:flex-row items-start md:items-center gap-6 p-6 bg-zinc-900/50 border border-white/5 rounded-2xl hover:bg-zinc-800/50 transition-all duration-300"
+                                  >
+                                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-xl bg-white/5 flex items-center justify-center text-white/20 overflow-hidden relative shrink-0 shadow-lg">
+                                      {track.enriched?.image
+                                        ? <img src={track.enriched.image} alt={track.artist} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" />
+                                        : <span className="text-xl font-mono opacity-50">{String(idx + 1).padStart(2, "0")}</span>
+                                      }
+                                    </div>
+                                    <div className="flex-1 flex flex-col gap-1.5 w-full">
+                                      <SpotifyLink url={track.enriched?.url} className="hover:text-emerald-400 transition-colors inline-flex items-center gap-2 text-left">
+                                        <p className="text-sm text-fuchsia-400 uppercase tracking-widest font-medium">{track.artist}</p>
+                                        {track.enriched?.url && <ExternalLink size={12} className="opacity-50" />}
+                                      </SpotifyLink>
+                                      <h4 className="text-xl font-light tracking-tight">{track.title}</h4>
+                                      <p className="text-xs text-white/40 italic font-light leading-relaxed line-clamp-2">{track.reason}</p>
+                                    </div>
+                                    {/* Play Button */}
+                                    <div className="shrink-0 flex flex-col gap-2 items-end">
+                                      <ArtistPlayButton
+                                        artistUri={track.enriched?.uri}
+                                        artistName={track.artist}
+                                        accentColor="fuchsia"
+                                      />
+                                    </div>
+                                  </motion.div>
+                                  {/* Spotify Embed unterhalb der Karte */}
+                                  {extractSpotifyArtistId(track.enriched?.url) && (
+                                    <div className="mt-2">
+                                      <SpotifyEmbedCard
+                                        artistId={extractSpotifyArtistId(track.enriched?.url)}
+                                        artistName={track.artist}
+                                        accentColor="fuchsia"
+                                      />
+                                    </div>
+                                  )}
+                                </div>
                               ))
                             }
                           </div>
@@ -849,17 +868,24 @@ export default function Home() {
                               </motion.div>
                               <p className="text-white/60 font-light leading-relaxed text-xs line-clamp-3">{rec.reason}</p>
                             </div>
-                            <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
-                              <span className="text-[8px] uppercase tracking-widest text-white/20">
-                                Similar to <span className="text-white/40">{rec.similarTo}</span>
-                              </span>
-                              {/* Play Button auf der Karte */}
-                              <ArtistPlayButton
-                                artistUri={rec.enriched?.url
-                                  ? `spotify:artist:${rec.enriched.url.split("/artist/")[1]?.split("?")[0]}`
-                                  : undefined}
+                            <div className="mt-auto pt-4 border-t border-white/5 space-y-3">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[8px] uppercase tracking-widest text-white/20">
+                                  Similar to <span className="text-white/40">{rec.similarTo}</span>
+                                </span>
+                                <ArtistPlayButton
+                                  artistUri={rec.enriched?.url
+                                    ? `spotify:artist:${rec.enriched.url.split("/artist/")[1]?.split("?")[0]}`
+                                    : undefined}
+                                  artistName={rec.artist}
+                                  accentColor="emerald"
+                                />
+                              </div>
+                              {/* Spotify Embed – kein Login/Premium nötig */}
+                              <SpotifyEmbedCard
+                                artistId={extractSpotifyArtistId(rec.enriched?.url)}
                                 artistName={rec.artist}
-                                accentColor="emerald"
+                                accentColor="cyan"
                               />
                             </div>
                           </div>
