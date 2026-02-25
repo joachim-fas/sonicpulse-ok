@@ -280,9 +280,10 @@ Respond with a JSON object containing a "tracks" array with keys: title, artist,
    */
   mood: publicProcedure
     .input(z.object({
-      prompt:         z.string().min(3).max(1000),
-      songCount:      z.number().min(1).max(3).default(3),
-      musicReference: z.string().max(200).optional(), // optional: artist/band as musical style reference
+      prompt:          z.string().min(3).max(1000),
+      songCount:       z.number().min(1).max(3).default(3),
+      musicReference:  z.string().max(200).optional(),
+      discoveryFilter: z.enum(["mainstream", "underground", "exotic"]).default("mainstream"),
     }))
     .mutation(async ({ input }) => {
       const llmResponse = await invokeLLM({
@@ -304,6 +305,9 @@ First, deeply analyze the emotional landscape of this message:
 - What is the occasion or life situation?
 - What does this person need from music right now (catharsis, comfort, energy, reflection, celebration, courage...)?
 - What is the emotional intensity (subtle/moderate/intense)?
+
+Discovery filter: "${input.discoveryFilter}"
+${input.discoveryFilter === "mainstream" ? "Recommend well-known, widely recognized songs that most people would know. Prioritize chart hits, iconic tracks, and artists with broad mainstream appeal." : input.discoveryFilter === "underground" ? "Recommend lesser-known, cult, or indie songs. Avoid mainstream chart hits. Prioritize artists with dedicated followings but limited mainstream exposure – hidden gems that feel like a personal discovery." : "Recommend rare, niche, or globally diverse songs. Think world music, experimental, obscure genres, non-English language music, or deeply underground artists. Surprise the listener with something truly unexpected."}
 
 Then recommend exactly ${input.songCount} song${input.songCount === 1 ? "" : "s"} that are emotionally aligned with this state${input.musicReference ? ` and musically inspired by the style of "${input.musicReference}"` : ""}.
 For each song, explain WHY it resonates with this specific emotional moment – not just the genre, but the emotional journey the song takes the listener on.

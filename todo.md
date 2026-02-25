@@ -166,3 +166,11 @@
 ## Mood Mode – Pre-Listening direkt integriert
 - [x] Track-Embed direkt in Song-Card sichtbar (kein Toggle, defaultOpen=true oder inline iframe)
 - [x] Embed lädt automatisch beim Erscheinen der Song-Cards
+
+## Mood Mode – UX Redesign & Discovery Filter
+- [x] Backend: discoveryFilter (mainstream/underground/exotic) in mood-Prozedur
+- [x] Frontend: Mood Mode UX vereinfachen – klarer Input-Flow, weniger Schritte
+- [x] Frontend: Discovery-Filter als 3 Toggle-Buttons (mainstream / underground / exotic)
+- [x] Frontend: Musical Reference als optionaler Collapse statt immer sichtbar
+- [x] Frontend: Emotional Profile kompakter darstellen
+- [x] Frontend: Song-Cards schlanker – weniger Text, mehr Musik

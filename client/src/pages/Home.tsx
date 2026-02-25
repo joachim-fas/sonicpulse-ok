@@ -18,6 +18,7 @@ import {
   Heart,
   Quote,
   Guitar,
+  ChevronDown,
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -494,6 +495,8 @@ export default function Home() {
   // Mood
   const [moodPrompt, setMoodPrompt] = useState("");
   const [moodReference, setMoodReference] = useState("");
+  const [moodDiscovery, setMoodDiscovery] = useState<"mainstream" | "underground" | "exotic">("mainstream");
+  const [showMoodReference, setShowMoodReference] = useState(false);
   const [moodSongs, setMoodSongs] = useState<MoodSong[]>([]);
   const [emotionalProfile, setEmotionalProfile] = useState<EmotionalProfile | null>(null);
   const [moodPlaylistName, setMoodPlaylistName] = useState("SonicPulse Mood Mix");
@@ -609,8 +612,9 @@ export default function Home() {
       prompt: moodPrompt.trim(),
       songCount: 3,
       musicReference: moodReference.trim() || undefined,
+      discoveryFilter: moodDiscovery,
     });
-  }, [moodPrompt, moodReference, moodMutation]);
+  }, [moodPrompt, moodReference, moodDiscovery, moodMutation]);
 
   // ─── Background Gradient ──────────────────────────────────────────────────
   const bgGradient = !hasStarted
@@ -979,20 +983,17 @@ export default function Home() {
 
                   {/* ── Mood Mode ── */}
                   {mode === "mood" && (
-                    <div className="space-y-12 max-w-3xl mx-auto">
+                    <div className="space-y-10 max-w-2xl mx-auto">
 
                       {/* Input area */}
-                      <div className="space-y-5">
-                        <p className="text-white/50 text-sm font-light leading-relaxed max-w-xl">
-                          Describe your moment. What occasion are you looking for music for? What do you want to express or feel?
-                          The AI reads the emotional depth of your words and finds songs that truly fit.
-                        </p>
+                      <div className="space-y-4">
 
-                        {/* Emotional description */}
+                        {/* Textarea */}
                         <div className="relative">
                           <textarea
                             value={moodPrompt}
                             onChange={(e) => setMoodPrompt(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && moodPrompt.trim() && !isGenerating) generateMoodPlaylist(); }}
                             placeholder={moodPlaceholder}
                             rows={4}
                             maxLength={1000}
@@ -1003,38 +1004,77 @@ export default function Home() {
                           </div>
                         </div>
 
-                        {/* Musical reference (optional) */}
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <Guitar size={12} className="text-white/25" />
-                            <span className="text-[9px] uppercase tracking-widest text-white/30">Musical Reference <span className="text-white/20 normal-case tracking-normal">(optional)</span></span>
-                          </div>
-                          <ArtistInput
-                            value={moodReference}
-                            onChange={setMoodReference}
-                            onSelect={setMoodReference}
-                            placeholder="e.g. Radiohead, Nick Cave, Portishead..."
-                            accentColor="rose"
-                          />
-                          <p className="text-[10px] text-white/25 font-light leading-relaxed">
-                            Defines the <em>sonic style</em> only — not the emotional content. The AI will find songs in a similar musical universe that match your emotional state.
-                          </p>
-                        </div>
+                        {/* Discovery Filter + Generate Row */}
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
 
-                        {/* Generate button */}
-                        <div className="flex justify-end">
+                          {/* Discovery Filter */}
+                          <div className="flex items-center gap-1 bg-zinc-950 border border-white/8 rounded-full p-1 shrink-0">
+                            {(["mainstream", "underground", "exotic"] as const).map((f) => (
+                              <button
+                                key={f}
+                                onClick={() => setMoodDiscovery(f)}
+                                className={cn(
+                                  "px-3 py-1.5 rounded-full text-[10px] uppercase tracking-widest transition-all whitespace-nowrap",
+                                  moodDiscovery === f
+                                    ? f === "mainstream" ? "bg-white text-black"
+                                      : f === "underground" ? "bg-rose-500 text-white"
+                                      : "bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white"
+                                    : "text-white/30 hover:text-white/60"
+                                )}
+                              >{f}</button>
+                            ))}
+                          </div>
+
+                          {/* Generate Button */}
                           <button
                             onClick={generateMoodPlaylist}
                             disabled={isGenerating || !moodPrompt.trim()}
                             className={cn(
-                              "flex items-center justify-center gap-2 px-8 py-3 rounded-full font-medium transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-xs uppercase tracking-widest",
+                              "flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-full font-medium transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-xs uppercase tracking-widest",
                               "bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:from-rose-400 hover:to-pink-400",
                               isGenerating && "animate-pulse"
                             )}
                           >
-                            {isGenerating ? <Loader2 size={18} className="animate-spin" /> : <Heart size={18} />}
+                            {isGenerating ? <Loader2 size={16} className="animate-spin" /> : <Heart size={16} />}
                             {isGenerating ? loadingMessage : "Find My Songs"}
                           </button>
+                        </div>
+
+                        {/* Musical Reference – optional collapse */}
+                        <div>
+                          <button
+                            onClick={() => setShowMoodReference(!showMoodReference)}
+                            className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-white/25 hover:text-white/50 transition-colors"
+                          >
+                            <Guitar size={11} />
+                            <span>Musical reference</span>
+                            <span className="text-white/15">(optional)</span>
+                            <motion.span animate={{ rotate: showMoodReference ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                              <ChevronDown size={11} />
+                            </motion.span>
+                          </button>
+                          <AnimatePresence>
+                            {showMoodReference && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }}
+                                className="overflow-hidden"
+                              >
+                                <div className="pt-3 space-y-2">
+                                  <ArtistInput
+                                    value={moodReference}
+                                    onChange={setMoodReference}
+                                    onSelect={setMoodReference}
+                                    placeholder="e.g. Radiohead, Nick Cave, Portishead..."
+                                    accentColor="rose"
+                                  />
+                                  <p className="text-[10px] text-white/20 font-light">
+                                    Sonic style only — not emotional context.
+                                  </p>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
                       </div>
 
@@ -1048,45 +1088,20 @@ export default function Home() {
                             transition={{ duration: 0.5 }}
                           >
                             {moodMutation.isPending && !emotionalProfile ? (
-                              <div className="p-6 bg-zinc-900/60 border border-rose-500/10 rounded-3xl space-y-3">
+                              <div className="p-5 bg-zinc-900/60 border border-rose-500/10 rounded-2xl space-y-2">
                                 <div className="h-4 bg-zinc-800 rounded-full animate-pulse w-1/3" />
-                                <div className="h-3 bg-zinc-800 rounded-full animate-pulse w-2/3" />
-                                <div className="h-3 bg-zinc-800 rounded-full animate-pulse w-1/2" />
+                                <div className="h-3 bg-zinc-800 rounded-full animate-pulse w-3/4" />
                               </div>
                             ) : emotionalProfile && (
-                              <div className="p-6 md:p-8 bg-gradient-to-br from-rose-950/40 to-zinc-900/60 border border-rose-500/15 rounded-3xl space-y-5">
-                                <div className="flex items-start justify-between gap-4 flex-wrap">
-                                  <div>
-                                    <span className="text-[9px] uppercase tracking-[0.3em] text-rose-400/60 block mb-1">Emotional Profile</span>
-                                    <h3 className="text-2xl font-light tracking-tight text-rose-100">{emotionalProfile.coreEmotion}</h3>
-                                  </div>
+                              <div className="p-5 bg-gradient-to-br from-rose-950/30 to-zinc-900/50 border border-rose-500/15 rounded-2xl">
+                                <div className="flex items-center justify-between gap-3 mb-3">
+                                  <h3 className="text-lg font-light tracking-tight text-rose-100">{emotionalProfile.coreEmotion}</h3>
                                   <IntensityBadge intensity={emotionalProfile.intensity} />
                                 </div>
-
-                                {/* Empathetic note */}
-                                <div className="flex gap-3 p-4 bg-rose-500/5 border border-rose-500/10 rounded-2xl">
-                                  <Quote size={14} className="text-rose-400/50 shrink-0 mt-0.5" />
-                                  <p className="text-sm text-white/70 font-light leading-relaxed italic">{emotionalProfile.emotionalNote}</p>
+                                <div className="flex gap-2">
+                                  <Quote size={12} className="text-rose-400/40 shrink-0 mt-0.5" />
+                                  <p className="text-xs text-white/55 font-light leading-relaxed italic">{emotionalProfile.emotionalNote}</p>
                                 </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  <div className="space-y-1">
-                                    <span className="text-[8px] uppercase tracking-widest text-white/25">Occasion</span>
-                                    <p className="text-sm text-white/60 font-light">{emotionalProfile.occasion}</p>
-                                  </div>
-                                  <div className="space-y-1">
-                                    <span className="text-[8px] uppercase tracking-widest text-white/25">Music Need</span>
-                                    <p className="text-sm text-white/60 font-light">{emotionalProfile.musicNeed}</p>
-                                  </div>
-                                </div>
-
-                                {moodReference && (
-                                  <div className="flex items-center gap-2 pt-1">
-                                    <Guitar size={11} className="text-white/25" />
-                                    <span className="text-[9px] uppercase tracking-widest text-white/25">Musical reference:</span>
-                                    <span className="text-[9px] text-white/40 font-light">{moodReference}</span>
-                                  </div>
-                                )}
                               </div>
                             )}
                           </motion.div>
@@ -1096,30 +1111,9 @@ export default function Home() {
                       {/* Song Cards */}
                       {(moodSongs.length > 0 || moodMutation.isPending) && (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-                          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-                            <div>
-                              <span className="text-xs uppercase tracking-[0.3em] text-white/40 mb-4 block">Curated for this moment</span>
-                              <h2 className="text-4xl font-light tracking-tight italic" style={{ fontFamily: "Georgia, serif" }}>
-                                Your Emotional Soundtrack
-                              </h2>
-                            </div>
-
-                            {moodSongs.length > 0 && (
-                              <SpotifySaveSection
-                                tracks={moodSongs.map((s) => ({ title: s.title, artist: s.artist }))}
-                                playlistName={moodPlaylistName}
-                                onPlaylistNameChange={setMoodPlaylistName}
-                                showNameInput={showMoodPlaylistInput}
-                                onToggleNameInput={() => setShowMoodPlaylistInput(!showMoodPlaylistInput)}
-                                onSave={() => handleCreatePlaylist(moodSongs.map((s) => ({ title: s.title, artist: s.artist })), moodPlaylistName)}
-                                onLogin={handleSpotifyLogin}
-                                isLoggedIn={isSpotifyLoggedIn}
-                                isLoginPending={getAuthUrlMutation.isPending}
-                                isSaving={createPlaylistMutation.isPending}
-                                saveError={saveError}
-                                accentColor="rose"
-                              />
-                            )}
+                          <div className="flex items-center justify-between gap-4 mb-6">
+                            <span className="text-xs uppercase tracking-[0.3em] text-white/35">Your Emotional Soundtrack</span>
+                            <span className="text-[9px] uppercase tracking-widest text-white/20 px-2 py-1 rounded-full border border-white/8">{moodDiscovery}</span>
                           </div>
 
                           <div className="space-y-4">
@@ -1130,43 +1124,32 @@ export default function Home() {
                                   <motion.div
                                     initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: idx * 0.1 }}
-                                    className="group p-6 bg-zinc-900/40 border border-white/5 rounded-3xl hover:bg-zinc-900/60 hover:border-rose-500/10 transition-all duration-400"
+                                    className="group p-5 bg-zinc-900/40 border border-white/5 rounded-2xl hover:bg-zinc-900/60 hover:border-rose-500/10 transition-all duration-300"
                                   >
-                                    <div className="flex flex-col md:flex-row items-start gap-5">
-                                      <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center text-white/20 overflow-hidden shrink-0 shadow-lg">
+                                    <div className="flex items-start gap-4">
+                                      {/* Artist image */}
+                                      <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center overflow-hidden shrink-0">
                                         {song.enriched?.image
-                                          ? <img src={song.enriched.image} alt={song.artist} className="w-full h-full object-cover opacity-50 group-hover:opacity-80 transition-opacity" />
-                                          : <Heart size={20} className="text-rose-400/30" />
+                                          ? <img src={song.enriched.image} alt={song.artist} className="w-full h-full object-cover opacity-60 group-hover:opacity-90 transition-opacity" />
+                                          : <Heart size={16} className="text-rose-400/30" />
                                         }
                                       </div>
 
-                                      <div className="flex-1 space-y-3 w-full">
-                                        <div>
-                                          <div className="flex items-start justify-between gap-2 flex-wrap">
-                                            <div>
-                                              <p className="text-[10px] text-rose-400/70 uppercase tracking-widest font-medium mb-0.5">{song.artist}</p>
-                                              <h4 className="text-xl font-light tracking-tight">{song.title}</h4>
-                                            </div>
-                                            <span className="px-2 py-0.5 rounded-full bg-white/5 text-[8px] uppercase tracking-widest text-white/30 shrink-0">{song.genre}</span>
+                                      {/* Title + meta */}
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-start justify-between gap-2">
+                                          <div>
+                                            <p className="text-[10px] text-rose-400/60 uppercase tracking-widest font-medium">{song.artist}</p>
+                                            <h4 className="text-base font-light tracking-tight leading-snug">{song.title}</h4>
                                           </div>
+                                          <span className="px-2 py-0.5 rounded-full bg-white/5 text-[8px] uppercase tracking-widest text-white/25 shrink-0 mt-0.5">{song.genre}</span>
                                         </div>
-
-                                        <p className="text-sm text-white/55 font-light leading-relaxed">{song.emotionalBridge}</p>
-
-                                        <div className="flex gap-2 p-3 bg-rose-500/5 border border-rose-500/10 rounded-xl">
-                                          <Quote size={11} className="text-rose-400/40 shrink-0 mt-0.5" />
-                                          <p className="text-xs text-white/40 italic font-light leading-relaxed">{song.lyricMoment}</p>
-                                        </div>
-
-                                        {song.enriched?.url ? (
-                                          <a href={song.enriched.url} target="_blank" rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#1DB954]/10 border border-[#1DB954]/25 text-[#1DB954] text-[10px] uppercase tracking-widest hover:bg-[#1DB954]/20 transition-all w-fit">
-                                            <SpotifyLogo size={12} />Open on Spotify
-                                          </a>
-                                        ) : (
-                                          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 text-white/20 text-[10px] uppercase tracking-widest w-fit">
-                                            Not on Spotify
-                                          </span>
+                                        <p className="text-xs text-white/45 font-light leading-relaxed mt-2">{song.emotionalBridge}</p>
+                                        {song.lyricMoment && (
+                                          <div className="flex gap-1.5 mt-2">
+                                            <Quote size={9} className="text-rose-400/30 shrink-0 mt-0.5" />
+                                            <p className="text-[10px] text-white/30 italic font-light leading-relaxed">{song.lyricMoment}</p>
+                                          </div>
                                         )}
                                       </div>
                                     </div>

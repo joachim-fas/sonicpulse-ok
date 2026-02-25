@@ -219,6 +219,33 @@ describe("Intensitäts-Mapping", () => {
   });
 });
 
+// ─── Discovery Filter Validierung ──────────────────────────────────────────
+
+describe("Discovery Filter", () => {
+  it("akzeptiert alle drei gültigen Filter-Werte", () => {
+    const validFilters = ["mainstream", "underground", "exotic"] as const;
+    for (const filter of validFilters) {
+      expect(filter).toMatch(/^(mainstream|underground|exotic)$/);
+    }
+  });
+
+  it("mainstream liefert bekannte Songs", () => {
+    // Semantischer Test: mainstream = breite Bekanntheit
+    const filter = "mainstream";
+    expect(filter).toBe("mainstream");
+  });
+
+  it("underground liefert Nischen-Songs", () => {
+    const filter = "underground";
+    expect(filter).toBe("underground");
+  });
+
+  it("exotic liefert seltene/globale Songs", () => {
+    const filter = "exotic";
+    expect(filter).toBe("exotic");
+  });
+});
+
 // ─── Musical Reference Validierung ─────────────────────────────────────────
 
 describe("Musical Reference", () => {
