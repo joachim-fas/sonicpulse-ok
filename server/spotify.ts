@@ -87,57 +87,112 @@ export async function getSpotifyToken(): Promise<string> {
 }
 
 /**
+ * Normalisiert einen Künstlernamen für den Vergleich:
+ * lowercase, "the "-Präfix entfernen, Sonderzeichen entfernen.
+ */
+function normalizeArtistName(name: string): string {
+  return name.toLowerCase().replace(/^the\s+/, "").replace(/[^a-z0-9]/g, "");
+}
+
+/**
+ * Berechnet einen einfachen Ähnlichkeitsscore zwischen zwei normalisierten Namen.
+ * Gibt 1.0 für exakten Match, 0.0 für keine Übereinstimmung.
+ */
+function nameSimilarity(a: string, b: string): number {
+  const na = normalizeArtistName(a);
+  const nb = normalizeArtistName(b);
+  if (na === nb) return 1.0;
+  if (na.includes(nb) || nb.includes(na)) return 0.85;
+  // Levenshtein-ähnlicher Ansatz: gemeinsame Zeichen / max Länge
+  const longer = na.length > nb.length ? na : nb;
+  const shorter = na.length > nb.length ? nb : na;
+  if (longer.length === 0) return 1.0;
+  let matches = 0;
+  for (let i = 0; i < shorter.length; i++) {
+    if (longer.includes(shorter[i])) matches++;
+  }
+  return matches / longer.length;
+}
+
+/**
  * Sucht einen Künstler auf Spotify und gibt ein validiertes Objekt zurück.
- * Gibt null zurück wenn kein Treffer gefunden wird (kein kaputter Link).
+ * Holt bis zu 5 Kandidaten und wählt den besten Name-Match.
+ * Gibt null zurück wenn kein ausreichend guter Treffer gefunden wird.
  */
 export async function searchSpotifyArtist(
   artistName: string
 ): Promise<SpotifyArtistResult | null> {
   const token = await getSpotifyToken();
 
-  const params = new URLSearchParams({
-    q: artistName,
-    type: "artist",
-    limit: "1",
-  });
+  // Strategie 1: Exakte Suche mit limit 5 – besten Match wählen
+  const trySearch = async (query: string, minScore = 0.7): Promise<SpotifyArtistResult | null> => {
+    const params = new URLSearchParams({
+      q: query,
+      type: "artist",
+      limit: "5",
+    });
 
-  const response = await fetch(`${SPOTIFY_API_BASE}/search?${params}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+    const response = await fetch(`${SPOTIFY_API_BASE}/search?${params}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-  if (!response.ok) {
-    throw new Error(`Spotify Search-Fehler: ${response.status}`);
-  }
+    if (!response.ok) {
+      throw new Error(`Spotify Search-Fehler: ${response.status}`);
+    }
 
-  const data = (await response.json()) as {
-    artists: { items: SpotifyArtistRaw[] };
+    const data = (await response.json()) as {
+      artists: { items: SpotifyArtistRaw[] };
+    };
+
+    const items = data.artists?.items;
+    if (!items || items.length === 0) return null;
+
+    // Besten Match nach Name-Ähnlichkeit wählen
+    let bestArtist: SpotifyArtistRaw | null = null;
+    let bestScore = 0;
+    for (const candidate of items) {
+      const score = nameSimilarity(artistName, candidate.name);
+      if (score > bestScore) {
+        bestScore = score;
+        bestArtist = candidate;
+      }
+    }
+
+    if (!bestArtist || bestScore < minScore) return null;
+
+    const imageUrl =
+      bestArtist.images.find((img) => img.height >= 300 && img.height <= 640)?.url ??
+      bestArtist.images[0]?.url ??
+      null;
+
+    return {
+      display_name: artistName,
+      spotify_name: bestArtist.name,
+      spotify_id: bestArtist.id,
+      direct_link: bestArtist.external_urls.spotify,
+      image_url: imageUrl,
+      genres: bestArtist.genres,
+      followers: bestArtist.followers.total,
+      popularity: bestArtist.popularity,
+    };
   };
 
-  const items = data.artists?.items;
-  if (!items || items.length === 0) {
-    return null;
+  // Strategie 1: Exakter Name
+  const result1 = await trySearch(artistName, 0.7);
+  if (result1) return result1;
+
+  // Strategie 2: Name in Anführungszeichen (exakte Phrase)
+  const result2 = await trySearch(`"${artistName}"`, 0.6);
+  if (result2) return result2;
+
+  // Strategie 3: Name ohne Sonderzeichen
+  const cleanName = artistName.replace(/[^a-zA-Z0-9\s]/g, " ").trim();
+  if (cleanName !== artistName) {
+    const result3 = await trySearch(cleanName, 0.6);
+    if (result3) return result3;
   }
 
-  const artist = items[0];
-
-  // Bestes Profilbild wählen (mittlere Größe bevorzugt)
-  const imageUrl =
-    artist.images.find((img) => img.height >= 300 && img.height <= 640)?.url ??
-    artist.images[0]?.url ??
-    null;
-
-  return {
-    display_name: artistName,
-    spotify_name: artist.name,
-    spotify_id: artist.id,
-    direct_link: artist.external_urls.spotify,
-    image_url: imageUrl,
-    genres: artist.genres,
-    followers: artist.followers.total,
-    popularity: artist.popularity,
-  };
+  return null;
 }
 
 /**

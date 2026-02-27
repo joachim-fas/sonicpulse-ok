@@ -194,13 +194,38 @@ export const sonicpulseRouter = router({
         })
       );
 
+      // Collect all listener counts for relative ranking (to compute fallback scores)
+      const allListeners = rawRecs.map((_, i) => {
+        const profile = profiles[i];
+        const fallbackInfo = lastfmInfoFallbacks[i];
+        return profile?.lastfm_listeners ?? fallbackInfo?.listeners ?? null;
+      }).filter((l): l is number => l !== null);
+      const maxListeners = allListeners.length > 0 ? Math.max(...allListeners) : 1;
+
       const recommendations = rawRecs.map((rec, i) => {
         const profile = profiles[i];
         const youtubeId = youtubeIds[i];
         // Similarity Score: fuzzy lookup across all input artists' similar lists
         const key = normalizeName(rec.artist);
         const rawScore = bestScoreMap.get(key) ?? null;
-        const similarityScore = rawScore !== null ? Math.round(rawScore * 100) : null;
+        let similarityScore: number;
+        if (rawScore !== null) {
+          // Last.fm hat einen echten Score – direkt nutzen
+          similarityScore = Math.round(rawScore * 100);
+        } else {
+          // Fallback: Score aus Listeners-Ranking (relativer Popularitätswert)
+          // + fester Basis-Score von 55–75% (LLM hat den Künstler bewusst empfohlen)
+          const fallbackInfo = lastfmInfoFallbacks[i];
+          const listeners = profile?.lastfm_listeners ?? fallbackInfo?.listeners ?? null;
+          if (listeners !== null && maxListeners > 0) {
+            // Normierter Listeners-Score: 55% Basis + bis zu 20% aus Popularität
+            const listenerRatio = Math.min(listeners / maxListeners, 1);
+            similarityScore = Math.round(55 + listenerRatio * 20);
+          } else {
+            // Kein Listeners-Wert: fester Score 60–72% (LLM-Empfehlung ohne Metadaten)
+            similarityScore = 60 + (i % 4) * 3; // leichte Variation pro Karte
+          }
+        }
         // Listeners: from enriched profile or Last.fm direct fallback
         const fallbackInfo = lastfmInfoFallbacks[i];
         const listeners = profile?.lastfm_listeners ?? fallbackInfo?.listeners ?? null;

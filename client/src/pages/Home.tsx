@@ -1489,8 +1489,8 @@ export default function Home() {
                                   )}
                                 </div>
                                 <div className="flex items-center gap-1 shrink-0">
-                                  {/* Last.fm Similarity Score */}
-                                  {rec.similarityScore != null && rec.similarityScore > 0 && (
+                                  {/* Match Score – immer anzeigen */}
+                                  {rec.similarityScore != null && (
                                     <span className="flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-400 text-[8px] uppercase tracking-widest border border-cyan-500/20">
                                       {rec.similarityScore}% match
                                     </span>

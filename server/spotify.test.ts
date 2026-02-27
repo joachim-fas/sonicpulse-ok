@@ -73,6 +73,10 @@ describe("searchSpotifyArtist", () => {
   });
 
   it("gibt null zurück wenn keine Ergebnisse gefunden werden (kein kaputter Link)", async () => {
+    const emptyResponse = {
+      ok: true,
+      json: async () => ({ artists: { items: [] } }),
+    };
     const mockFetch = vi
       .fn()
       // Token-Request
@@ -80,11 +84,12 @@ describe("searchSpotifyArtist", () => {
         ok: true,
         json: async () => ({ access_token: "mock_token", expires_in: 3600 }),
       })
-      // Search-Request – leer
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ artists: { items: [] } }),
-      });
+      // Strategie 1: leer
+      .mockResolvedValueOnce(emptyResponse)
+      // Strategie 2: leer (quoted search)
+      .mockResolvedValueOnce(emptyResponse)
+      // Strategie 3: leer (clean name – gleich wie Strategie 1, wird übersprungen)
+      .mockResolvedValue(emptyResponse);
     vi.stubGlobal("fetch", mockFetch);
 
     const { searchSpotifyArtist } = await import("./spotify");
@@ -134,21 +139,24 @@ describe("searchSpotifyArtist", () => {
   });
 
   it("setzt den Authorization-Header korrekt", async () => {
+    const emptyResponse = {
+      ok: true,
+      json: async () => ({ artists: { items: [] } }),
+    };
     const mockFetch = vi
       .fn()
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({ access_token: "bearer_xyz", expires_in: 3600 }),
       })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ artists: { items: [] } }),
-      });
+      // Alle Strategien geben leere Ergebnisse zurück
+      .mockResolvedValue(emptyResponse);
     vi.stubGlobal("fetch", mockFetch);
 
     const { searchSpotifyArtist } = await import("./spotify");
     await searchSpotifyArtist("Test");
 
+    // Erster Search-Call ist mockFetch.calls[1] (nach Token-Request)
     const searchCall = mockFetch.mock.calls[1];
     expect(searchCall?.[1]?.headers?.Authorization).toBe("Bearer bearer_xyz");
   });
