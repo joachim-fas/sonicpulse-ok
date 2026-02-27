@@ -180,62 +180,192 @@ const InfoModal = ({ type, onClose }: { type: "privacy" | "terms" | "spotify"; o
 };
 
 // ─── Music Loading Bar ──────────────────────────────────────────────────────────
-const EXPLORE_MESSAGES = [
-  "Bribing the AI with backstage passes...",
-  "Asking Keith Richards what he thinks...",
-  "Cross-referencing 47 obscure Pitchfork reviews...",
-  "Consulting the ghost of John Peel...",
-  "Digging through a crate of forgotten 7-inches...",
-  "Calculating the exact BPM of your soul...",
-  "Translating your taste into 12 musical dimensions...",
-  "Arguing with the algorithm about shoegaze...",
-  "Checking if this band is still underground enough...",
-  "Dusting off the B-sides nobody asked for...",
-  "Running a vibe check on 3,000 artists...",
-  "Asking Thom Yorke if this is too mainstream...",
-  "Consulting the Allmusic database circa 2003...",
-  "Checking if this genre even has a name yet...",
-  "Verifying the band hasn't sold out since Tuesday...",
-  "Matching your energy to a Bandcamp rabbit hole...",
-  "Scanning liner notes from albums you'll never own...",
-  "Asking the AI to be honest about its music taste...",
-  "Filtering out everything that's been in a car commercial...",
-  "Checking if this artist has a Wikipedia page yet...",
-  "Consulting a vinyl collector in a basement somewhere...",
-  "Asking the algorithm to think outside the algorithm...",
-  "Sorting through 14 years of Last.fm scrobbles...",
-  "Checking if this band broke up before you heard of them...",
+
+// EXPLORE – Mainstream
+const EXPLORE_MAINSTREAM_MESSAGES = [
+  "Checking if this is already on a Spotify editorial playlist...",
+  "Asking Spotify HQ if they've heard of your bands...",
+  "Cross-referencing with the Top 40 from three years ago...",
+  "Verifying these artists have at least one stadium tour...",
+  "Making sure the algorithm already knows what you like...",
+  "Consulting the Billboard chart from when this was cool...",
+  "Checking if this has been in a Netflix trailer yet...",
+  "Asking a Shazam employee for their honest opinion...",
+  "Confirming these bands have a greatest hits compilation...",
+  "Finding artists your parents might actually recognize...",
+  "Verifying there's a deluxe edition with bonus tracks...",
+  "Checking if this artist has done a Tiny Desk concert...",
+  "Consulting the Spotify Wrapped Hall of Fame...",
+  "Making sure this is safe for a dinner party playlist...",
+  "Asking if this has been covered by a talent show contestant...",
+  "Cross-referencing with Apple Music's 'Today's Hits'...",
+  "Confirming there's at least one collab with a pop star...",
+  "Checking if the lead single has 100M+ streams...",
+  "Verifying this artist has a verified blue checkmark everywhere...",
+  "Asking the algorithm to do what it does best...",
+  "Consulting the 'Songs You Already Know' database...",
+  "Making sure this is available on every streaming platform...",
+  "Checking if this was on a FIFA soundtrack at some point...",
+  "Asking Pitchfork's Best New Music archive, 2010–2018...",
 ];
 
-const MOOD_MESSAGES = [
+// EXPLORE – Underground
+const EXPLORE_UNDERGROUND_MESSAGES = [
+  "Bribing the AI with backstage passes to a show in a basement...",
+  "Consulting the ghost of John Peel...",
+  "Digging through a crate of forgotten 7-inches in Kreuzberg...",
+  "Arguing with the algorithm about whether shoegaze is back...",
+  "Checking if this band is still underground enough to recommend...",
+  "Verifying the band hasn't sold out since last Tuesday...",
+  "Scanning liner notes from albums pressed in editions of 300...",
+  "Asking the AI to be honest about its music taste for once...",
+  "Filtering out everything that's been in a car commercial...",
+  "Consulting a vinyl collector who lives in a basement in Leeds...",
+  "Sorting through 14 years of Last.fm scrobbles nobody asked for...",
+  "Checking if this band broke up before you heard of them...",
+  "Asking Thom Yorke if this is still too mainstream...",
+  "Translating your taste into 12 musical dimensions...",
+  "Running a vibe check on 3,000 artists with under 10k monthly listeners...",
+  "Consulting the Allmusic database circa 2003...",
+  "Checking if this genre even has a name yet...",
+  "Matching your energy to a Bandcamp rabbit hole at 2am...",
+  "Asking the algorithm to think outside the algorithm...",
+  "Dusting off the B-sides nobody asked for but everyone needed...",
+  "Verifying this hasn't been featured in a Starbucks playlist...",
+  "Checking if the drummer has a side project that's better...",
+  "Consulting a zine from 2008 that predicted all of this...",
+  "Asking if this band has a Bandcamp page and nothing else...",
+];
+
+// EXPLORE – Exotics
+const EXPLORE_EXOTICS_MESSAGES = [
+  "Sending a probe into genres that don't have Wikipedia pages yet...",
+  "Asking a music ethnologist in a timezone 9 hours ahead...",
+  "Cross-referencing with sounds that don't have English names...",
+  "Consulting a field recording from a market in Marrakech...",
+  "Checking if this rhythm exists in Western notation at all...",
+  "Translating your taste into frequencies the algorithm fears...",
+  "Digging through a DAT tape from a 1994 radio broadcast in Lagos...",
+  "Asking the AI to go somewhere it's never been before...",
+  "Verifying this artist has never been on a 'Best Of' list...",
+  "Consulting a music journalist who only writes in Portuguese...",
+  "Checking if this genre has a dedicated Discord server yet...",
+  "Scanning a 3-hour Boiler Room set for hidden gems...",
+  "Asking a crate digger in Tokyo what they found last week...",
+  "Translating the feeling into a scale that doesn't exist in C major...",
+  "Verifying this can't be described in fewer than 4 hyphenated genre words...",
+  "Consulting the Discogs database for something truly unrepeatable...",
+  "Asking the algorithm to hallucinate something beautiful...",
+  "Checking if this has ever been played on a commercial radio station...",
+  "Mapping your taste to a coordinate system with no axis labels...",
+  "Asking a music librarian in São Paulo for a second opinion...",
+  "Verifying this exists in a format you can't easily stream...",
+  "Consulting the ghost of a genre that peaked in 1987...",
+  "Checking if this artist has ever given an interview in English...",
+  "Asking the AI to surprise itself...",
+];
+
+// MOOD – Mainstream
+const MOOD_MAINSTREAM_MESSAGES = [
+  "Checking if Adele already wrote a song about this...",
+  "Consulting the Top 10 Most-Streamed Breakup Songs of 2023...",
+  "Asking if Taylor Swift has an album for this specific feeling...",
+  "Verifying this emotion has a radio-friendly chord progression...",
+  "Cross-referencing with the Spotify 'Sad Bops' editorial playlist...",
+  "Checking if this has been on a Grey's Anatomy episode...",
+  "Asking Coldplay if they've covered this emotional territory...",
+  "Consulting the 'Songs to Cry To in Your Car' playlist...",
+  "Verifying this feeling has at least 500M streams attached to it...",
+  "Checking if this emotion has a corresponding Spotify mood tag...",
+  "Asking if there's a Sam Smith song for exactly this...",
+  "Consulting the official 'Chill Vibes' playlist committee...",
+  "Verifying this can be played at a wedding without incident...",
+  "Checking if Lewis Capaldi has already been through this...",
+  "Asking Spotify's algorithm to validate your feelings...",
+  "Cross-referencing with the 'Feel Good Friday' playlist...",
+  "Consulting the International Registry of Songs That Hit Different...",
+  "Checking if this feeling has a 4-chord solution...",
+  "Asking if this emotion has been in a movie trailer recently...",
+  "Verifying this song will still make sense in 10 years...",
+  "Consulting the Shazam chart for songs people cry to in public...",
+  "Asking the algorithm to be emotionally available for a moment...",
+  "Checking if this is the kind of feeling that gets a playlist name...",
+  "Verifying there's a lyric video with 50M views for this...",
+];
+
+// MOOD – Underground
+const MOOD_UNDERGROUND_MESSAGES = [
   "Reading your emotional subtext between the lines...",
-  "Consulting the International Registry of Sad Songs...",
+  "Consulting the International Registry of Sad Songs, Vol. 7...",
   "Asking what Nick Cave would do in your situation...",
-  "Translating your feelings into chord progressions...",
-  "Scanning 40 years of heartbreak anthems...",
+  "Translating your feelings into chord progressions nobody plays live...",
+  "Scanning 40 years of heartbreak anthems pressed on 12-inch...",
   "Calibrating the melancholy-to-euphoria ratio...",
-  "Checking if Sufjan Stevens has a song for this...",
-  "Decoding your emotional frequency...",
-  "Matching your vibe to the perfect key signature...",
-  "Asking the universe what song this moment deserves...",
-  "Mapping your feelings to a Pitchfork 10.0...",
-  "Consulting the Kübler-Ross model of music therapy...",
-  "Finding the song that knows what you mean...",
+  "Checking if Sufjan Stevens has a song for this specific feeling...",
+  "Decoding your emotional frequency in Hz...",
   "Asking Phoebe Bridgers if she's been through this too...",
-  "Cross-referencing your mood with 200 breakup albums...",
-  "Checking if Elliott Smith wrote something for this...",
+  "Cross-referencing your mood with 200 breakup albums from the 90s...",
+  "Checking if Elliott Smith wrote something for this exact moment...",
   "Translating silence into a tracklist...",
-  "Asking what Joni Mitchell would say about this...",
+  "Asking what Joni Mitchell would say about all of this...",
   "Calibrating the bittersweet-to-hopeful dial...",
-  "Finding the song that sounds like this exact feeling...",
-  "Consulting the emotional index of 10,000 lyrics...",
+  "Finding the song that sounds like this exact feeling at 3am...",
+  "Consulting the emotional index of 10,000 lyrics nobody knows by heart...",
   "Asking the AI to feel something for a moment...",
   "Matching your inner weather to a sonic landscape...",
   "Checking if this feeling has a genre yet...",
+  "Asking the Kübler-Ross model which stage has the best soundtrack...",
+  "Verifying this emotion has been captured on a 4-track recorder...",
+  "Consulting a playlist made by someone who also couldn't sleep...",
+  "Checking if this feeling has a corresponding Grouper album...",
+  "Asking the algorithm to find the song before you knew you needed it...",
 ];
 
-const MusicLoadingBar = ({ mode, isLiquid = false }: { mode: "explore" | "mood"; isLiquid?: boolean }) => {
-  const messages = mode === "explore" ? EXPLORE_MESSAGES : MOOD_MESSAGES;
+// MOOD – Exotic
+const MOOD_EXOTIC_MESSAGES = [
+  "Asking a music therapist in Reykjavik what they'd prescribe...",
+  "Consulting a field recording that sounds exactly like this feeling...",
+  "Translating your emotion into a scale with no Western equivalent...",
+  "Checking if there's a Japanese word for this feeling and a song for it...",
+  "Scanning 60 years of music from places that don't export it...",
+  "Asking a musician in Dakar what this feeling sounds like there...",
+  "Consulting the emotional vocabulary of a genre you've never heard...",
+  "Verifying this feeling exists in a time signature you can't count...",
+  "Asking the AI to find the song that doesn't know it's perfect for this...",
+  "Cross-referencing your mood with sounds from 7 different continents...",
+  "Checking if this emotion has been captured in a language you don't speak...",
+  "Consulting a playlist that exists in one city and nowhere else...",
+  "Asking a composer in Tbilisi if they've felt this too...",
+  "Translating the feeling into frequencies the body understands before the brain does...",
+  "Verifying this can only be fully heard on headphones at 2am...",
+  "Scanning an archive of music that never got a streaming release...",
+  "Asking the algorithm to go somewhere it's never been emotionally...",
+  "Consulting a music tradition older than the genre names we use...",
+  "Checking if this feeling has a corresponding instrument that doesn't exist in English...",
+  "Asking a sound artist in Seoul what silence sounds like when it's full...",
+  "Verifying this song exists in a format that requires patience...",
+  "Consulting the emotional index of music that never charted anywhere...",
+  "Asking the universe what frequency this moment deserves...",
+  "Translating your inner weather into a sonic landscape with no borders...",
+];
+
+const MusicLoadingBar = ({
+  mode,
+  isLiquid = false,
+  discoveryLevel = "underground",
+}: {
+  mode: "explore" | "mood";
+  isLiquid?: boolean;
+  discoveryLevel?: "mainstream" | "underground" | "exotics" | "exotic";
+}) => {
+  const messages = mode === "explore"
+    ? discoveryLevel === "mainstream" ? EXPLORE_MAINSTREAM_MESSAGES
+      : discoveryLevel === "exotics" ? EXPLORE_EXOTICS_MESSAGES
+      : EXPLORE_UNDERGROUND_MESSAGES
+    : discoveryLevel === "mainstream" ? MOOD_MAINSTREAM_MESSAGES
+      : discoveryLevel === "exotic" || discoveryLevel === "exotics" ? MOOD_EXOTIC_MESSAGES
+      : MOOD_UNDERGROUND_MESSAGES;
+
   const [msgIdx, setMsgIdx] = useState(() => Math.floor(Math.random() * messages.length));
   const seenRef = useRef<Set<number>>(new Set([Math.floor(Math.random() * messages.length)]));
   const [progress, setProgress] = useState(0);
@@ -253,7 +383,7 @@ const MusicLoadingBar = ({ mode, isLiquid = false }: { mode: "explore" | "mood";
       setFade(false);
       setTimeout(() => {
         setMsgIdx((prev) => {
-          const unseen = messages.map((_, i) => i).filter(i => !seenRef.current.has(i));
+          const unseen = messages.map((_: string, i: number) => i).filter((i: number) => !seenRef.current.has(i));
           if (unseen.length === 0) {
             seenRef.current.clear();
             const next = (prev + 1) % messages.length;
@@ -1371,7 +1501,7 @@ export default function Home() {
                             transition={{ duration: 0.5 }}
                           >
                             {moodMutation.isPending && !emotionalProfile ? (
-                              <div ref={loadingRef}><AnimatePresence><MusicLoadingBar mode="mood" isLiquid={isLiquidTheme} /></AnimatePresence></div>
+                              <div ref={loadingRef}><AnimatePresence><MusicLoadingBar mode="mood" isLiquid={isLiquidTheme} discoveryLevel={moodDiscovery} /></AnimatePresence></div>
                             ) : emotionalProfile && (
                               <div className={cn(
                                 "p-5 rounded-2xl border",
@@ -1554,7 +1684,7 @@ export default function Home() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
                     {exploreMutation.isPending && recommendations.length === 0
-                      ? <div ref={loadingRef} className="col-span-full"><AnimatePresence><MusicLoadingBar mode="explore" isLiquid={isLiquidTheme} /></AnimatePresence></div>
+                      ? <div ref={loadingRef} className="col-span-full"><AnimatePresence><MusicLoadingBar mode="explore" isLiquid={isLiquidTheme} discoveryLevel={discoveryLevel} /></AnimatePresence></div>
                       : recommendations.map((rec, idx) => (
                         <motion.div
                           key={idx}

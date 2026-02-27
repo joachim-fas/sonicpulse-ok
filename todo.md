@@ -211,7 +211,7 @@
 
 ## UI Polish – Feb 27
 - [ ] Button-Layout: Discovery-Filter und Submit-Button in eine saubere Zeile / untereinander
-- [ ] Reasoning-Texte: mehr Variation, keine Wiederholungen, beide Modi erweitern
+- [x] Reasoning-Texte: mehr Variation, keine Wiederholungen, beide Modi erweitern
 - [ ] Auto-Scroll: beim Start der Suche zum Reasoning-Bereich scrollen (mobile-first)
 - [ ] Auto-Scroll: nach Abschluss zum ersten Ergebnis scrollen
 - [ ] Hintergrundanimation: weicher, mehr Dynamik, keine harten Sprünge
