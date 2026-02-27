@@ -191,3 +191,10 @@
 - [x] Frontend: Party Mode UI-Bereich aus Home.tsx entfernen
 - [x] Frontend: mode-Typ auf "explore" | "mood" reduzieren
 - [x] Tests: Party-bezogene Tests entfernen oder anpassen
+
+## Explore Mode – ArtistInput Autocomplete Fix
+- [x] Bug: Auswahl aus Dropdown funktioniert nicht konstant (Race Condition / onBlur schließt vor onClick)
+- [x] Fix: e.preventDefault() auf Dropdown-Item verhindert Input-Blur
+- [x] Fix: mouseDownOnDropdown-Guard verhindert vorzeitiges Schließen
+- [x] Fix: AbortController für ausstehende Fetch-Requests beim Tippen
+- [x] Fix: Dropdown-State nach Auswahl korrekt zurücksetzen

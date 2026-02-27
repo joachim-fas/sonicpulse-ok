@@ -180,13 +180,17 @@ const ArtistInput = ({
   const [suggestions, setSuggestions] = useState<MBSuggestion[]>([]);
   const [open, setOpen] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const mouseDownOnDropdown = useRef(false);
   const utils = trpc.useUtils();
 
-  const handleChange = async (val: string) => {
+  const handleChange = (val: string) => {
     onChange(val);
     if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (abortRef.current) abortRef.current.abort();
     if (val.length < 2) { setSuggestions([]); setOpen(false); return; }
     debounceRef.current = setTimeout(async () => {
+      abortRef.current = new AbortController();
       try {
         const res = await utils.sonicpulse.musicbrainzSearch.fetch({ query: val });
         setSuggestions(res as MBSuggestion[]);
@@ -195,7 +199,19 @@ const ArtistInput = ({
     }, 300);
   };
 
-  const handleSelect = (name: string) => { onSelect(name); setSuggestions([]); setOpen(false); };
+  const handleSelect = (name: string) => {
+    onSelect(name);
+    setSuggestions([]);
+    setOpen(false);
+    mouseDownOnDropdown.current = false;
+  };
+
+  const handleBlur = () => {
+    // Only close if the user didn't mousedown on the dropdown
+    if (!mouseDownOnDropdown.current) {
+      setOpen(false);
+    }
+  };
 
   const borderColor = {
     cyan:    "border-cyan-500/30 focus:border-cyan-500 focus:shadow-[0_0_15px_rgba(6,182,212,0.3)]",
@@ -216,7 +232,7 @@ const ArtistInput = ({
           type="text"
           value={value}
           onChange={(e) => handleChange(e.target.value)}
-          onBlur={() => setTimeout(() => setOpen(false), 150)}
+          onBlur={handleBlur}
           onFocus={() => suggestions.length > 0 && setOpen(true)}
           placeholder={placeholder}
           className={cn(
@@ -238,11 +254,17 @@ const ArtistInput = ({
           <motion.div
             initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
             className="absolute z-20 left-0 right-0 mt-1 bg-zinc-900 border border-white/10 rounded-xl overflow-hidden shadow-2xl"
+            onMouseDown={() => { mouseDownOnDropdown.current = true; }}
+            onMouseUp={() => { mouseDownOnDropdown.current = false; }}
+            onMouseLeave={() => { mouseDownOnDropdown.current = false; }}
           >
             {suggestions.map((s) => (
               <button
                 key={s.id}
-                onMouseDown={() => handleSelect(s.name)}
+                onMouseDown={(e) => {
+                  e.preventDefault(); // Prevent input blur
+                  handleSelect(s.name);
+                }}
                 className="w-full px-4 py-2 text-left hover:bg-white/5 transition-colors border-b border-white/5 last:border-0 flex justify-between items-center"
               >
                 <span className="text-xs font-light">{s.name}</span>
