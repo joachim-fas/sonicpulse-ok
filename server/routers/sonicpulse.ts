@@ -160,7 +160,12 @@ export const sonicpulseRouter = router({
           genre:     rec.genre,
           similarTo: rec.similarTo,
           enriched: profile
-            ? { image: profile.image_url, url: profile.direct_link, previewUrl: null }
+            ? {
+                image:     profile.image_url,
+                url:       profile.direct_link || null,   // null wenn keine echte Spotify-ID
+                spotifyId: profile.spotify_id || null,    // null wenn keine echte Spotify-ID
+                previewUrl: null,
+              }
             : undefined,
         };
       });

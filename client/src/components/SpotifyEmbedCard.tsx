@@ -7,11 +7,13 @@
  *
  * Artist-URL: https://open.spotify.com/embed/artist/{artist_id}?utm_source=generator&theme=0
  * Track-URL:  https://open.spotify.com/embed/track/{track_id}?utm_source=generator&theme=0
+ *
+ * Fallback: Wenn keine Spotify-ID verfügbar, wird ein "Search on Spotify"-Button angezeigt.
  */
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Headphones, ChevronDown, Loader2 } from "lucide-react";
+import { Headphones, ChevronDown, Loader2, ExternalLink } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -47,13 +49,6 @@ export function SpotifyEmbedCard({
   // Track-Embed hat Priorität über Artist-Embed
   const hasTrack = !!trackId;
   const hasArtist = !!artistId;
-  if (!hasTrack && !hasArtist) return null;
-
-  const embedUrl = hasTrack
-    ? `https://open.spotify.com/embed/track/${trackId}?utm_source=generator&theme=0`
-    : `https://open.spotify.com/embed/artist/${artistId}?utm_source=generator&theme=0`;
-
-  const iframeHeight = compact ? 152 : hasTrack ? 152 : 352;
 
   const accentClasses = {
     cyan:    "text-cyan-400 border-cyan-500/20 hover:border-cyan-500/40 hover:bg-cyan-500/5",
@@ -68,6 +63,38 @@ export function SpotifyEmbedCard({
     emerald: "bg-emerald-500/10 text-emerald-400",
     rose:    "bg-rose-500/10 text-rose-400",
   };
+
+  // ── Fallback: kein Spotify-Embed verfügbar → Suchlink-Button ────────────────
+  if (!hasTrack && !hasArtist) {
+    const searchUrl = `https://open.spotify.com/search/${encodeURIComponent(artistName)}`;
+    return (
+      <a
+        href={searchUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={cn(
+          "w-full flex items-center justify-between px-4 py-2.5 rounded-xl border transition-all duration-300 text-left",
+          accentClasses[accentColor]
+        )}
+      >
+        <div className="flex items-center gap-2.5">
+          <div className={cn("p-1.5 rounded-lg", iconClasses[accentColor])}>
+            <Headphones size={12} />
+          </div>
+          <span className="text-[10px] uppercase tracking-widest font-medium">
+            Search on Spotify
+          </span>
+        </div>
+        <ExternalLink size={12} className="opacity-60" />
+      </a>
+    );
+  }
+
+  const embedUrl = hasTrack
+    ? `https://open.spotify.com/embed/track/${trackId}?utm_source=generator&theme=0`
+    : `https://open.spotify.com/embed/artist/${artistId}?utm_source=generator&theme=0`;
+
+  const iframeHeight = compact ? 152 : hasTrack ? 152 : 352;
 
   return (
     <div className="w-full">

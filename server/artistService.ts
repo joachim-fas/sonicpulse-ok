@@ -134,8 +134,24 @@ export async function resolveArtist(artistName: string): Promise<ArtistProfile |
     console.warn(`[ArtistService] Wikidata nicht verfügbar für "${artistName}" (${msg})`);
   }
 
-  // ── Alle Quellen erschöpft ────────────────────────────────────────────────
-  console.info(`[ArtistService] Keine Spotify-ID für "${artistName}" gefunden – kein Link wird generiert`);
+  // ── Alle Quellen erschöpft – aber Discogs-Bild noch versuchen ─────────────
+  console.info(`[ArtistService] Keine Spotify-ID für "${artistName}" gefunden – versuche Discogs-Bild`);
+  try {
+    const image_url = await getArtistImageFromDiscogs(artistName).catch(() => null);
+    if (image_url) {
+      return {
+        display_name: artistName,
+        spotify_name: artistName,
+        spotify_id:   "",
+        direct_link:  "",
+        image_url,
+        genres:       [],
+        followers:    null,
+        popularity:   null,
+        source:       "musicbrainz" as const,
+      };
+    }
+  } catch { /* ignore */ }
   return null;
 }
 

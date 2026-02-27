@@ -33,7 +33,7 @@ interface Recommendation {
   reason: string;
   genre: string;
   similarTo: string;
-  enriched?: { image?: string | null; url?: string | null; previewUrl?: string | null };
+  enriched?: { image?: string | null; url?: string | null; spotifyId?: string | null; previewUrl?: string | null };
 }
 
 interface Track {
@@ -1397,7 +1397,11 @@ export default function Home() {
                                   Similar to <span className="text-white/40">{rec.similarTo}</span>
                                 </span>
                               </div>
-                              <SpotifyEmbedCard artistId={extractSpotifyArtistId(rec.enriched?.url)} artistName={rec.artist} accentColor="cyan" />
+                              <SpotifyEmbedCard
+                                artistId={rec.enriched?.spotifyId ?? extractSpotifyArtistId(rec.enriched?.url)}
+                                artistName={rec.artist}
+                                accentColor="cyan"
+                              />
                             </div>
                           </div>
                         </motion.div>

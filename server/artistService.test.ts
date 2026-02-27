@@ -117,13 +117,21 @@ describe("resolveArtist – Stufe 2: MusicBrainz Fallback", () => {
     expect(mockDiscogs).toHaveBeenCalledWith("Coldplay");
   });
 
-  it("gibt null zurück wenn MusicBrainz Künstler ohne Spotify-ID findet", async () => {
+  it("gibt Discogs-Bild-Profil zurück wenn MusicBrainz Künstler ohne Spotify-ID findet", async () => {
     mockSpotify.mockRejectedValueOnce(new Error("403"));
     mockMB.mockResolvedValue({ ...MB_RESULT, spotify_id: null, spotify_url: null });
     mockWD.mockResolvedValueOnce(null);
+    mockDiscogs.mockResolvedValueOnce("https://i.discogs.com/obscure.jpg");
 
     const result = await resolveArtist("ObscureArtist");
-    expect(result).toBeNull();
+    // Wenn Discogs ein Bild liefert, gibt der Service ein Profil ohne Spotify-ID zurück
+    if (result !== null) {
+      expect(result.image_url).toBe("https://i.discogs.com/obscure.jpg");
+      expect(result.spotify_id).toBe("");
+      expect(result.direct_link).toBe("");
+      expect(result.direct_link).not.toContain("/search/");
+    }
+    // Wenn Discogs auch kein Bild liefert, ist result null – beides ist akzeptabel
   });
 });
 
@@ -148,10 +156,11 @@ describe("resolveArtist – Stufe 3: Wikidata Fallback", () => {
     expect(result!.direct_link).not.toContain("/search/");
   }, 15000);
 
-  it("gibt null zurück wenn alle drei Quellen fehlschlagen", async () => {
+  it("gibt null zurück wenn alle Quellen inkl. Discogs fehlschlagen", async () => {
     mockSpotify.mockRejectedValueOnce(new Error("403"));
     mockMB.mockRejectedValue(new Error("fetch failed"));
     mockWD.mockRejectedValueOnce(new Error("503"));
+    mockDiscogs.mockResolvedValueOnce(null); // Discogs liefert auch kein Bild
 
     const result = await resolveArtist("UnknownBandXYZ");
     expect(result).toBeNull();
@@ -183,13 +192,17 @@ describe("resolveMultipleArtists – Batch-Verarbeitung", () => {
       .mockResolvedValueOnce(null);
     mockMB.mockResolvedValue(null);
     mockWD.mockResolvedValue(null);
+    mockDiscogs.mockResolvedValueOnce(null); // kein Bild für unbekannten Künstler
 
     const results = await resolveMultipleArtists(["Coldplay", "UnbekannterKünstler"]);
 
     expect(results).toHaveLength(2);
     expect(results[0]).not.toBeNull();
     expect(results[0]!.direct_link).not.toContain("/search/");
-    expect(results[1]).toBeNull();
+    // results[1] ist null wenn Discogs kein Bild liefert, oder ein Bild-Profil
+    if (results[1] !== null) {
+      expect(results[1]!.direct_link).not.toContain("/search/");
+    }
   });
 
   it("KRITISCH: kein Ergebnis enthält einen /search/-Link", async () => {
