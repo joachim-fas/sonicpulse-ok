@@ -275,3 +275,38 @@
 - [x] Themes gegenseitig exklusiv (Toggle-Bug gefixt)
 - [x] bg-black auf Haupt-Container damit Canvas sichtbar ist
 - [x] Alle 85 Tests bestehen
+
+## v3 Design-System (finales Design)
+- [ ] Liquid Orb Theme komplett entfernen (OrganicBackground, LiquidWaveIcon, alle isLiquidTheme-Refs)
+- [ ] Aura Theme komplett entfernen (AuraBackground, AuraIcon, alle isAuraTheme-Refs)
+- [ ] v3 Design-Tokens in index.css: Violett/Pink/Blau/Neon-Green, Dark/Light Variablen
+- [ ] Clash Display + Satoshi + DM Serif Display Fonts in index.html einbinden
+- [ ] Blob-Hintergrund (CSS-Animationen, 7 Blobs, Pulse-Rings, Wave-Lines, Grain)
+- [ ] Home.tsx: Glassmorphismus-Karten, neue Typografie, Buttons, Inputs
+- [ ] Navbar: v3-Stil (Glasmorphismus, Clash Display Logo, Theme-Toggle)
+- [ ] Design-Customizer-Seite (/design) mit Live-Playground
+- [ ] Playground: Animation-Typ (Blobs/Waves/Particles/Rings/Aurora/Mesh)
+- [ ] Playground: Farbschema (Violet/Rose/Ocean/Sunset/Mono/Neon)
+- [ ] Playground: Hintergrundfarbe (10 Optionen)
+- [ ] Playground: Speed/Intensity/Blur Slider
+- [ ] Playground: Einstellungen in localStorage persistieren
+- [ ] Route /design in App.tsx registrieren
+
+## v3 Design-System (finales Design, Feb 28)
+- [x] Liquid Orb und Aura Themes vollständig entfernt (Komponenten, State, CSS)
+- [x] v3 CSS-Design-Tokens: --sp-violet, --sp-pink-hot, --sp-blue-sky, --sp-bg
+- [x] Blob-System: 7 animierte CSS-Blobs pro Palette (Landing/Explore/Mood)
+- [x] Mouse-Tracking: Lerp-basiertes Parallax, Touch-Pulse-Effekte
+- [x] Grain-Overlay, Pulse-Rings, Wave-Lines
+- [x] sp-card, sp-btn-primary, sp-btn-mood, sp-btn-ghost, sp-input, sp-nav, sp-display, sp-accent
+- [x] Accent-Gradient: Violett → Pink → Blau
+- [x] Design Customizer Seite (/design) – öffentlich zugänglich
+- [x] Live-Preview mit Landing/Explore/Mood-Tabs
+- [x] Blob-Farb-Picker für alle drei Paletten
+- [x] Slider: Blur, Intensity, Blob-Count, Mouse-Reaktivität
+- [x] Toggles: Grain, Pulse-Rings, Wave-Lines
+- [x] Card-Einstellungen: Blur, Opacity, Border, Radius
+- [x] Accent-Gradient-Picker mit Live-Vorschau
+- [x] Export JSON + Reset-Funktion
+- [x] Auto-Save in localStorage
+- [x] Alle 85 Tests bestehen

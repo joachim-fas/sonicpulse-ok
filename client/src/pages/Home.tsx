@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Music,
@@ -21,6 +21,7 @@ import {
   CircleSlash,
   Moon,
   Sun,
+  Settings,
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -28,10 +29,7 @@ import { trpc } from "@/lib/trpc";
 import { SpotifyEmbedCard } from "@/components/SpotifyEmbedCard";
 import { YouTubeEmbedCard } from "@/components/YouTubeEmbedCard";
 import { AnimatedArtistFallback } from "@/components/AnimatedArtistFallback";
-import { OrganicBackground } from "@/components/OrganicBackground";
-import { AuraBackground } from "@/components/AuraBackground";
-import { LiquidWaveIcon } from "@/components/LiquidWaveIcon";
-import { AuraIcon } from "@/components/AuraIcon";
+import { Link } from "wouter";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -100,7 +98,7 @@ function extractSpotifyArtistId(url?: string | null): string | null {
   return match?.[1] ?? null;
 }
 
-// ─── SpotifyLink: only real artist profiles, never /search/ ──────────────────
+// ─── SpotifyLink ─────────────────────────────────────────────────────────────
 const SpotifyLink = ({
   url, children, className,
 }: { url?: string | null; children: React.ReactNode; className?: string }) => {
@@ -162,7 +160,7 @@ const InfoModal = ({ type, onClose }: { type: "privacy" | "terms" | "spotify"; o
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="relative w-full max-w-lg bg-zinc-900 border border-white/10 rounded-3xl p-8 shadow-2xl"
+        className="relative w-full max-w-lg sp-card p-8 shadow-2xl"
       >
         <button onClick={onClose} className="absolute top-6 right-6 text-white/40 hover:text-white transition-colors">
           <X size={20} />
@@ -170,7 +168,7 @@ const InfoModal = ({ type, onClose }: { type: "privacy" | "terms" | "spotify"; o
         <h2 className="text-2xl font-light tracking-tight mb-6">{title}</h2>
         {text}
         <div className="mt-8 pt-6 border-t border-white/5 flex justify-end">
-          <button onClick={onClose} className="px-6 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-full text-xs uppercase tracking-widest transition-colors">
+          <button onClick={onClose} className="sp-btn-ghost text-xs uppercase tracking-widest">
             Close
           </button>
         </div>
@@ -179,9 +177,23 @@ const InfoModal = ({ type, onClose }: { type: "privacy" | "terms" | "spotify"; o
   );
 };
 
-// ─── Music Loading Bar ──────────────────────────────────────────────────────────
+// ─── Intensity Badge ──────────────────────────────────────────────────────────
+const IntensityBadge = ({ intensity }: { intensity: "subtle" | "moderate" | "intense" }) => {
+  const map = {
+    subtle:   { label: "Subtle",   cls: "bg-violet-500/15 text-violet-300 border-violet-500/20" },
+    moderate: { label: "Moderate", cls: "bg-pink-500/15 text-pink-300 border-pink-500/20" },
+    intense:  { label: "Intense",  cls: "bg-rose-500/20 text-rose-300 border-rose-500/30" },
+  };
+  const { label, cls } = map[intensity];
+  return (
+    <span className={cn("px-2 py-0.5 rounded-full text-[8px] uppercase tracking-widest border font-medium", cls)}>
+      {label}
+    </span>
+  );
+};
 
-// EXPLORE – Mainstream
+// ─── Music Loading Bar ────────────────────────────────────────────────────────
+
 const EXPLORE_MAINSTREAM_MESSAGES = [
   "Checking if this is already on a Spotify editorial playlist...",
   "Asking Spotify HQ if they've heard of your bands...",
@@ -209,7 +221,6 @@ const EXPLORE_MAINSTREAM_MESSAGES = [
   "Asking Pitchfork's Best New Music archive, 2010–2018...",
 ];
 
-// EXPLORE – Underground
 const EXPLORE_UNDERGROUND_MESSAGES = [
   "Bribing the AI with backstage passes to a show in a basement...",
   "Consulting the ghost of John Peel...",
@@ -237,7 +248,6 @@ const EXPLORE_UNDERGROUND_MESSAGES = [
   "Asking if this band has a Bandcamp page and nothing else...",
 ];
 
-// EXPLORE – Exotics
 const EXPLORE_EXOTICS_MESSAGES = [
   "Sending a probe into genres that don't have Wikipedia pages yet...",
   "Asking a music ethnologist in a timezone 9 hours ahead...",
@@ -265,7 +275,6 @@ const EXPLORE_EXOTICS_MESSAGES = [
   "Asking the AI to surprise itself...",
 ];
 
-// MOOD – Mainstream
 const MOOD_MAINSTREAM_MESSAGES = [
   "Checking if Adele already wrote a song about this...",
   "Consulting the Top 10 Most-Streamed Breakup Songs of 2023...",
@@ -293,7 +302,6 @@ const MOOD_MAINSTREAM_MESSAGES = [
   "Verifying there's a lyric video with 50M views for this...",
 ];
 
-// MOOD – Underground
 const MOOD_UNDERGROUND_MESSAGES = [
   "Reading your emotional subtext between the lines...",
   "Consulting the International Registry of Sad Songs, Vol. 7...",
@@ -321,7 +329,6 @@ const MOOD_UNDERGROUND_MESSAGES = [
   "Asking the algorithm to find the song before you knew you needed it...",
 ];
 
-// MOOD – Exotic
 const MOOD_EXOTIC_MESSAGES = [
   "Asking a music therapist in Reykjavik what they'd prescribe...",
   "Consulting a field recording that sounds exactly like this feeling...",
@@ -351,11 +358,9 @@ const MOOD_EXOTIC_MESSAGES = [
 
 const MusicLoadingBar = ({
   mode,
-  isLiquid = false,
   discoveryLevel = "underground",
 }: {
   mode: "explore" | "mood";
-  isLiquid?: boolean;
   discoveryLevel?: "mainstream" | "underground" | "exotics" | "exotic";
 }) => {
   const messages = mode === "explore"
@@ -404,8 +409,9 @@ const MusicLoadingBar = ({
     };
   }, [messages.length]);
 
-  const accentColor = mode === "explore" ? "#06b6d4" : "#fb7185";
-  const glowColor = mode === "explore" ? "rgba(6,182,212,0.4)" : "rgba(251,113,133,0.4)";
+  const accentColor = mode === "explore" ? "var(--sp-violet)" : "var(--sp-pink-hot)";
+  const accentHex = mode === "explore" ? "#954aaf" : "#eb518b";
+  const glowColor = mode === "explore" ? "rgba(149,74,175,0.4)" : "rgba(235,81,139,0.4)";
 
   return (
     <motion.div
@@ -421,13 +427,13 @@ const MusicLoadingBar = ({
       >
         <div
           className="w-16 h-16 rounded-full border-2 flex items-center justify-center"
-          style={{ borderColor: accentColor, boxShadow: `0 0 20px ${glowColor}` }}
+          style={{ borderColor: accentHex, boxShadow: `0 0 20px ${glowColor}` }}
         >
-          <Disc size={28} style={{ color: accentColor }} />
+          <Disc size={28} style={{ color: accentHex }} />
         </div>
         <div
           className="absolute inset-0 rounded-full animate-ping opacity-20"
-          style={{ backgroundColor: accentColor }}
+          style={{ backgroundColor: accentHex }}
         />
       </motion.div>
 
@@ -435,8 +441,8 @@ const MusicLoadingBar = ({
         <motion.p
           animate={{ opacity: fade ? 1 : 0 }}
           transition={{ duration: 0.3 }}
-          className={cn("text-sm font-light tracking-wide text-center", isLiquid && (mode === "explore" ? "liquid-glow-cyan" : "liquid-glow-rose"))}
-          style={{ color: accentColor }}
+          className="text-sm font-light tracking-wide text-center"
+          style={{ color: accentHex }}
         >
           {messages[msgIdx]}
         </motion.p>
@@ -448,15 +454,15 @@ const MusicLoadingBar = ({
             className="h-full rounded-full"
             style={{
               width: `${progress}%`,
-              background: `linear-gradient(90deg, ${accentColor}80, ${accentColor})`,
+              background: `linear-gradient(90deg, ${accentHex}80, ${accentHex})`,
               boxShadow: `0 0 8px ${glowColor}`,
             }}
             transition={{ duration: 0.2 }}
           />
         </div>
         <div className="flex justify-between mt-2">
-          <span className="text-[9px] uppercase tracking-widest" style={{ color: accentColor + '80' }}>Thinking</span>
-          <span className="text-[9px] uppercase tracking-widest" style={{ color: accentColor + '80' }}>{Math.round(progress)}%</span>
+          <span className="text-[9px] uppercase tracking-widest" style={{ color: accentHex + '80' }}>Thinking</span>
+          <span className="text-[9px] uppercase tracking-widest" style={{ color: accentHex + '80' }}>{Math.round(progress)}%</span>
         </div>
       </div>
     </motion.div>
@@ -465,7 +471,7 @@ const MusicLoadingBar = ({
 
 // ─── Artist Input with MusicBrainz Autocomplete ───────────────────────────────
 const ArtistInput = ({
-  value, onChange, onSelect, placeholder, accentColor = "cyan", onRemove, showRemove = false, isLightMode = false, isLiquid = false, isAura = false,
+  value, onChange, onSelect, placeholder, accentColor = "cyan", onRemove, showRemove = false,
 }: {
   value: string;
   onChange: (val: string) => void;
@@ -474,9 +480,6 @@ const ArtistInput = ({
   accentColor?: "cyan" | "fuchsia" | "rose";
   onRemove?: () => void;
   showRemove?: boolean;
-  isLightMode?: boolean;
-  isLiquid?: boolean;
-  isAura?: boolean;
 }) => {
   const [suggestions, setSuggestions] = useState<MBSuggestion[]>([]);
   const [open, setOpen] = useState(false);
@@ -513,28 +516,6 @@ const ArtistInput = ({
     }
   };
 
-  const borderColor = {
-    cyan:    "border-cyan-500/30 focus:border-cyan-500",
-    fuchsia: "border-fuchsia-500/30 focus:border-fuchsia-500",
-    rose:    "border-rose-500/30 focus:border-rose-400",
-  }[accentColor];
-
-  const textColor = isLightMode ? "text-zinc-800" : {
-    cyan:    "text-cyan-50",
-    fuchsia: "text-fuchsia-50",
-    rose:    "text-rose-50",
-  }[accentColor];
-
-  const inputClass = isLiquid
-    ? cn("w-full rounded-xl px-4 py-3 text-sm font-light transition-all liquid-input", showRemove ? "pr-16" : "pr-10")
-    : isAura
-    ? cn("w-full rounded-xl px-4 py-3 text-sm font-light transition-all bg-white/70 border border-zinc-200/60 text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-zinc-400/60 backdrop-blur-sm", showRemove ? "pr-16" : "pr-10")
-    : cn(
-        "w-full border rounded-xl px-4 py-3 text-sm font-light focus:outline-none transition-all",
-        isLightMode ? "bg-white placeholder:text-zinc-400" : "bg-black placeholder:text-white/40",
-        borderColor, textColor, showRemove ? "pr-16" : "pr-10"
-      );
-
   return (
     <div className="relative">
       <div className="relative">
@@ -545,27 +526,25 @@ const ArtistInput = ({
           onBlur={handleBlur}
           onFocus={() => suggestions.length > 0 && setOpen(true)}
           placeholder={placeholder}
-          className={inputClass}
+          className={cn(
+            "sp-input w-full",
+            showRemove ? "pr-16" : "pr-10"
+          )}
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
           {showRemove && (
-            <button onClick={onRemove} className={cn("transition-colors hover:text-red-400", isLightMode || isLiquid ? "text-white/30" : "text-white/10")}>
+            <button onClick={onRemove} className="text-white/30 transition-colors hover:text-red-400">
               <Trash2 size={14} />
             </button>
           )}
-          <Mic2 size={14} className={cn(isLightMode ? "text-zinc-300" : "text-white/10")} />
+          <Mic2 size={14} className="text-white/20" />
         </div>
       </div>
       <AnimatePresence>
         {open && suggestions.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-            className={cn(
-              "absolute z-20 left-0 right-0 mt-1 rounded-xl overflow-hidden shadow-2xl border",
-              isLiquid
-                ? "bg-black/60 backdrop-blur-xl border-white/10"
-                : isLightMode ? "bg-white border-zinc-200" : "bg-zinc-900 border-white/10"
-            )}
+            className="absolute z-20 left-0 right-0 mt-1 rounded-xl overflow-hidden shadow-2xl border bg-[var(--sp-bg-elevated)] border-white/10"
             onMouseDown={() => { mouseDownOnDropdown.current = true; }}
             onMouseUp={() => { mouseDownOnDropdown.current = false; }}
             onMouseLeave={() => { mouseDownOnDropdown.current = false; }}
@@ -577,15 +556,10 @@ const ArtistInput = ({
                   e.preventDefault();
                   handleSelect(s.name);
                 }}
-                className={cn(
-                  "w-full px-4 py-2 text-left transition-colors flex justify-between items-center border-b last:border-0",
-                  isLiquid
-                    ? "hover:bg-white/10 border-white/5 text-white"
-                    : isLightMode ? "hover:bg-zinc-50 border-zinc-100 text-zinc-800" : "hover:bg-white/5 border-white/5 text-white"
-                )}
+                className="w-full px-4 py-2 text-left transition-colors flex justify-between items-center border-b last:border-0 hover:bg-white/5 border-white/5 text-white"
               >
                 <span className="text-xs font-light">{s.name}</span>
-                <span className={cn("text-[8px] uppercase tracking-widest", isLightMode ? "text-zinc-400" : "text-white/40")}>{s.country ?? "Artist"}</span>
+                <span className="text-[8px] uppercase tracking-widest text-white/40">{s.country ?? "Artist"}</span>
               </button>
             ))}
           </motion.div>
@@ -607,7 +581,7 @@ const PlaylistSuccessModal = ({
       initial={{ opacity: 0, scale: 0.9, y: 30 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.9, y: 30 }}
-      className="relative w-full max-w-md bg-zinc-900 border border-[#1DB954]/30 rounded-3xl p-8 shadow-2xl"
+      className="relative w-full max-w-md sp-card p-8 shadow-2xl border-[#1DB954]/30"
     >
       <button onClick={onClose} className="absolute top-6 right-6 text-white/40 hover:text-white transition-colors">
         <X size={20} />
@@ -649,7 +623,7 @@ const PlaylistSuccessModal = ({
   </div>
 );
 
-// ─── Spotify Save Section (shared across modes) ───────────────────────────────
+// ─── Spotify Save Section ─────────────────────────────────────────────────────
 const SpotifySaveSection = ({
   tracks, playlistName, onPlaylistNameChange, showNameInput, onToggleNameInput,
   onSave, onLogin, isLoggedIn, isLoginPending, isSaving, saveError, accentColor = "green", compact = false,
@@ -683,7 +657,7 @@ const SpotifySaveSection = ({
             value={playlistName}
             onChange={(e) => onPlaylistNameChange(e.target.value)}
             placeholder="Playlist name..."
-            className="bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-sm font-light focus:outline-none focus:border-[#1DB954]/50 text-white placeholder:text-white/30 w-full md:w-64 dark:bg-zinc-900"
+            className="sp-input text-sm w-full md:w-64"
           />
         </motion.div>
       )}
@@ -710,7 +684,7 @@ const SpotifySaveSection = ({
   );
 };
 
-// ─── Floating Save Button (shared) ───────────────────────────────────────────
+// ─── Floating Save Button ─────────────────────────────────────────────────────
 const FloatingSaveButton = ({
   tracks, playlistName, onSave, onLogin, isLoggedIn, isLoginPending, isSaving, accentColor = "green",
 }: {
@@ -723,43 +697,40 @@ const FloatingSaveButton = ({
   isSaving: boolean;
   accentColor?: "green" | "rose";
 }) => {
-  const saveBtn = accentColor === "rose"
+  if (!tracks.length) return null;
+  const btnClass = accentColor === "rose"
     ? "bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:from-rose-400 hover:to-pink-400 shadow-rose-900/40"
-    : "bg-[#1DB954] text-black hover:bg-[#1ed760] shadow-green-900/40";
-
-  if (!isLoggedIn) return null;
+    : "bg-[#1DB954] text-black hover:bg-[#1ed760]";
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="pt-8 flex justify-center">
-      <button
-        onClick={onSave}
-        disabled={isSaving || !tracks.length}
-        className={cn(
-          "flex items-center gap-3 px-8 py-4 rounded-full font-medium text-sm uppercase tracking-widest transition-all active:scale-95 shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed",
-          saveBtn, isSaving && "animate-pulse"
-        )}
-      >
-        {isSaving ? <Loader2 size={18} className="animate-spin" /> : <ListMusic size={18} />}
-        {isSaving ? "Creating playlist..." : `Save playlist (${tracks.length} tracks)`}
-      </button>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="fixed bottom-8 right-8 z-30"
+    >
+      {isLoggedIn ? (
+        <button
+          onClick={onSave}
+          disabled={isSaving}
+          className={cn(
+            "flex items-center gap-2 px-6 py-3 rounded-full font-medium text-sm shadow-2xl transition-all active:scale-95 disabled:opacity-50",
+            btnClass, isSaving && "animate-pulse"
+          )}
+        >
+          {isSaving ? <Loader2 size={16} className="animate-spin" /> : <ListMusic size={16} />}
+          {isSaving ? "Saving..." : "Save playlist"}
+        </button>
+      ) : (
+        <button
+          onClick={onLogin}
+          disabled={isLoginPending}
+          className="flex items-center gap-2 px-6 py-3 rounded-full bg-[#1DB954] text-black font-medium text-sm shadow-2xl hover:bg-[#1ed760] transition-all active:scale-95 disabled:opacity-50"
+        >
+          {isLoginPending ? <Loader2 size={16} className="animate-spin" /> : <SpotifyLogo size={16} />}
+          Connect Spotify
+        </button>
+      )}
     </motion.div>
-  );
-};
-
-// ─── Intensity Badge ──────────────────────────────────────────────────────────
-const IntensityBadge = ({ intensity }: { intensity: "subtle" | "moderate" | "intense" }) => {
-  const config = {
-    subtle:   { color: "bg-sky-500/15 text-sky-300 border-sky-500/20",     dots: 1 },
-    moderate: { color: "bg-amber-500/15 text-amber-300 border-amber-500/20", dots: 2 },
-    intense:  { color: "bg-rose-500/15 text-rose-300 border-rose-500/20",   dots: 3 },
-  }[intensity];
-  return (
-    <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[9px] uppercase tracking-widest font-medium", config.color)}>
-      {Array.from({ length: 3 }).map((_, i) => (
-        <span key={i} className={cn("w-1 h-1 rounded-full", i < config.dots ? "bg-current" : "bg-current opacity-20")} />
-      ))}
-      {intensity}
-    </span>
   );
 };
 
@@ -789,30 +760,17 @@ export default function Home() {
   const [infoModal, setInfoModal] = useState<"privacy" | "terms" | "spotify" | null>(null);
   const [loadingMessage, setLoadingMessage] = useState("");
   const [isLightMode, setIsLightMode] = useState(false);
-  const [isLiquidTheme, setIsLiquidTheme] = useState(() => {
-    try { return localStorage.getItem("sonicpulse_liquid_theme") === "true"; } catch { return false; }
-  });
-  const [isAuraTheme, setIsAuraTheme] = useState(() => {
-    try { return localStorage.getItem("sonicpulse_aura_theme") === "true"; } catch { return false; }
-  });
 
-  // Apply theme classes to document root
+  // Apply theme classes
   useEffect(() => {
-    if (isLightMode && !isLiquidTheme && !isAuraTheme) {
+    if (isLightMode) {
       document.documentElement.classList.add('light');
       document.documentElement.classList.remove('dark');
     } else {
       document.documentElement.classList.remove('light');
+      document.documentElement.classList.add('dark');
     }
-  }, [isLightMode, isLiquidTheme, isAuraTheme]);
-
-  // Persist theme preferences
-  useEffect(() => {
-    try { localStorage.setItem("sonicpulse_liquid_theme", String(isLiquidTheme)); } catch { /* ignore */ }
-  }, [isLiquidTheme]);
-  useEffect(() => {
-    try { localStorage.setItem("sonicpulse_aura_theme", String(isAuraTheme)); } catch { /* ignore */ }
-  }, [isAuraTheme]);
+  }, [isLightMode]);
 
   const [playlistSuccess, setPlaylistSuccess] = useState<{
     url: string; tracksAdded: number; tracksNotFound: string[];
@@ -943,15 +901,13 @@ export default function Home() {
     });
   }, [moodPrompt, moodReference, moodDiscovery, moodMutation]);
 
-  // ─── Mouse / Touch tracking (only for non-liquid theme) ──────────────────
+  // ─── Mouse tracking for blob parallax ────────────────────────────────────
   const mousePos = useRef({ x: 50, y: 50 });
   const mousePosSmooth = useRef({ x: 50, y: 50 });
   const [pulses, setPulses] = useState<{ id: number; x: number; y: number }[]>([]);
   const pulseIdRef = useRef(0);
 
   useEffect(() => {
-    if (isLiquidTheme || isAuraTheme) return; // OrganicBackground / AuraBackground handle their own tracking
-
     const handleMouseMove = (e: MouseEvent) => {
       mousePos.current = {
         x: (e.clientX / window.innerWidth) * 100,
@@ -989,17 +945,7 @@ export default function Home() {
       window.removeEventListener('touchmove', handleTouchMove);
       cancelAnimationFrame(rafId);
     };
-  }, [isLiquidTheme]);
-
-  // ─── Background Gradient (standard theme) ────────────────────────────────
-  const bgGradient = !hasStarted
-    ? "radial-gradient(ellipse at 40% 10%, rgba(234,179,8,0.12) 0%, transparent 60%), radial-gradient(ellipse at 70% 80%, rgba(180,83,9,0.08) 0%, transparent 50%)"
-    : mode === "explore"
-    ? "radial-gradient(ellipse at 30% 0%, rgba(6,182,212,0.13) 0%, transparent 60%), radial-gradient(ellipse at 80% 90%, rgba(59,130,246,0.08) 0%, transparent 50%)"
-    : "radial-gradient(ellipse at 60% 0%, rgba(244,114,182,0.14) 0%, transparent 60%), radial-gradient(ellipse at 20% 80%, rgba(168,85,247,0.07) 0%, transparent 50%)";
-
-  const blob1 = !hasStarted ? "bg-yellow-900/30" : mode === "explore" ? "bg-cyan-900/30" : "bg-rose-900/30";
-  const blob2 = !hasStarted ? "bg-amber-900/25" : mode === "explore" ? "bg-blue-900/25" : "bg-pink-900/20";
+  }, []);
 
   // ─── Mood Placeholder Examples ────────────────────────────────────────────
   const moodExamples = [
@@ -1012,135 +958,94 @@ export default function Home() {
   ];
   const [moodPlaceholder] = useState(() => moodExamples[Math.floor(Math.random() * moodExamples.length)]);
 
-  // ─── Derived theme helpers ────────────────────────────────────────────────
-  // Priority: Aura > Liquid > Light/Dark Standard
-  const cardClass = isAuraTheme
-    ? "aura-card transition-all duration-500"
-    : isLiquidTheme
-    ? "liquid-card transition-all duration-500"
-    : cn(
-        "group rounded-[32px] overflow-hidden transition-all duration-500 flex flex-col border",
-        isLightMode ? "bg-white border-zinc-200 hover:border-zinc-300 hover:shadow-lg" : "bg-zinc-900/30 border-white/5 hover:bg-zinc-900/50"
-      );
-
-  const filterPillContainerClass = isAuraTheme
-    ? "flex items-center gap-1 p-1 rounded-full aura-pill"
-    : isLiquidTheme
-    ? "flex items-center gap-1 p-1 rounded-full liquid-pill"
-    : cn("flex items-center gap-1 p-1 rounded-full border", isLightMode ? "bg-white border-zinc-200" : "bg-black/40 border-white/5");
-
-  const controlCardClass = isAuraTheme
-    ? "flex flex-col sm:flex-row items-center justify-between gap-4 p-5 md:p-6 rounded-[28px] aura-card max-w-4xl mx-auto"
-    : isLiquidTheme
-    ? "flex flex-col sm:flex-row items-center justify-between gap-4 p-5 md:p-6 rounded-[28px] liquid-card max-w-4xl mx-auto"
-    : cn(
-        "flex flex-col sm:flex-row items-center justify-between gap-4 p-5 md:p-6 rounded-[28px] border max-w-4xl mx-auto",
-        isLightMode ? "bg-zinc-100 border-zinc-200" : "bg-zinc-900/30 border-white/5"
-      );
-
-  const textMuted = isAuraTheme ? "text-zinc-500" : isLiquidTheme ? "text-white/50" : isLightMode ? "text-zinc-500" : "text-white/40";
-  const textDim   = isAuraTheme ? "text-zinc-400" : isLiquidTheme ? "text-white/30" : isLightMode ? "text-zinc-400" : "text-white/20";
-  const textBody  = isAuraTheme ? "text-zinc-600" : isLiquidTheme ? "text-white/70" : isLightMode ? "text-zinc-600" : "text-white/60";
-  const headingClass = isAuraTheme ? "text-zinc-900" : isLiquidTheme ? "text-white" : isLightMode ? "text-zinc-900" : "text-white";
-  const dividerClass = isAuraTheme ? "border-zinc-200/80" : isLiquidTheme ? "border-white/8" : isLightMode ? "border-zinc-100" : "border-white/5";
-
-  // Determine organic background mode
-  const organicMode: "explore" | "mood" | "landing" = !hasStarted ? "landing" : mode;
+  // ─── Background blob colors based on mode ────────────────────────────────
+  const blobMode = !hasStarted ? "landing" : mode;
 
   return (
     <div className={cn(
-      "min-h-screen font-sans overflow-x-hidden relative transition-colors duration-500",
-      isAuraTheme ? "text-zinc-900" : isLiquidTheme ? "text-white" : isLightMode ? "bg-background text-foreground" : "bg-black text-white"
+      "min-h-screen overflow-x-hidden relative transition-colors duration-500",
+      isLightMode ? "bg-[#f8f7f4] text-zinc-900" : "sp-bg text-white"
     )}>
 
-      {/* ── Animated Background ── */}
-      {isAuraTheme ? (
-        <AuraBackground mode={organicMode} blobCount={5} />
-      ) : isLiquidTheme ? (
-        <OrganicBackground mode={organicMode} shapeCount={6} />
-      ) : (
-        <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+      {/* ── Animated Blob Background ── */}
+      <div className="sp-bg-system" aria-hidden="true">
+        <div className={cn("sp-blob sp-blob-1", blobMode === "explore" ? "sp-blob-explore-1" : blobMode === "mood" ? "sp-blob-mood-1" : "sp-blob-landing-1")} />
+        <div className={cn("sp-blob sp-blob-2", blobMode === "explore" ? "sp-blob-explore-2" : blobMode === "mood" ? "sp-blob-mood-2" : "sp-blob-landing-2")} />
+        <div className={cn("sp-blob sp-blob-3", blobMode === "explore" ? "sp-blob-explore-3" : blobMode === "mood" ? "sp-blob-mood-3" : "sp-blob-landing-3")} />
+        <div className={cn("sp-blob sp-blob-4", blobMode === "explore" ? "sp-blob-explore-4" : blobMode === "mood" ? "sp-blob-mood-4" : "sp-blob-landing-4")} />
+        <div className={cn("sp-blob sp-blob-5", blobMode === "explore" ? "sp-blob-explore-5" : blobMode === "mood" ? "sp-blob-mood-5" : "sp-blob-landing-5")} />
+        <div className={cn("sp-blob sp-blob-6", blobMode === "explore" ? "sp-blob-explore-6" : blobMode === "mood" ? "sp-blob-mood-6" : "sp-blob-landing-6")} />
+        <div className={cn("sp-blob sp-blob-7", blobMode === "explore" ? "sp-blob-explore-7" : blobMode === "mood" ? "sp-blob-mood-7" : "sp-blob-landing-7")} />
+        <div className="sp-pulse-ring sp-pulse-ring-1" />
+        <div className="sp-pulse-ring sp-pulse-ring-2" />
+        <div className="sp-wave-line sp-wave-line-1" />
+        <div className="sp-wave-line sp-wave-line-2" />
+        <div className="sp-grain" />
+        {/* Mouse-reactive blob */}
+        <div
+          className="sp-blob sp-blob-mouse"
+          style={{
+            left: 'var(--mx, 50%)',
+            top: 'var(--my, 50%)',
+            background: blobMode === "explore"
+              ? 'radial-gradient(circle, rgba(149,74,175,0.18) 0%, transparent 70%)'
+              : blobMode === "mood"
+              ? 'radial-gradient(circle, rgba(235,81,139,0.18) 0%, transparent 70%)'
+              : 'radial-gradient(circle, rgba(13,171,247,0.15) 0%, transparent 70%)',
+          }}
+        />
+        {/* Touch pulses */}
+        {pulses.map((p) => (
           <motion.div
-            animate={{ background: bgGradient }}
-            transition={{ duration: 3.5, ease: [0.4, 0, 0.2, 1] }}
-            className="absolute inset-0"
-          />
-          <div
-            className="absolute inset-0"
+            key={p.id}
+            initial={{ opacity: 0.5, scale: 0.2 }}
+            animate={{ opacity: 0, scale: 3.5 }}
+            transition={{ duration: 1.1, ease: [0.2, 0.8, 0.4, 1] }}
+            className="absolute rounded-full pointer-events-none"
             style={{
-              background: `radial-gradient(ellipse 55% 45% at var(--mx, 50%) var(--my, 50%), ${
-                !hasStarted ? 'rgba(234,179,8,0.07)' : mode === 'explore' ? 'rgba(6,182,212,0.09)' : 'rgba(244,114,182,0.09)'
-              } 0%, transparent 70%)`,
-              transition: 'background-color 2s ease',
+              left: `${p.x}%`,
+              top: `${p.y}%`,
+              width: 120,
+              height: 120,
+              marginLeft: -60,
+              marginTop: -60,
+              background: blobMode === "explore"
+                ? 'radial-gradient(circle, rgba(149,74,175,0.35) 0%, transparent 70%)'
+                : 'radial-gradient(circle, rgba(235,81,139,0.35) 0%, transparent 70%)',
             }}
           />
-          {pulses.map((p) => (
-            <motion.div
-              key={p.id}
-              initial={{ opacity: 0.5, scale: 0.2 }}
-              animate={{ opacity: 0, scale: 3.5 }}
-              transition={{ duration: 1.1, ease: [0.2, 0.8, 0.4, 1] }}
-              className="absolute rounded-full pointer-events-none"
-              style={{
-                left: `${p.x}%`,
-                top: `${p.y}%`,
-                width: 120,
-                height: 120,
-                marginLeft: -60,
-                marginTop: -60,
-                background: !hasStarted
-                  ? 'radial-gradient(circle, rgba(234,179,8,0.35) 0%, transparent 70%)'
-                  : mode === 'explore'
-                  ? 'radial-gradient(circle, rgba(6,182,212,0.35) 0%, transparent 70%)'
-                  : 'radial-gradient(circle, rgba(244,114,182,0.35) 0%, transparent 70%)',
-              }}
-            />
-          ))}
-          <motion.div
-            animate={{ x: [0, 60, 20, -40, 0], y: [0, 30, -20, 50, 0], scale: [1, 1.08, 1.04, 1.1, 1], opacity: [0.25, 0.3, 0.22, 0.28, 0.25] }}
-            transition={{ duration: 35, repeat: Infinity, ease: "easeInOut", times: [0, 0.25, 0.5, 0.75, 1] }}
-            className={cn("absolute top-[-15%] left-[-5%] w-[65vw] h-[65vw] rounded-full blur-[140px] mix-blend-screen transition-colors duration-[3000ms]", blob1)}
-          />
-          <motion.div
-            animate={{ x: [0, -50, -20, 40, 0], y: [0, -30, 20, -50, 0], scale: [1, 1.06, 1.1, 1.03, 1], opacity: [0.18, 0.22, 0.16, 0.20, 0.18] }}
-            transition={{ duration: 42, repeat: Infinity, ease: "easeInOut", times: [0, 0.25, 0.5, 0.75, 1] }}
-            className={cn("absolute bottom-[-15%] right-[-5%] w-[55vw] h-[55vw] rounded-full blur-[140px] mix-blend-screen transition-colors duration-[3000ms]", blob2)}
-          />
-          <motion.div
-            animate={{ x: [0, 30, -30, 0], y: [0, -20, 20, 0], opacity: [0.08, 0.12, 0.06, 0.08] }}
-            transition={{ duration: 28, repeat: Infinity, ease: "easeInOut" }}
-            className={cn("absolute top-[30%] left-[30%] w-[40vw] h-[40vw] rounded-full blur-[160px] mix-blend-screen transition-colors duration-[3000ms]",
-              !hasStarted ? "bg-orange-900/20" : mode === "explore" ? "bg-teal-900/20" : "bg-fuchsia-900/20"
-            )}
-          />
-        </div>
-      )}
+        ))}
+      </div>
 
       {/* ── Navbar ── */}
       <nav className={cn(
-        "relative z-10 flex items-center justify-between px-4 md:px-8 py-6 border-b sticky top-0",
-        isAuraTheme ? "aura-nav" : isLiquidTheme ? "liquid-nav" : isLightMode ? "border-black/10 bg-white/70 backdrop-blur-md" : "border-white/5 backdrop-blur-md"
+        "relative z-10 flex items-center justify-between px-4 md:px-8 py-5 border-b sticky top-0",
+        isLightMode
+          ? "border-black/10 bg-white/70 backdrop-blur-md"
+          : "sp-nav border-white/8"
       )}>
         <button
           onClick={() => setHasStarted(false)}
-          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          className="flex items-center gap-3 hover:opacity-80 transition-opacity"
         >
-          <Disc className={cn(isLiquidTheme || !isLightMode ? "text-white" : "text-zinc-800", "transition-colors duration-300")} size={24} />
-          <span className={cn(
-            "text-xl font-light tracking-widest uppercase",
-            isAuraTheme
-              ? cn("text-zinc-900", hasStarted && mode === "explore" ? "aura-glow-blue" : hasStarted && mode === "mood" ? "aura-glow-pink" : "")
-              : isLiquidTheme
-              ? cn("text-white", hasStarted && mode === "explore" ? "liquid-glow-cyan" : hasStarted && mode === "mood" ? "liquid-glow-rose" : "")
-              : isLightMode ? "text-zinc-900" : "text-white"
-          )}>SonicPulse</span>
+          <div className={cn(
+            "w-8 h-8 rounded-full flex items-center justify-center",
+            blobMode === "explore" ? "bg-[var(--sp-violet)]/20" : blobMode === "mood" ? "bg-[var(--sp-pink-hot)]/20" : "bg-[var(--sp-blue-sky)]/20"
+          )}>
+            <Disc size={16} className={cn(
+              blobMode === "explore" ? "text-[var(--sp-violet)]" : blobMode === "mood" ? "text-[var(--sp-pink-hot)]" : "text-[var(--sp-blue-sky)]"
+            )} />
+          </div>
+          <span className="sp-display text-lg font-semibold tracking-tight">
+            SonicPulse
+          </span>
         </button>
 
         <div className="flex items-center gap-3">
           {hasStarted && (
             <div className={cn(
               "flex items-center gap-1 p-1 rounded-full border",
-              isLiquidTheme ? "liquid-pill" : isLightMode ? "bg-zinc-100 border-zinc-200" : "bg-black/40 border-white/5"
+              isLightMode ? "bg-white border-zinc-200" : "bg-black/30 border-white/8"
             )}>
               {(["explore", "mood"] as const).map((m) => (
                 <button
@@ -1149,66 +1054,42 @@ export default function Home() {
                   className={cn(
                     "px-3 md:px-4 py-1.5 rounded-full text-[10px] md:text-xs uppercase tracking-widest transition-all whitespace-nowrap",
                     mode === m
-                      ? m === "explore" ? "bg-gradient-to-r from-cyan-500 to-teal-500 text-white shadow-sm"
-                        : "bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-sm"
-                      : isLiquidTheme || !isLightMode ? "text-white/40 hover:text-white" : "text-zinc-500 hover:text-zinc-900"
+                      ? m === "explore"
+                        ? "bg-gradient-to-r from-[var(--sp-violet)] to-[var(--sp-blue-deep)] text-white shadow-sm"
+                        : "bg-gradient-to-r from-[var(--sp-pink-hot)] to-[var(--sp-violet)] text-white shadow-sm"
+                      : isLightMode ? "text-zinc-500 hover:text-zinc-900" : "text-white/40 hover:text-white"
                   )}
                 >{m}</button>
               ))}
             </div>
           )}
 
-          {/* Aura Theme Toggle */}
-          <button
-            onClick={() => { const next = !isAuraTheme; setIsAuraTheme(next); if (next) { setIsLiquidTheme(false); } }}
-            title={isAuraTheme ? "Switch to Standard Theme" : "Switch to Aura Theme"}
-            className={cn(
-              "p-2 rounded-full transition-all",
-              isAuraTheme
-                ? mode === "explore"
-                  ? "text-blue-600 hover:text-blue-500 hover:bg-blue-100 ring-1 ring-blue-400/40"
-                  : "text-fuchsia-600 hover:text-fuchsia-500 hover:bg-fuchsia-100 ring-1 ring-fuchsia-400/40"
-                : isLiquidTheme || !isLightMode
-                ? "text-white/30 hover:text-white/60 hover:bg-white/5"
-                : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100"
-            )}
-          >
-            <AuraIcon size={14} />
-          </button>
+          {/* Design Customizer Link */}
+          <Link href="/design">
+            <button
+              title="Design Customizer"
+              className={cn(
+                "p-2 rounded-full transition-all",
+                isLightMode ? "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100" : "text-white/30 hover:text-white/60 hover:bg-white/5"
+              )}
+            >
+              <Settings size={14} />
+            </button>
+          </Link>
 
-          {/* Liquid Orb Toggle */}
+          {/* Light/Dark Toggle */}
           <button
-            onClick={() => { const next = !isLiquidTheme; setIsLiquidTheme(next); if (next) { setIsAuraTheme(false); } }}
-            title={isLiquidTheme ? "Switch to Standard Theme" : "Switch to Liquid Orb Theme"}
+            onClick={() => setIsLightMode(!isLightMode)}
+            title={isLightMode ? "Switch to Dark Mode" : "Switch to Light Mode"}
             className={cn(
               "p-2 rounded-full transition-all",
-              isLiquidTheme
-                ? "text-cyan-400 hover:text-cyan-300 hover:bg-white/10 ring-1 ring-cyan-500/40"
-                : isAuraTheme
-                ? "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100"
-                : isLightMode
+              isLightMode
                 ? "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200"
                 : "text-white/30 hover:text-white/60 hover:bg-white/5"
             )}
           >
-            <LiquidWaveIcon size={14} />
+            {isLightMode ? <Moon size={14} /> : <Sun size={14} />}
           </button>
-
-          {/* Light/Dark Toggle (hidden in Liquid/Aura mode) */}
-          {!isLiquidTheme && !isAuraTheme && (
-            <button
-              onClick={() => setIsLightMode(!isLightMode)}
-              title={isLightMode ? "Switch to Dark Mode" : "Switch to Light Mode"}
-              className={cn(
-                "p-2 rounded-full transition-all",
-                isLightMode
-                  ? "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200"
-                  : "text-white/30 hover:text-white/60 hover:bg-white/5"
-              )}
-            >
-              {isLightMode ? <Moon size={14} /> : <Sun size={14} />}
-            </button>
-          )}
 
           {isSpotifyLoggedIn ? (
             <div className="flex items-center gap-2">
@@ -1221,7 +1102,7 @@ export default function Home() {
                 title="Disconnect Spotify"
                 className={cn(
                   "p-2 rounded-full transition-all",
-                  isAuraTheme ? "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100" : isLiquidTheme || !isLightMode ? "text-white/30 hover:text-white/60 hover:bg-white/5" : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100"
+                  isLightMode ? "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100" : "text-white/30 hover:text-white/60 hover:bg-white/5"
                 )}
               >
                 <LogOut size={14} />
@@ -1244,50 +1125,36 @@ export default function Home() {
               transition={{ duration: 0.5 }}
               className="flex flex-col items-center justify-center min-h-[70vh] text-center"
             >
-              <h1 className={cn(
-                "text-6xl md:text-8xl font-light tracking-tighter mb-8 leading-none",
-              isAuraTheme ? "text-zinc-900" : isLiquidTheme ? "text-white" : isLightMode ? "text-zinc-900" : "text-white"
-            )}>
+              <div className="sp-section-tag mb-6">Beta</div>
+              <h1 className="sp-display text-6xl md:text-8xl font-semibold tracking-tight mb-6 leading-none">
                 Your sound,<br />
-                <span className="italic" style={{ fontFamily: "Georgia, serif" }}>reimagined.</span>
+                <em className="sp-accent font-normal" style={{ fontStyle: "italic" }}>reimagined.</em>
               </h1>
-              <p className={cn("max-w-md mb-12 text-lg font-light leading-relaxed", textMuted)}>
+              <p className={cn("max-w-md mb-12 text-lg font-light leading-relaxed", isLightMode ? "text-zinc-500" : "text-white/50")}>
                 No DJ required. Tell us what you love, or how you feel — we'll handle the rest.
               </p>
               <div className="flex flex-col md:flex-row gap-6 justify-center w-full max-w-3xl">
                 <button
                   onClick={() => handleModeSelect("explore")}
-                  className={cn(
-                    "relative flex-1 group p-6 md:p-8 rounded-[32px] transition-all duration-500 text-left border",
-                    isAuraTheme
-                      ? "aura-card hover:shadow-blue-200/60"
-                      : isLiquidTheme
-                      ? "liquid-card hover:bg-white/10"
-                      : isLightMode ? "bg-zinc-100 border-zinc-200 hover:bg-zinc-900 hover:text-white hover:border-zinc-900" : "bg-zinc-900/30 border-white/5 hover:bg-white hover:text-black"
-                  )}
+                  className="relative flex-1 group p-6 md:p-8 sp-card sp-card-hover text-left"
                 >
+                  <div className="sp-card-accent-line sp-card-accent-explore" />
                   <motion.div whileHover={{ rotate: 15, scale: 1.1 }} className="inline-block mb-4">
-                    <Sparkles className="opacity-40 group-hover:opacity-100 text-cyan-500 transition-colors" size={32} />
+                    <Sparkles className="opacity-40 group-hover:opacity-100 transition-all" style={{ color: "var(--sp-violet)" }} size={32} />
                   </motion.div>
-                  <h3 className={cn("text-2xl font-light mb-2", isAuraTheme ? "text-zinc-900" : "")}>Explore Mode</h3>
-                  <p className={cn("text-xs opacity-40 group-hover:opacity-60 uppercase tracking-widest", isAuraTheme ? "text-zinc-700" : "")}>Feed it 3 bands. Get artists you'll actually love.</p>
+                  <h3 className="sp-display text-2xl font-semibold mb-2">Explore Mode</h3>
+                  <p className={cn("text-xs opacity-40 group-hover:opacity-60 uppercase tracking-widest", isLightMode ? "text-zinc-600" : "")}>Feed it 3 bands. Get artists you'll actually love.</p>
                 </button>
                 <button
                   onClick={() => handleModeSelect("mood")}
-                  className={cn(
-                    "relative flex-1 group p-6 md:p-8 rounded-[32px] transition-all duration-500 text-left border",
-                    isAuraTheme
-                      ? "aura-card hover:shadow-fuchsia-200/60"
-                      : isLiquidTheme
-                      ? "liquid-card hover:bg-white/10"
-                      : isLightMode ? "bg-zinc-100 border-zinc-200 hover:bg-zinc-900 hover:text-white hover:border-zinc-900" : "bg-zinc-900/30 border-white/5 hover:bg-white hover:text-black"
-                  )}
+                  className="relative flex-1 group p-6 md:p-8 sp-card sp-card-hover text-left"
                 >
+                  <div className="sp-card-accent-line sp-card-accent-mood" />
                   <motion.div whileHover={{ scale: 1.15 }} className="inline-block mb-4">
-                    <Heart className="opacity-40 group-hover:opacity-100 text-rose-400 transition-colors" size={32} />
+                    <Heart className="opacity-40 group-hover:opacity-100 transition-all" style={{ color: "var(--sp-pink-hot)" }} size={32} />
                   </motion.div>
-                  <h3 className={cn("text-2xl font-light mb-2", isAuraTheme ? "text-zinc-900" : "")}>Mood Mode</h3>
-                  <p className={cn("text-xs opacity-40 group-hover:opacity-60 uppercase tracking-widest", isAuraTheme ? "text-zinc-700" : "")}>Describe the feeling. We find the soundtrack.</p>
+                  <h3 className="sp-display text-2xl font-semibold mb-2">Mood Mode</h3>
+                  <p className={cn("text-xs opacity-40 group-hover:opacity-60 uppercase tracking-widest", isLightMode ? "text-zinc-600" : "")}>Describe the feeling. We find the soundtrack.</p>
                 </button>
               </div>
             </motion.div>
@@ -1309,15 +1176,13 @@ export default function Home() {
                   transition={{ duration: 0.4 }}
                 >
                   <div className="mb-12">
-                  <span className={cn(
-                    "text-xs uppercase tracking-[0.3em] mb-4 block",
-                    mode === "explore"
-                      ? isAuraTheme ? "text-blue-600 font-medium" : isLiquidTheme ? "text-cyan-400 liquid-glow-cyan" : "text-cyan-400/70"
-                      : isAuraTheme ? "text-fuchsia-600 font-medium" : isLiquidTheme ? "text-rose-400 liquid-glow-rose" : "text-rose-400/70"
-                  )}>
+                    <span className={cn(
+                      "text-xs uppercase tracking-[0.3em] mb-4 block font-medium",
+                      mode === "explore" ? "text-[var(--sp-violet)]" : "text-[var(--sp-pink-hot)]"
+                    )}>
                       {mode === "explore" ? "Manual Input" : "Emotional Intelligence"}
                     </span>
-                    <h2 className={cn("text-5xl font-light tracking-tight", headingClass, isAuraTheme ? "text-zinc-900" : "")}>
+                    <h2 className="sp-display text-5xl font-semibold tracking-tight">
                       {mode === "explore" ? "Explore New Sounds" : "Mood Mode"}
                     </h2>
                   </div>
@@ -1331,20 +1196,23 @@ export default function Home() {
                             key={idx}
                             value={band}
                             accentColor="cyan"
-                            isLightMode={(isLightMode && !isLiquidTheme) || isAuraTheme}
-                            isLiquid={isLiquidTheme && !isAuraTheme}
-                            isAura={isAuraTheme}
                             placeholder={`Band #${idx + 1}`}
                             onChange={(val) => { const n = [...exploreBands]; n[idx] = val; setExploreBands(n); }}
                             onSelect={(name) => { const n = [...exploreBands]; n[idx] = name; setExploreBands(n); }}
                           />
                         ))}
                       </div>
-                      <div className={controlCardClass}>
+                      <div className={cn(
+                        "flex flex-col sm:flex-row items-center justify-between gap-4 p-5 md:p-6 rounded-[28px] border max-w-4xl mx-auto",
+                        isLightMode ? "bg-zinc-100 border-zinc-200" : "sp-card"
+                      )}>
                         {/* Discovery Filter */}
                         <div className="flex flex-col gap-1.5 items-center sm:items-start">
-                          <span className={cn("text-[8px] uppercase tracking-widest", textMuted)}>Discovery</span>
-                          <div className={filterPillContainerClass}>
+                          <span className={cn("text-[8px] uppercase tracking-widest", isLightMode ? "text-zinc-500" : "text-white/40")}>Discovery</span>
+                          <div className={cn(
+                            "flex items-center gap-1 p-1 rounded-full border",
+                            isLightMode ? "bg-white border-zinc-200" : "bg-black/30 border-white/8"
+                          )}>
                             {(["mainstream", "underground", "exotics"] as const).map((level) => (
                               <button
                                 key={level}
@@ -1352,10 +1220,12 @@ export default function Home() {
                                 className={cn(
                                   "px-4 py-1.5 rounded-full text-[9px] uppercase tracking-widest transition-all whitespace-nowrap",
                                   discoveryLevel === level
-                                    ? level === "mainstream" ? "bg-gradient-to-r from-cyan-500 to-teal-500 text-white"
-                                      : level === "underground" ? "bg-cyan-600 text-white"
-                                      : "bg-gradient-to-r from-teal-500 to-emerald-400 text-white"
-                                    : isLiquidTheme || !isLightMode ? "text-white/50 hover:text-white" : "text-zinc-500 hover:text-zinc-900"
+                                    ? level === "mainstream"
+                                      ? "bg-gradient-to-r from-[var(--sp-violet)] to-[var(--sp-blue-sky)] text-white"
+                                      : level === "underground"
+                                      ? "bg-[var(--sp-violet-deep)] text-white"
+                                      : "bg-gradient-to-r from-[var(--sp-blue-deep)] to-[var(--sp-blue-sky)] text-white"
+                                    : isLightMode ? "text-zinc-500 hover:text-zinc-900" : "text-white/50 hover:text-white"
                                 )}
                               >{level}</button>
                             ))}
@@ -1366,12 +1236,7 @@ export default function Home() {
                           onClick={generateRecommendations}
                           disabled={isGenerating || exploreBands.every((b) => !b.trim())}
                           className={cn(
-                            "flex items-center justify-center gap-2 px-8 py-3 rounded-full font-medium transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-xs uppercase tracking-widest shrink-0",
-                            isAuraTheme
-                              ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:from-blue-400 hover:to-cyan-400 shadow-lg shadow-blue-200"
-                              : isLiquidTheme
-                              ? "bg-gradient-to-r from-cyan-500 to-teal-500 text-white hover:from-cyan-400 hover:to-teal-400 shadow-lg shadow-cyan-900/40"
-                              : isLightMode ? "bg-cyan-600 text-white hover:bg-cyan-500" : "bg-cyan-500 text-white hover:bg-cyan-400",
+                            "sp-btn-primary flex items-center justify-center gap-2 shrink-0",
                             isGenerating && "animate-pulse"
                           )}
                         >
@@ -1395,27 +1260,24 @@ export default function Home() {
                           placeholder={moodPlaceholder}
                           rows={4}
                           maxLength={1000}
-                          className={cn(
-                            "w-full rounded-2xl px-5 py-4 text-sm font-light focus:outline-none transition-all resize-none leading-relaxed",
-                             isAuraTheme
-                               ? "bg-white/70 border border-fuchsia-200/60 focus:border-fuchsia-400/60 text-zinc-800 placeholder:text-zinc-400 backdrop-blur-sm"
-                               : isLiquidTheme
-                               ? "liquid-input rounded-2xl"
-                               : isLightMode
-                               ? "bg-white border border-zinc-200 focus:border-rose-300 text-zinc-800 placeholder:text-zinc-400"
-                               : "bg-zinc-950 border border-rose-500/20 focus:border-rose-400/50 text-white/90 placeholder:text-white/25"
-                          )}
+                          className="sp-input w-full rounded-2xl resize-none leading-relaxed"
                         />
-                        <div className={cn("absolute bottom-3 right-4 text-[9px] uppercase tracking-widest", textDim)}>
+                        <div className={cn("absolute bottom-3 right-4 text-[9px] uppercase tracking-widest", isLightMode ? "text-zinc-400" : "text-white/20")}>
                           {moodPrompt.length}/1000
                         </div>
                       </div>
 
                       {/* Filter + CTA Card */}
-                      <div className={controlCardClass}>
+                      <div className={cn(
+                        "flex flex-col sm:flex-row items-center justify-between gap-4 p-5 md:p-6 rounded-[28px] border max-w-4xl mx-auto",
+                        isLightMode ? "bg-zinc-100 border-zinc-200" : "sp-card"
+                      )}>
                         <div className="flex flex-col gap-1.5 items-center sm:items-start">
-                          <span className={cn("text-[8px] uppercase tracking-widest", textDim)}>Discovery</span>
-                          <div className={filterPillContainerClass}>
+                          <span className={cn("text-[8px] uppercase tracking-widest", isLightMode ? "text-zinc-400" : "text-white/20")}>Discovery</span>
+                          <div className={cn(
+                            "flex items-center gap-1 p-1 rounded-full border",
+                            isLightMode ? "bg-white border-zinc-200" : "bg-black/30 border-white/8"
+                          )}>
                             {(["mainstream", "underground", "exotic"] as const).map((f) => (
                               <button
                                 key={f}
@@ -1423,10 +1285,12 @@ export default function Home() {
                                 className={cn(
                                   "px-4 py-1.5 rounded-full text-[9px] uppercase tracking-widest transition-all whitespace-nowrap",
                                   moodDiscovery === f
-                                    ? f === "mainstream" ? "bg-gradient-to-r from-rose-500 to-pink-500 text-white"
-                                      : f === "underground" ? "bg-rose-600 text-white"
-                                      : "bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white"
-                                    : isLiquidTheme || !isLightMode ? "text-white/40 hover:text-white" : "text-zinc-500 hover:text-zinc-900"
+                                    ? f === "mainstream"
+                                      ? "bg-gradient-to-r from-[var(--sp-pink-hot)] to-[var(--sp-pink-rose)] text-white"
+                                      : f === "underground"
+                                      ? "bg-[var(--sp-pink-hot)] text-white"
+                                      : "bg-gradient-to-r from-[var(--sp-violet)] to-[var(--sp-pink-hot)] text-white"
+                                    : isLightMode ? "text-zinc-500 hover:text-zinc-900" : "text-white/40 hover:text-white"
                                 )}
                               >{f}</button>
                             ))}
@@ -1437,12 +1301,7 @@ export default function Home() {
                           onClick={generateMoodPlaylist}
                           disabled={isGenerating || !moodPrompt.trim()}
                           className={cn(
-                            "flex items-center justify-center gap-2 px-8 py-3 rounded-full font-medium transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-xs uppercase tracking-widest shrink-0",
-                            isAuraTheme
-                              ? "bg-gradient-to-r from-fuchsia-500 to-pink-500 text-white hover:from-fuchsia-400 hover:to-pink-400 shadow-lg shadow-fuchsia-200"
-                              : isLiquidTheme
-                              ? "bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:from-rose-400 hover:to-pink-400 shadow-lg shadow-rose-900/40"
-                              : "bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:from-rose-400 hover:to-pink-400",
+                            "sp-btn-mood flex items-center justify-center gap-2 shrink-0",
                             isGenerating && "animate-pulse"
                           )}
                         >
@@ -1455,11 +1314,11 @@ export default function Home() {
                       <div className="max-w-4xl mx-auto">
                         <button
                           onClick={() => setShowMoodReference(!showMoodReference)}
-                          className={cn("flex items-center gap-2 text-[10px] uppercase tracking-widest transition-colors", textDim, "hover:text-white/50")}
+                          className={cn("flex items-center gap-2 text-[10px] uppercase tracking-widest transition-colors", isLightMode ? "text-zinc-400 hover:text-zinc-600" : "text-white/20 hover:text-white/50")}
                         >
                           <Guitar size={11} />
                           <span>Musical reference</span>
-                          <span className={textDim}>(optional)</span>
+                          <span className={isLightMode ? "text-zinc-400" : "text-white/20"}>(optional)</span>
                           <motion.span animate={{ rotate: showMoodReference ? 180 : 0 }} transition={{ duration: 0.2 }}>
                             <ChevronDown size={11} />
                           </motion.span>
@@ -1478,11 +1337,8 @@ export default function Home() {
                                   onSelect={setMoodReference}
                                   placeholder="e.g. Radiohead, Nick Cave, Portishead..."
                                   accentColor="rose"
-                                  isLightMode={isLightMode && !isLiquidTheme}
-                                  isLiquid={isLiquidTheme}
-                                  isAura={isAuraTheme}
                                 />
-                                <p className={cn("text-[10px] font-light", textMuted)}>
+                                <p className={cn("text-[10px] font-light", isLightMode ? "text-zinc-500" : "text-white/40")}>
                                   Sonic style only — not emotional context.
                                 </p>
                               </div>
@@ -1501,23 +1357,19 @@ export default function Home() {
                             transition={{ duration: 0.5 }}
                           >
                             {moodMutation.isPending && !emotionalProfile ? (
-                              <div ref={loadingRef}><AnimatePresence><MusicLoadingBar mode="mood" isLiquid={isLiquidTheme} discoveryLevel={moodDiscovery} /></AnimatePresence></div>
+                              <div ref={loadingRef}><AnimatePresence><MusicLoadingBar mode="mood" discoveryLevel={moodDiscovery} /></AnimatePresence></div>
                             ) : emotionalProfile && (
                               <div className={cn(
                                 "p-5 rounded-2xl border",
-                                isAuraTheme
-                                  ? "aura-card"
-                                  : isLiquidTheme
-                                  ? "liquid-card"
-                                  : isLightMode ? "bg-rose-50 border-rose-200" : "bg-gradient-to-br from-rose-950/30 to-zinc-900/50 border-rose-500/15"
+                                isLightMode ? "bg-rose-50 border-rose-200" : "sp-card border-[var(--sp-pink-hot)]/15"
                               )}>
                                 <div className="flex items-center justify-between gap-3 mb-3">
-                                  <h3 className={cn("text-lg font-light tracking-tight", isAuraTheme ? "text-fuchsia-700" : isLiquidTheme ? "text-rose-200" : isLightMode ? "text-rose-800" : "text-rose-100")}>{emotionalProfile.coreEmotion}</h3>
+                                  <h3 className={cn("text-lg font-light tracking-tight", isLightMode ? "text-rose-800" : "text-[var(--sp-pink-rose)]")}>{emotionalProfile.coreEmotion}</h3>
                                   <IntensityBadge intensity={emotionalProfile.intensity} />
                                 </div>
                                 <div className="flex gap-2">
-                                  <Quote size={12} className="text-rose-400/40 shrink-0 mt-0.5" />
-                                  <p className={cn("text-xs font-light leading-relaxed italic", textBody)}>{emotionalProfile.emotionalNote}</p>
+                                  <Quote size={12} className="text-[var(--sp-pink-hot)]/40 shrink-0 mt-0.5" />
+                                  <p className={cn("text-xs font-light leading-relaxed italic", isLightMode ? "text-zinc-600" : "text-white/60")}>{emotionalProfile.emotionalNote}</p>
                                 </div>
                               </div>
                             )}
@@ -1529,8 +1381,8 @@ export default function Home() {
                       {(moodSongs.length > 0 || moodMutation.isPending) && (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
                           <div className="flex items-center justify-between gap-4 mb-6">
-                            <span className={cn("text-xs uppercase tracking-[0.3em]", isLiquidTheme ? "text-rose-400 liquid-glow-rose" : "text-rose-400/70")}>Your Emotional Soundtrack</span>
-                            <span className="px-2 py-1 rounded-full text-[9px] uppercase tracking-widest bg-gradient-to-r from-rose-500/20 to-pink-500/20 border border-rose-500/30 text-rose-400">{moodDiscovery}</span>
+                            <span className={cn("text-xs uppercase tracking-[0.3em]", isLightMode ? "text-[var(--sp-pink-hot)]" : "text-[var(--sp-pink-hot)]/70")}>Your Emotional Soundtrack</span>
+                            <span className="px-2 py-1 rounded-full text-[9px] uppercase tracking-widest bg-[var(--sp-pink-hot)]/10 border border-[var(--sp-pink-hot)]/20 text-[var(--sp-pink-hot)]">{moodDiscovery}</span>
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
@@ -1542,96 +1394,88 @@ export default function Home() {
                             ref={idx === 0 ? resultsRef : undefined}
                             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.1 }}
-                            className={cn(
-                              isAuraTheme
-                                ? "aura-card overflow-hidden flex flex-col group"
-                                : isLiquidTheme
-                                ? "liquid-card overflow-hidden flex flex-col group"
-                                : cn("group rounded-[32px] overflow-hidden transition-all duration-500 flex flex-col border", isLightMode ? "bg-white border-zinc-200 hover:border-zinc-300 hover:shadow-lg" : "bg-zinc-900/30 border-white/5 hover:bg-zinc-900/50")
-                            )}
+                            className="sp-card overflow-hidden flex flex-col group sp-card-hover"
                           >
-                            <div className="relative aspect-[16/10] overflow-hidden rounded-t-[32px]">
+                            <div className="relative aspect-[16/10] overflow-hidden rounded-t-[28px]">
                               {song.enriched?.image
-                                ? <img src={song.enriched.image} alt={song.artist} className={cn("w-full h-full object-cover transition-all duration-700 group-hover:scale-110", isAuraTheme ? "opacity-80 group-hover:opacity-100 saturate-125" : isLiquidTheme ? "opacity-60 group-hover:opacity-80 saturate-150" : isLightMode ? "opacity-75 group-hover:opacity-95" : "opacity-55 group-hover:opacity-75")} />
-                                      : <AnimatedArtistFallback artistName={song.artist} accentColor="rose" className="w-full h-full" />
-                                    }
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                                    <div className="absolute bottom-0 left-0 p-6 w-full">
-                                      <div className="mb-2">
-                                        <p className={cn("text-[9px] uppercase tracking-widest font-medium mb-1 drop-shadow", isAuraTheme ? "text-fuchsia-300" : isLiquidTheme ? "text-rose-300 liquid-glow-rose" : "text-rose-300/80")}>Now Playing</p>
-                                        <SpotifyLink url={song.trackUrl ?? song.enriched?.url} className="group/name flex items-start gap-2 text-white hover:text-rose-300 transition-colors text-left">
-                                          <div>
-                                            <h3 className="text-xl font-semibold tracking-tight drop-shadow-md leading-tight">{song.title}</h3>
-                                            <p className="text-sm text-white/70 font-light mt-0.5 drop-shadow">{song.artist}</p>
-                                          </div>
-                                          {(song.trackUrl ?? song.enriched?.url) && (
-                                            <div className="p-1 rounded-full bg-rose-500/10 text-rose-400 opacity-0 group-hover/name:opacity-100 transition-all mt-1 shrink-0">
-                                              <ExternalLink size={11} />
-                                            </div>
-                                          )}
-                                        </SpotifyLink>
-                                      </div>
-                                      <span className="px-2 py-0.5 rounded-full bg-black/60 text-white/90 text-[8px] uppercase tracking-widest inline-block">{song.genre}</span>
+                                ? <img src={song.enriched.image} alt={song.artist} className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110 opacity-70 group-hover:opacity-90" />
+                                : <AnimatedArtistFallback artistName={song.artist} accentColor="rose" className="w-full h-full" />
+                              }
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                              <div className="absolute bottom-0 left-0 p-6 w-full">
+                                <div className="mb-2">
+                                  <p className="text-[9px] uppercase tracking-widest font-medium mb-1 drop-shadow text-[var(--sp-pink-rose)]">Now Playing</p>
+                                  <SpotifyLink url={song.trackUrl ?? song.enriched?.url} className="group/name flex items-start gap-2 text-white hover:text-[var(--sp-pink-rose)] transition-colors text-left">
+                                    <div>
+                                      <h3 className="text-xl font-semibold tracking-tight drop-shadow-md leading-tight">{song.title}</h3>
+                                      <p className="text-sm text-white/70 font-light mt-0.5 drop-shadow">{song.artist}</p>
                                     </div>
-                                  </div>
-
-                                  <div className="p-6 flex-1 flex flex-col">
-                                    <div className="flex items-start gap-2 mb-4">
-                                      <motion.div
-                                        animate={{ y: [0, -4, 0], rotate: [0, 10, -10, 0] }}
-                                        transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                                        className={cn("mt-0.5 shrink-0", isAuraTheme ? "text-fuchsia-500" : "text-rose-400")}
-                                      >
-                                        <Music size={14} />
-                                      </motion.div>
-                                      <p className={cn("font-light leading-relaxed text-xs line-clamp-3", textBody)}>{song.emotionalBridge}</p>
-                                    </div>
-                                    {song.lyricMoment && (
-                                      <div className="flex gap-1.5 mb-4">
-                                        <Quote size={9} className={cn("shrink-0 mt-0.5", isAuraTheme ? "text-fuchsia-400/40" : "text-rose-400/30")} />
-                                        <p className={cn("text-[10px] italic font-light leading-relaxed line-clamp-2", isAuraTheme ? "text-zinc-500" : isLiquidTheme ? "text-white/45" : isLightMode ? "text-zinc-500" : "text-white/45")}>{song.lyricMoment}</p>
+                                    {(song.trackUrl ?? song.enriched?.url) && (
+                                      <div className="p-1 rounded-full bg-[var(--sp-pink-hot)]/10 text-[var(--sp-pink-hot)] opacity-0 group-hover/name:opacity-100 transition-all mt-1 shrink-0">
+                                        <ExternalLink size={11} />
                                       </div>
                                     )}
-                                    <div className={cn("mt-auto pt-4 border-t space-y-3", dividerClass)}>
-                                      <div className="flex items-center gap-2 flex-wrap">
-                                        {song.listeners != null && song.listeners > 0 && (
-                                          <span className={cn("text-[8px] uppercase tracking-widest", isLiquidTheme ? "text-white/35" : isLightMode ? "text-zinc-400" : "text-white/35")}>
-                                            {song.listeners.toLocaleString()} listeners
-                                          </span>
-                                        )}
-                                      </div>
-                                      {song.youtubeId ? (
-                                        <YouTubeEmbedCard
-                                          videoId={song.youtubeId}
-                                          label={`${song.title} – ${song.artist}`}
-                                          accentColor="rose"
-                                          defaultOpen={true}
-                                        />
-                                      ) : (
-                                        <div className={cn("flex items-center gap-2 px-4 py-3 rounded-xl text-xs", isLiquidTheme ? "bg-white/5 text-white/30" : isLightMode ? "bg-zinc-100 text-zinc-400" : "bg-white/5 text-white/30")}>
-                                          <CircleSlash size={12} />
-                                          No video found for this song
-                                        </div>
-                                      )}
-                                      {song.trackUrl && (
-                                        <a
-                                          href={song.trackUrl}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium transition-all w-full justify-center mt-2 bg-[#1DB954]/10 text-[#1DB954] hover:bg-[#1DB954]/20 border border-[#1DB954]/20"
-                                        >
-                                          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                                            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-                                          </svg>
-                                          Listen on Spotify
-                                        </a>
-                                      )}
-                                    </div>
-                                  </div>
+                                  </SpotifyLink>
+                                </div>
+                                <span className="px-2 py-0.5 rounded-full bg-black/60 text-white/90 text-[8px] uppercase tracking-widest inline-block">{song.genre}</span>
+                              </div>
+                            </div>
+
+                            <div className="p-6 flex-1 flex flex-col">
+                              <div className="flex items-start gap-2 mb-4">
+                                <motion.div
+                                  animate={{ y: [0, -4, 0], rotate: [0, 10, -10, 0] }}
+                                  transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                                  className="mt-0.5 shrink-0 text-[var(--sp-pink-hot)]"
+                                >
+                                  <Music size={14} />
                                 </motion.div>
-                              ))
-                            }
-                          </div>
+                                <p className={cn("font-light leading-relaxed text-xs line-clamp-3", isLightMode ? "text-zinc-600" : "text-white/60")}>{song.emotionalBridge}</p>
+                              </div>
+                              {song.lyricMoment && (
+                                <div className="flex gap-1.5 mb-4">
+                                  <Quote size={9} className="shrink-0 mt-0.5 text-[var(--sp-pink-hot)]/30" />
+                                  <p className={cn("text-[10px] italic font-light leading-relaxed line-clamp-2", isLightMode ? "text-zinc-500" : "text-white/45")}>{song.lyricMoment}</p>
+                                </div>
+                              )}
+                              <div className={cn("mt-auto pt-4 border-t space-y-3", isLightMode ? "border-zinc-100" : "border-white/5")}>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  {song.listeners != null && song.listeners > 0 && (
+                                    <span className={cn("text-[8px] uppercase tracking-widest", isLightMode ? "text-zinc-400" : "text-white/35")}>
+                                      {song.listeners.toLocaleString()} listeners
+                                    </span>
+                                  )}
+                                </div>
+                                {song.youtubeId ? (
+                                  <YouTubeEmbedCard
+                                    videoId={song.youtubeId}
+                                    label={`${song.title} – ${song.artist}`}
+                                    accentColor="rose"
+                                    defaultOpen={true}
+                                  />
+                                ) : (
+                                  <div className={cn("flex items-center gap-2 px-4 py-3 rounded-xl text-xs", isLightMode ? "bg-zinc-100 text-zinc-400" : "bg-white/5 text-white/30")}>
+                                    <CircleSlash size={12} />
+                                    No video found for this song
+                                  </div>
+                                )}
+                                {song.trackUrl && (
+                                  <a
+                                    href={song.trackUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium transition-all w-full justify-center mt-2 bg-[#1DB954]/10 text-[#1DB954] hover:bg-[#1DB954]/20 border border-[#1DB954]/20"
+                                  >
+                                    <SpotifyLogo size={12} />
+                                    Listen on Spotify
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))
+                      }
+                    </div>
 
                           {moodSongs.length > 0 && (
                             <FloatingSaveButton
@@ -1654,12 +1498,12 @@ export default function Home() {
               </AnimatePresence>
 
               {/* ── Explore Recommendations ── */}
-                  {(recommendations.length > 0 || exploreMutation.isPending) && mode === "explore" && (
+              {(recommendations.length > 0 || exploreMutation.isPending) && mode === "explore" && (
                 <section className="pb-20">
                   <div className="mb-12">
-                    <span className={cn("text-xs uppercase tracking-[0.3em] mb-4 block", isAuraTheme ? "text-blue-600 font-medium" : isLiquidTheme ? "text-cyan-400 liquid-glow-cyan" : "text-cyan-400/70")}>The Future</span>
-                    <h2 className={cn("text-5xl font-light tracking-tight italic", isAuraTheme ? "text-zinc-900" : headingClass)} style={{ fontFamily: "Georgia, serif" }}>
-                      Curated for you
+                    <span className={cn("text-xs uppercase tracking-[0.3em] mb-4 block font-medium", isLightMode ? "text-[var(--sp-violet)]" : "text-[var(--sp-violet)]/80")}>The Future</span>
+                    <h2 className="sp-display text-5xl font-semibold tracking-tight">
+                      Curated <em className="sp-accent font-normal" style={{ fontStyle: "italic" }}>for you</em>
                     </h2>
                   </div>
 
@@ -1682,34 +1526,28 @@ export default function Home() {
                     </div>
                   )}
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
                     {exploreMutation.isPending && recommendations.length === 0
-                      ? <div ref={loadingRef} className="col-span-full"><AnimatePresence><MusicLoadingBar mode="explore" isLiquid={isLiquidTheme} discoveryLevel={discoveryLevel} /></AnimatePresence></div>
+                      ? <div ref={loadingRef} className="col-span-full"><AnimatePresence><MusicLoadingBar mode="explore" discoveryLevel={discoveryLevel} /></AnimatePresence></div>
                       : recommendations.map((rec, idx) => (
                         <motion.div
                           key={idx}
                           ref={idx === 0 ? resultsRef : undefined}
                           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: idx * 0.1 }}
-                          className={cn(
-                            isAuraTheme
-                              ? "aura-card overflow-hidden flex flex-col group"
-                              : isLiquidTheme
-                              ? "liquid-card overflow-hidden flex flex-col group"
-                              : cn("group rounded-[32px] overflow-hidden transition-all duration-500 flex flex-col border", isLightMode ? "bg-white border-zinc-200 hover:border-zinc-300 hover:shadow-lg" : "bg-zinc-900/30 border-white/5 hover:bg-zinc-900/50")
-                          )}
+                          className="sp-card overflow-hidden flex flex-col group sp-card-hover"
                         >
-                          <div className="relative aspect-[16/10] overflow-hidden rounded-t-[32px]">
+                          <div className="relative aspect-[16/10] overflow-hidden rounded-t-[28px]">
                             {rec.enriched?.image
-                              ? <img src={rec.enriched.image} alt={rec.artist} className={cn("w-full h-full object-cover transition-all duration-700 group-hover:scale-110", isAuraTheme ? "opacity-80 group-hover:opacity-100 saturate-125" : isLiquidTheme ? "opacity-60 group-hover:opacity-80 saturate-150" : isLightMode ? "opacity-75 group-hover:opacity-95" : "opacity-55 group-hover:opacity-75")} />
+                              ? <img src={rec.enriched.image} alt={rec.artist} className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110 opacity-70 group-hover:opacity-90" />
                               : <AnimatedArtistFallback artistName={rec.artist} accentColor="cyan" className="w-full h-full" />
                             }
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                             <div className="absolute bottom-0 left-0 p-6 w-full">
-                              <SpotifyLink url={rec.enriched?.url} className={cn("group/name flex items-center gap-2 transition-colors text-left", isAuraTheme ? "text-white hover:text-cyan-200" : "text-white hover:text-cyan-400")}>
+                              <SpotifyLink url={rec.enriched?.url} className="group/name flex items-center gap-2 transition-colors text-left text-white hover:text-[var(--sp-violet)]">
                                 <h3 className="text-2xl font-light tracking-tight drop-shadow-md">{rec.artist}</h3>
                                 {rec.enriched?.url && (
-                                  <div className="p-1 rounded-full bg-cyan-500/10 text-cyan-400 opacity-0 group-hover/name:opacity-100 transition-all">
+                                  <div className="p-1 rounded-full bg-[var(--sp-violet)]/10 text-[var(--sp-violet)] opacity-0 group-hover/name:opacity-100 transition-all">
                                     <ExternalLink size={12} />
                                   </div>
                                 )}
@@ -1722,32 +1560,32 @@ export default function Home() {
                               <motion.div
                                 animate={{ y: [0, -4, 0], rotate: [0, 10, -10, 0] }}
                                 transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                                className={cn("mt-0.5 shrink-0", isAuraTheme ? "text-blue-500" : "text-cyan-400")}
+                                className="mt-0.5 shrink-0 text-[var(--sp-violet)]"
                               >
                                 <Music size={14} />
                               </motion.div>
-                              <p className={cn("font-light leading-relaxed text-xs line-clamp-3", textBody)}>{rec.reason}</p>
+                              <p className={cn("font-light leading-relaxed text-xs line-clamp-3", isLightMode ? "text-zinc-600" : "text-white/60")}>{rec.reason}</p>
                             </div>
-                            <div className={cn("mt-auto pt-4 border-t space-y-3", dividerClass)}>
+                            <div className={cn("mt-auto pt-4 border-t space-y-3", isLightMode ? "border-zinc-100" : "border-white/5")}>
                               <div className="flex items-center justify-between gap-2">
                                 <div className="flex flex-col gap-0.5 min-w-0">
-                                  <span className={cn("text-[8px] uppercase tracking-widest", isAuraTheme ? "text-zinc-500" : isLiquidTheme ? "text-white/50" : isLightMode ? "text-zinc-500" : "text-white/50")}>
-                                    Similar to <span className={isAuraTheme ? "text-zinc-800" : isLiquidTheme ? "text-white/80" : isLightMode ? "text-zinc-800" : "text-white/70"}>{rec.similarTo}</span>
+                                  <span className={cn("text-[8px] uppercase tracking-widest", isLightMode ? "text-zinc-500" : "text-white/50")}>
+                                    Similar to <span className={isLightMode ? "text-zinc-800" : "text-white/70"}>{rec.similarTo}</span>
                                   </span>
                                   {rec.listeners != null && rec.listeners > 0 && (
-                                    <span className={cn("text-[8px] uppercase tracking-widest", isAuraTheme ? "text-zinc-400" : isLiquidTheme ? "text-white/35" : isLightMode ? "text-zinc-400" : "text-white/35")}>
+                                    <span className={cn("text-[8px] uppercase tracking-widest", isLightMode ? "text-zinc-400" : "text-white/35")}>
                                       {rec.listeners.toLocaleString()} listeners
                                     </span>
                                   )}
                                 </div>
                                 <div className="flex items-center gap-1 shrink-0">
                                   {rec.similarityScore != null && (
-                                    <span className="flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-400 text-[8px] uppercase tracking-widest border border-cyan-500/20">
+                                    <span className="flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-[var(--sp-violet)]/15 text-[var(--sp-violet)] text-[8px] uppercase tracking-widest border border-[var(--sp-violet)]/20">
                                       {rec.similarityScore}% match
                                     </span>
                                   )}
                                   {!rec.enriched?.spotifyId && !extractSpotifyArtistId(rec.enriched?.url) && (
-                                    <span className={cn("flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] uppercase tracking-widest border", isAuraTheme ? "bg-zinc-100 border-zinc-200 text-zinc-500" : isLiquidTheme ? "bg-white/5 border-white/8 text-white/30" : isLightMode ? "bg-zinc-100 border-zinc-200 text-zinc-500" : "bg-white/5 border-white/8 text-white/30")}>
+                                    <span className={cn("flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] uppercase tracking-widest border", isLightMode ? "bg-zinc-100 border-zinc-200 text-zinc-500" : "bg-white/5 border-white/8 text-white/30")}>
                                       <CircleSlash size={8} />
                                       Not on Spotify
                                     </span>
@@ -1791,17 +1629,17 @@ export default function Home() {
       {/* ── Footer ── */}
       <footer className={cn(
         "relative z-10 border-t px-8 py-12 mt-20",
-        isAuraTheme ? "border-zinc-200" : isLiquidTheme ? "border-white/5" : isLightMode ? "border-zinc-200" : "border-white/5"
+        isLightMode ? "border-zinc-200" : "border-white/5"
       )}>
-        <div className={cn("max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8", isAuraTheme ? "text-zinc-400" : isLiquidTheme ? "text-white/40" : isLightMode ? "text-zinc-400" : "text-white/40")}>
+        <div className={cn("max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8", isLightMode ? "text-zinc-400" : "text-white/40")}>
           <div className="flex items-center gap-2">
             <Disc size={16} />
-            <span className="text-xs uppercase tracking-widest">SONICPULSE © 2026</span>
+            <span className="sp-display text-xs font-medium uppercase tracking-widest">SONICPULSE © 2026</span>
           </div>
           <div className="flex gap-8 text-[10px] uppercase tracking-[0.2em]">
-            <button onClick={() => setInfoModal("privacy")} className={cn("transition-colors", isAuraTheme ? "hover:text-zinc-900" : isLiquidTheme || !isLightMode ? "hover:text-white" : "hover:text-zinc-800")}>Privacy</button>
-            <button onClick={() => setInfoModal("terms")} className={cn("transition-colors", isAuraTheme ? "hover:text-zinc-900" : isLiquidTheme || !isLightMode ? "hover:text-white" : "hover:text-zinc-800")}>Terms</button>
-            <button onClick={() => setInfoModal("spotify")} className={cn("transition-colors", isAuraTheme ? "hover:text-zinc-900" : isLiquidTheme || !isLightMode ? "hover:text-white" : "hover:text-zinc-800")}>Spotify API</button>
+            <button onClick={() => setInfoModal("privacy")} className={cn("transition-colors", isLightMode ? "hover:text-zinc-800" : "hover:text-white")}>Privacy</button>
+            <button onClick={() => setInfoModal("terms")} className={cn("transition-colors", isLightMode ? "hover:text-zinc-800" : "hover:text-white")}>Terms</button>
+            <button onClick={() => setInfoModal("spotify")} className={cn("transition-colors", isLightMode ? "hover:text-zinc-800" : "hover:text-white")}>Spotify API</button>
           </div>
         </div>
       </footer>

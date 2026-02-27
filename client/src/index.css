@@ -384,7 +384,349 @@
       0 0 40px rgba(217, 70, 239, 0.25);
   }
 
-  /* Shimmer Skeleton */
+  /* ─── v3 SonicPulse Design System ─────────────────────────────────────────
+     Inspiriert von: Clash Display + Satoshi + DM Serif Display
+     Farb-Tokens: Violett, Pink, Blau, Neon-Grün
+     Blob-Hintergrund: CSS-Animationen, kein Canvas
+     ─────────────────────────────────────────────────────────────────────── */
+
+  /* ── Design Tokens ── */
+  :root {
+    --sp-violet:       #954aaf;
+    --sp-violet-deep:  #6b21a8;
+    --sp-violet-light: #c084fc;
+    --sp-pink-hot:     #eb518b;
+    --sp-pink-rose:    #f472b6;
+    --sp-blue-sky:     #0dabf7;
+    --sp-blue-deep:    #1e40af;
+    --sp-neon-green:   #39ff14;
+    --sp-bg:           #0a0a0f;
+    --sp-bg-elevated:  #111118;
+    --sp-bg-card:      rgba(255,255,255,0.04);
+    --sp-border:       rgba(255,255,255,0.07);
+    --mx: 50%;
+    --my: 50%;
+  }
+
+  /* ── Background System ── */
+  .sp-bg {
+    background: var(--sp-bg);
+  }
+
+  .sp-bg-system {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  /* ── Blob Base ── */
+  .sp-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.55;
+    will-change: transform;
+    transform-origin: center center;
+  }
+
+  /* Mouse-reactive blob */
+  .sp-blob-mouse {
+    width: 600px;
+    height: 600px;
+    margin-left: -300px;
+    margin-top: -300px;
+    filter: blur(120px);
+    opacity: 0.35;
+    transition: left 0.12s ease-out, top 0.12s ease-out;
+    pointer-events: none;
+  }
+
+  /* ── Blob Positions & Sizes ── */
+  .sp-blob-1 { width: 520px; height: 520px; top: -120px; left: -80px; }
+  .sp-blob-2 { width: 440px; height: 440px; top: 30%; right: -100px; }
+  .sp-blob-3 { width: 380px; height: 380px; bottom: 10%; left: 20%; }
+  .sp-blob-4 { width: 300px; height: 300px; top: 60%; right: 15%; }
+  .sp-blob-5 { width: 260px; height: 260px; top: 15%; left: 40%; }
+  .sp-blob-6 { width: 200px; height: 200px; bottom: 25%; right: 35%; }
+  .sp-blob-7 { width: 180px; height: 180px; top: 45%; left: 8%; }
+
+  /* ── Landing Palette: Violett + Blau + Pink ── */
+  .sp-blob-landing-1 { background: radial-gradient(circle, #954aaf 0%, transparent 70%); animation: sp-float-1 18s ease-in-out infinite; }
+  .sp-blob-landing-2 { background: radial-gradient(circle, #0dabf7 0%, transparent 70%); animation: sp-float-2 22s ease-in-out infinite; }
+  .sp-blob-landing-3 { background: radial-gradient(circle, #eb518b 0%, transparent 70%); animation: sp-float-3 16s ease-in-out infinite; }
+  .sp-blob-landing-4 { background: radial-gradient(circle, #6b21a8 0%, transparent 70%); animation: sp-float-4 25s ease-in-out infinite; }
+  .sp-blob-landing-5 { background: radial-gradient(circle, #1e40af 0%, transparent 70%); animation: sp-float-5 20s ease-in-out infinite; }
+  .sp-blob-landing-6 { background: radial-gradient(circle, #f472b6 0%, transparent 70%); animation: sp-float-6 14s ease-in-out infinite; }
+  .sp-blob-landing-7 { background: radial-gradient(circle, #c084fc 0%, transparent 70%); animation: sp-float-7 28s ease-in-out infinite; }
+
+  /* ── Explore Palette: Violett + Blau + Neon ── */
+  .sp-blob-explore-1 { background: radial-gradient(circle, #7c3aed 0%, transparent 70%); animation: sp-float-1 20s ease-in-out infinite; }
+  .sp-blob-explore-2 { background: radial-gradient(circle, #1e40af 0%, transparent 70%); animation: sp-float-2 24s ease-in-out infinite; }
+  .sp-blob-explore-3 { background: radial-gradient(circle, #0dabf7 0%, transparent 70%); animation: sp-float-3 18s ease-in-out infinite; }
+  .sp-blob-explore-4 { background: radial-gradient(circle, #4c1d95 0%, transparent 70%); animation: sp-float-4 28s ease-in-out infinite; }
+  .sp-blob-explore-5 { background: radial-gradient(circle, #2563eb 0%, transparent 70%); animation: sp-float-5 22s ease-in-out infinite; }
+  .sp-blob-explore-6 { background: radial-gradient(circle, #8b5cf6 0%, transparent 70%); animation: sp-float-6 16s ease-in-out infinite; }
+  .sp-blob-explore-7 { background: radial-gradient(circle, #0e7490 0%, transparent 70%); animation: sp-float-7 30s ease-in-out infinite; }
+
+  /* ── Mood Palette: Pink + Rose + Violett ── */
+  .sp-blob-mood-1 { background: radial-gradient(circle, #eb518b 0%, transparent 70%); animation: sp-float-1 16s ease-in-out infinite; }
+  .sp-blob-mood-2 { background: radial-gradient(circle, #954aaf 0%, transparent 70%); animation: sp-float-2 20s ease-in-out infinite; }
+  .sp-blob-mood-3 { background: radial-gradient(circle, #f472b6 0%, transparent 70%); animation: sp-float-3 14s ease-in-out infinite; }
+  .sp-blob-mood-4 { background: radial-gradient(circle, #be185d 0%, transparent 70%); animation: sp-float-4 22s ease-in-out infinite; }
+  .sp-blob-mood-5 { background: radial-gradient(circle, #9d174d 0%, transparent 70%); animation: sp-float-5 18s ease-in-out infinite; }
+  .sp-blob-mood-6 { background: radial-gradient(circle, #c084fc 0%, transparent 70%); animation: sp-float-6 12s ease-in-out infinite; }
+  .sp-blob-mood-7 { background: radial-gradient(circle, #e879f9 0%, transparent 70%); animation: sp-float-7 26s ease-in-out infinite; }
+
+  /* ── Pulse Rings ── */
+  .sp-pulse-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.04);
+    animation: sp-pulse-expand 8s ease-out infinite;
+  }
+  .sp-pulse-ring-1 { width: 400px; height: 400px; top: 20%; left: 30%; margin-left: -200px; margin-top: -200px; animation-delay: 0s; }
+  .sp-pulse-ring-2 { width: 600px; height: 600px; top: 60%; right: 20%; margin-right: -300px; margin-top: -300px; animation-delay: 4s; }
+
+  /* ── Wave Lines ── */
+  .sp-wave-line {
+    position: absolute;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 30%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 70%, transparent 100%);
+    animation: sp-wave-drift 12s ease-in-out infinite;
+  }
+  .sp-wave-line-1 { top: 35%; animation-delay: 0s; }
+  .sp-wave-line-2 { top: 65%; animation-delay: 6s; }
+
+  /* ── Grain Overlay ── */
+  .sp-grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    background-size: 256px 256px;
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  /* ── Blob Float Animations ── */
+  @keyframes sp-float-1 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25%       { transform: translate(40px, -30px) scale(1.05); }
+    50%       { transform: translate(-20px, 50px) scale(0.95); }
+    75%       { transform: translate(60px, 20px) scale(1.08); }
+  }
+  @keyframes sp-float-2 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33%       { transform: translate(-50px, 40px) scale(1.06); }
+    66%       { transform: translate(30px, -60px) scale(0.94); }
+  }
+  @keyframes sp-float-3 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    20%       { transform: translate(30px, 50px) scale(1.04); }
+    60%       { transform: translate(-40px, -20px) scale(0.97); }
+    80%       { transform: translate(20px, 30px) scale(1.02); }
+  }
+  @keyframes sp-float-4 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    40%       { transform: translate(-30px, -50px) scale(1.07); }
+    70%       { transform: translate(50px, 30px) scale(0.93); }
+  }
+  @keyframes sp-float-5 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    30%       { transform: translate(60px, -20px) scale(1.05); }
+    60%       { transform: translate(-30px, 40px) scale(0.96); }
+  }
+  @keyframes sp-float-6 {
+    0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+    50%       { transform: translate(-40px, -30px) scale(1.1) rotate(15deg); }
+  }
+  @keyframes sp-float-7 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    35%       { transform: translate(20px, 60px) scale(1.03); }
+    70%       { transform: translate(-50px, -10px) scale(0.98); }
+  }
+
+  @keyframes sp-pulse-expand {
+    0%   { transform: scale(0.8); opacity: 0.6; }
+    100% { transform: scale(2.5); opacity: 0; }
+  }
+
+  @keyframes sp-wave-drift {
+    0%, 100% { transform: translateX(-10%) scaleX(1.2); opacity: 0.5; }
+    50%       { transform: translateX(10%) scaleX(0.9); opacity: 1; }
+  }
+
+  /* ── Navbar ── */
+  .sp-nav {
+    background: rgba(10, 10, 15, 0.75);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+  }
+
+  /* ── Cards ── */
+  .sp-card {
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 28px;
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    transition: box-shadow 0.3s ease, transform 0.3s ease, background 0.3s ease;
+  }
+
+  .sp-card-hover:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow:
+      0 16px 48px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.10);
+    transform: translateY(-2px);
+  }
+
+  /* Colored accent line on top of cards */
+  .sp-card-accent-line {
+    position: absolute;
+    top: 0;
+    left: 24px;
+    right: 24px;
+    height: 1px;
+    border-radius: 9999px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .sp-card:hover .sp-card-accent-line,
+  .group:hover .sp-card-accent-line {
+    opacity: 1;
+  }
+  .sp-card-accent-explore { background: linear-gradient(90deg, transparent, var(--sp-violet), var(--sp-blue-sky), transparent); }
+  .sp-card-accent-mood    { background: linear-gradient(90deg, transparent, var(--sp-pink-hot), var(--sp-violet), transparent); }
+
+  /* ── Inputs ── */
+  .sp-input {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 12px 16px;
+    color: rgba(255, 255, 255, 0.90);
+    font-size: 0.875rem;
+    font-weight: 300;
+    outline: none;
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+  .sp-input::placeholder {
+    color: rgba(255, 255, 255, 0.25);
+  }
+  .sp-input:focus {
+    border-color: rgba(255, 255, 255, 0.20);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  /* ── Buttons ── */
+  .sp-btn-primary {
+    padding: 12px 28px;
+    border-radius: 9999px;
+    background: linear-gradient(135deg, var(--sp-violet) 0%, var(--sp-blue-deep) 100%);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 20px rgba(149, 74, 175, 0.35);
+  }
+  .sp-btn-primary:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 28px rgba(149, 74, 175, 0.45);
+  }
+  .sp-btn-primary:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+  .sp-btn-primary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .sp-btn-mood {
+    padding: 12px 28px;
+    border-radius: 9999px;
+    background: linear-gradient(135deg, var(--sp-pink-hot) 0%, var(--sp-violet) 100%);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 20px rgba(235, 81, 139, 0.35);
+  }
+  .sp-btn-mood:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 28px rgba(235, 81, 139, 0.45);
+  }
+  .sp-btn-mood:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+  .sp-btn-mood:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .sp-btn-ghost {
+    padding: 8px 20px;
+    border-radius: 9999px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.10);
+    color: rgba(255,255,255,0.60);
+    font-size: 0.75rem;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+  .sp-btn-ghost:hover {
+    background: rgba(255,255,255,0.10);
+    color: rgba(255,255,255,0.90);
+  }
+
+  /* ── Typography ── */
+  .sp-display {
+    font-family: 'Clash Display', 'Satoshi', system-ui, -apple-system, sans-serif;
+    letter-spacing: -0.02em;
+  }
+
+  .sp-accent {
+    background: linear-gradient(135deg, var(--sp-violet) 0%, var(--sp-pink-hot) 50%, var(--sp-blue-sky) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .sp-section-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 14px;
+    border-radius: 9999px;
+    background: rgba(149, 74, 175, 0.12);
+    border: 1px solid rgba(149, 74, 175, 0.25);
+    color: var(--sp-violet-light);
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  /* ── Shimmer Skeleton ── */
   @keyframes shimmer {
     0% { background-position: -200% 0; }
     100% { background-position: 200% 0; }
