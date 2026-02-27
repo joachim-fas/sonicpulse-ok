@@ -1114,7 +1114,9 @@ export default function Home() {
                                 className={cn(
                                   "px-4 py-1.5 rounded-full text-[9px] uppercase tracking-widest transition-all whitespace-nowrap",
                                   discoveryLevel === level
-                                    ? isLightMode ? "bg-zinc-900 text-white" : "bg-white text-black"
+                                    ? level === "mainstream" ? "bg-gradient-to-r from-cyan-500 to-teal-500 text-white"
+                                      : level === "underground" ? "bg-cyan-600 text-white"
+                                      : "bg-gradient-to-r from-teal-500 to-emerald-400 text-white"
                                     : isLightMode ? "text-zinc-500 hover:text-zinc-900" : "text-white/50 hover:text-white"
                                 )}
                               >{level}</button>
@@ -1127,7 +1129,7 @@ export default function Home() {
                           disabled={isGenerating || exploreBands.every((b) => !b.trim())}
                           className={cn(
                             "flex items-center justify-center gap-2 px-8 py-3 rounded-full font-medium transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-xs uppercase tracking-widest shrink-0",
-                            isLightMode ? "bg-zinc-900 text-white hover:bg-zinc-700" : "bg-white text-black hover:bg-white/90",
+                            isLightMode ? "bg-cyan-600 text-white hover:bg-cyan-500" : "bg-cyan-500 text-white hover:bg-cyan-400",
                             isGenerating && "animate-pulse"
                           )}
                         >
@@ -1171,8 +1173,8 @@ export default function Home() {
                                 className={cn(
                                   "px-4 py-1.5 rounded-full text-[9px] uppercase tracking-widest transition-all whitespace-nowrap",
                                   moodDiscovery === f
-                                    ? f === "mainstream" ? isLightMode ? "bg-zinc-900 text-white" : "bg-white text-black"
-                                      : f === "underground" ? "bg-rose-500 text-white"
+                                    ? f === "mainstream" ? "bg-gradient-to-r from-rose-500 to-pink-500 text-white"
+                                      : f === "underground" ? "bg-rose-600 text-white"
                                       : "bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white"
                                     : isLightMode ? "text-zinc-500 hover:text-zinc-900" : "text-white/40 hover:text-white"
                                 )}
