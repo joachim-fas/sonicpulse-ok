@@ -1108,73 +1108,56 @@ export default function Home() {
       <main className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-12 pb-28">
         <AnimatePresence mode="wait">
           {!hasStarted ? (
-            /* ── Landing (v3.html: asymmetrisches Hero-Layout) ── */
+            /* ── Landing: zentriertes Layout mit zwei Mode-Karten ── */
             <motion.div
               key="landing"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20, filter: "blur(10px)" }}
               transition={{ duration: 0.5 }}
-              className="flex items-center min-h-[80vh] gap-8 md:gap-16"
+              className="flex flex-col items-center justify-center min-h-[80vh] text-center"
             >
-              {/* Left: Text Content */}
-              <div className="flex-1 max-w-xl">
-                <div className="hero-eyebrow">Design System v3 — SonicPulse</div>
-                <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(3rem, 8vw, 6rem)', fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 1.0, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>
-                  Your sound,<br />
-                  <em className="gradient-text" style={{ fontStyle: 'italic', fontFamily: 'var(--font-accent)' }}>reimagined.</em>
-                </h1>
-                <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: '2.5rem', maxWidth: 420 }}>
-                  No DJ required. Tell us what you love, or how you feel — we'll handle the rest.
-                </p>
-                {/* CTA Buttons (v3.html: btn-primary + btn-ghost) */}
-                <div className="flex flex-wrap gap-4 mb-8">
-                  <button onClick={() => handleModeSelect("explore")} className="btn btn-primary">
-                    <Sparkles size={16} /> Explore
-                  </button>
-                  <button onClick={() => handleModeSelect("mood")} className="btn btn-ghost">
-                    <Heart size={16} /> Mood Mode
-                  </button>
-                </div>
-                {/* Feature Tags (v3.html: tag-violet, tag-pink, tag-blue, tag-neutral) */}
-                <div className="flex flex-wrap gap-2">
-                  <span className="tag tag-violet">Organic</span>
-                  <span className="tag tag-pink">Interactive</span>
-                  <span className="tag tag-blue">Music</span>
-                  <span className="tag tag-neutral">Dark / Light</span>
-                </div>
-              </div>
-
-              {/* Right: Large Blob Orb (v3.html: artwork circle) */}
-              <div className="hidden md:flex flex-1 items-center justify-center">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
-                  style={{
-                    width: 'clamp(280px, 35vw, 480px)',
-                    height: 'clamp(280px, 35vw, 480px)',
-                    borderRadius: '50%',
-                    background: 'conic-gradient(from 0deg, var(--violet-deep), var(--pink-hot), var(--blue-sky), var(--violet), var(--pink-rose), var(--violet-deep))',
-                    filter: 'blur(2px)',
-                    boxShadow: '0 0 120px rgba(149,74,175,0.4), 0 0 60px rgba(235,81,139,0.3)',
-                    position: 'relative',
-                  }}
+              {/* Headline */}
+              <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(3.5rem, 9vw, 7rem)', fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 1.0, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>
+                Your sound,<br />
+                <em className="gradient-text" style={{ fontStyle: 'italic', fontFamily: 'var(--font-accent)' }}>reimagined.</em>
+              </h1>
+              {/* Subtext */}
+              <p style={{ fontSize: '1.05rem', color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: '3.5rem', maxWidth: 480 }}>
+                No DJ required. Tell us what you love, or how you feel — we'll handle the rest.
+              </p>
+              {/* Two Mode Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl">
+                <button
+                  onClick={() => handleModeSelect("explore")}
+                  className={cn(
+                    "feature-card text-left p-8 rounded-[28px] transition-all duration-300 hover:scale-[1.02] group",
+                    isLightMode ? "bg-white/80 border border-zinc-200 hover:border-violet-300" : ""
+                  )}
                 >
-                  {/* Inner glow */}
-                  <div style={{
-                    position: 'absolute', inset: '15%', borderRadius: '50%',
-                    background: 'radial-gradient(circle, rgba(13,171,247,0.6) 0%, rgba(149,74,175,0.4) 50%, transparent 70%)',
-                    filter: 'blur(20px)',
-                  }} />
-                  {/* Artwork label */}
-                  <div style={{
-                    position: 'absolute', top: '50%', left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    fontFamily: 'var(--font-body)', fontSize: '0.7rem',
-                    fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase',
-                    color: 'rgba(255,255,255,0.5)', pointerEvents: 'none',
-                  }}>artwork</div>
-                </motion.div>
+                  <Sparkles size={24} className="mb-5" style={{ color: 'var(--violet)' }} />
+                  <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 600, letterSpacing: '-0.02em', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
+                    Explore Mode
+                  </h3>
+                  <p style={{ fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--text-muted)', fontFamily: 'var(--font-body)' }}>
+                    Feed it 3 bands. Get artists you'll actually love.
+                  </p>
+                </button>
+                <button
+                  onClick={() => handleModeSelect("mood")}
+                  className={cn(
+                    "feature-card text-left p-8 rounded-[28px] transition-all duration-300 hover:scale-[1.02] group",
+                    isLightMode ? "bg-white/80 border border-zinc-200 hover:border-pink-300" : ""
+                  )}
+                >
+                  <Heart size={24} className="mb-5" style={{ color: 'var(--pink-hot)' }} />
+                  <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 600, letterSpacing: '-0.02em', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
+                    Mood Mode
+                  </h3>
+                  <p style={{ fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--text-muted)', fontFamily: 'var(--font-body)' }}>
+                    Describe the feeling. We find the soundtrack.
+                  </p>
+                </button>
               </div>
             </motion.div>
           ) : (
