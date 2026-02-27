@@ -1585,7 +1585,7 @@ export default function Home() {
                                       {rec.similarityScore}% match
                                     </span>
                                   )}
-                                  {!rec.enriched?.spotifyId && !extractSpotifyArtistId(rec.enriched?.url) && (
+                                  {!rec.enriched?.spotifyId && !extractSpotifyArtistId(rec.enriched?.url) && !rec.enriched?.url && (
                                     <span className={cn("flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] uppercase tracking-widest border", isLightMode ? "bg-zinc-100 border-zinc-200 text-zinc-500" : "bg-white/5 border-white/8 text-white/30")}>
                                       <CircleSlash size={8} />
                                       Not on Spotify
@@ -1593,21 +1593,21 @@ export default function Home() {
                                   )}
                                 </div>
                               </div>
-                              {(rec.enriched?.spotifyId || extractSpotifyArtistId(rec.enriched?.url)) && (
+                              {(rec.enriched?.spotifyId || extractSpotifyArtistId(rec.enriched?.url) || rec.enriched?.url) && (
                                 <SpotifyEmbedCard
                                   artistId={rec.enriched?.spotifyId ?? extractSpotifyArtistId(rec.enriched?.url)}
                                   artistName={rec.artist}
                                   accentColor="cyan"
                                 />
                               )}
-                              {!rec.enriched?.spotifyId && !extractSpotifyArtistId(rec.enriched?.url) && rec.youtubeId && (
+                              {!rec.enriched?.spotifyId && !extractSpotifyArtistId(rec.enriched?.url) && !rec.enriched?.url && rec.youtubeId && (
                                 <YouTubeEmbedCard
                                   videoId={rec.youtubeId}
                                   label="Watch on YouTube"
                                   accentColor="cyan"
                                 />
                               )}
-                              {!rec.enriched?.spotifyId && !extractSpotifyArtistId(rec.enriched?.url) && !rec.youtubeId && (
+                              {!rec.enriched?.spotifyId && !extractSpotifyArtistId(rec.enriched?.url) && !rec.enriched?.url && !rec.youtubeId && (
                                 <SpotifyEmbedCard
                                   artistId={null}
                                   artistName={rec.artist}

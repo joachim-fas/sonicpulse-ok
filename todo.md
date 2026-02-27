@@ -319,3 +319,13 @@
 - [ ] Artist Result Cards: feature-card, tag-violet/pink/blue, btn-icon
 - [ ] Mood Song Cards: feature-card, v3-Typografie, tag-*
 - [ ] Design Customizer (/design): komplettes v3-Redesign
+
+## Qualitätsfixes (kritisch)
+- [x] Bug: "Not on Spotify" Badge erscheint obwohl Artist auf Spotify ist (leerer String vs. null)
+- [x] Bug: YouTube-Fallback zeigt falsches Video (Jessie Reyez "COFFIN" für Band "C.O.F.F.I.N")
+- [x] Fix: "Not on Spotify" nur anzeigen wenn weder spotifyId noch url vorhanden
+- [x] Fix: YouTube-Validierung - 3 strenge Regeln (Channel enthält Bandname, Bandname enthält Channel, Titel beginnt mit Bandname)
+- [x] Fix: YouTube-Suche mit Anführungszeichen für exakte Treffer (erste Query)
+- [x] Fix: Mehrere Fallback-Queries in Prioritätsreihenfolge
+- [x] Tests: 7 neue YouTube-Validierungstests (inkl. C.O.F.F.I.N Regression-Test)
+- [x] Alle 93 Tests bestehen
