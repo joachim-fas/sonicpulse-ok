@@ -1105,99 +1105,97 @@ export default function Home() {
 
                   {/* ── Mood Mode ── */}
                   {mode === "mood" && (
-                    <div className="space-y-10 max-w-2xl mx-auto">
+                    <div className="space-y-8">
 
-                      {/* Input area */}
-                      <div className="space-y-4">
-
-                        {/* Textarea */}
-                        <div className="relative">
-                          <textarea
-                            value={moodPrompt}
-                            onChange={(e) => setMoodPrompt(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && moodPrompt.trim() && !isGenerating) generateMoodPlaylist(); }}
-                            placeholder={moodPlaceholder}
-                            rows={4}
-                            maxLength={1000}
-                            className="w-full bg-zinc-950 border border-rose-500/20 focus:border-rose-400/50 rounded-2xl px-5 py-4 text-sm font-light text-white/90 placeholder:text-white/25 focus:outline-none transition-all resize-none focus:shadow-[0_0_30px_rgba(244,114,182,0.12)] leading-relaxed"
-                          />
-                          <div className="absolute bottom-3 right-4 text-[9px] text-white/20 uppercase tracking-widest">
-                            {moodPrompt.length}/1000
-                          </div>
+                      {/* Textarea */}
+                      <div className="relative max-w-4xl mx-auto">
+                        <textarea
+                          value={moodPrompt}
+                          onChange={(e) => setMoodPrompt(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && moodPrompt.trim() && !isGenerating) generateMoodPlaylist(); }}
+                          placeholder={moodPlaceholder}
+                          rows={4}
+                          maxLength={1000}
+                          className="w-full bg-zinc-950 border border-rose-500/20 focus:border-rose-400/50 rounded-2xl px-5 py-4 text-sm font-light text-white/90 placeholder:text-white/25 focus:outline-none transition-all resize-none focus:shadow-[0_0_30px_rgba(244,114,182,0.12)] leading-relaxed"
+                        />
+                        <div className="absolute bottom-3 right-4 text-[9px] text-white/20 uppercase tracking-widest">
+                          {moodPrompt.length}/1000
                         </div>
+                      </div>
 
-                        {/* Discovery Filter + Generate Row */}
-                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-
-                          {/* Discovery Filter */}
-                          <div className="flex items-center gap-1 bg-zinc-950 border border-white/8 rounded-full p-1 shrink-0">
+                      {/* Filter + CTA Card – gleiche Struktur wie Explore */}
+                      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 md:p-6 bg-zinc-900/30 rounded-[28px] border border-white/5 max-w-4xl mx-auto">
+                        {/* Discovery Filter */}
+                        <div className="flex flex-col gap-1.5 items-center sm:items-start">
+                          <span className="text-[8px] uppercase tracking-widest text-white/20">Discovery</span>
+                          <div className="flex items-center gap-1 bg-black/40 p-1 rounded-full border border-white/5">
                             {(["mainstream", "underground", "exotic"] as const).map((f) => (
                               <button
                                 key={f}
                                 onClick={() => setMoodDiscovery(f)}
                                 className={cn(
-                                  "px-3 py-1.5 rounded-full text-[10px] uppercase tracking-widest transition-all whitespace-nowrap",
+                                  "px-4 py-1.5 rounded-full text-[9px] uppercase tracking-widest transition-all whitespace-nowrap",
                                   moodDiscovery === f
                                     ? f === "mainstream" ? "bg-white text-black"
                                       : f === "underground" ? "bg-rose-500 text-white"
                                       : "bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white"
-                                    : "text-white/30 hover:text-white/60"
+                                    : "text-white/40 hover:text-white"
                                 )}
                               >{f}</button>
                             ))}
                           </div>
-
-                          {/* Generate Button */}
-                          <button
-                            onClick={generateMoodPlaylist}
-                            disabled={isGenerating || !moodPrompt.trim()}
-                            className={cn(
-                              "flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-full font-medium transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-xs uppercase tracking-widest",
-                              "bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:from-rose-400 hover:to-pink-400",
-                              isGenerating && "animate-pulse"
-                            )}
-                          >
-                            {isGenerating ? <Loader2 size={16} className="animate-spin" /> : <Heart size={16} />}
-                            {isGenerating ? loadingMessage : "Find My Songs"}
-                          </button>
                         </div>
 
-                        {/* Musical Reference – optional collapse */}
-                        <div>
-                          <button
-                            onClick={() => setShowMoodReference(!showMoodReference)}
-                            className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-white/25 hover:text-white/50 transition-colors"
-                          >
-                            <Guitar size={11} />
-                            <span>Musical reference</span>
-                            <span className="text-white/15">(optional)</span>
-                            <motion.span animate={{ rotate: showMoodReference ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                              <ChevronDown size={11} />
-                            </motion.span>
-                          </button>
-                          <AnimatePresence>
-                            {showMoodReference && (
-                              <motion.div
-                                initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }}
-                                className="overflow-hidden"
-                              >
-                                <div className="pt-3 space-y-2">
-                                  <ArtistInput
-                                    value={moodReference}
-                                    onChange={setMoodReference}
-                                    onSelect={setMoodReference}
-                                    placeholder="e.g. Radiohead, Nick Cave, Portishead..."
-                                    accentColor="rose"
-                                  />
-                                  <p className="text-[10px] text-white/20 font-light">
-                                    Sonic style only — not emotional context.
-                                  </p>
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
+                        {/* Generate Button */}
+                        <button
+                          onClick={generateMoodPlaylist}
+                          disabled={isGenerating || !moodPrompt.trim()}
+                          className={cn(
+                            "flex items-center justify-center gap-2 px-8 py-3 rounded-full font-medium transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-xs uppercase tracking-widest shrink-0",
+                            "bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:from-rose-400 hover:to-pink-400",
+                            isGenerating && "animate-pulse"
+                          )}
+                        >
+                          {isGenerating ? <Loader2 size={16} className="animate-spin" /> : <Heart size={16} />}
+                          {isGenerating ? loadingMessage : "Find My Songs"}
+                        </button>
+                      </div>
+
+                      {/* Musical Reference – optional collapse (unter der Card, wie Explore keine Extra-Optionen hat) */}
+                      <div className="max-w-4xl mx-auto">
+                        <button
+                          onClick={() => setShowMoodReference(!showMoodReference)}
+                          className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-white/25 hover:text-white/50 transition-colors"
+                        >
+                          <Guitar size={11} />
+                          <span>Musical reference</span>
+                          <span className="text-white/15">(optional)</span>
+                          <motion.span animate={{ rotate: showMoodReference ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                            <ChevronDown size={11} />
+                          </motion.span>
+                        </button>
+                        <AnimatePresence>
+                          {showMoodReference && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="pt-3 space-y-2">
+                                <ArtistInput
+                                  value={moodReference}
+                                  onChange={setMoodReference}
+                                  onSelect={setMoodReference}
+                                  placeholder="e.g. Radiohead, Nick Cave, Portishead..."
+                                  accentColor="rose"
+                                />
+                                <p className="text-[10px] text-white/20 font-light">
+                                  Sonic style only — not emotional context.
+                                </p>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
 
                       {/* Emotional Profile */}
