@@ -848,7 +848,7 @@ export default function Home() {
                 <span className="italic" style={{ fontFamily: "Georgia, serif" }}>reimagined.</span>
               </h1>
               <p className="text-white/40 max-w-md mb-12 text-lg font-light leading-relaxed">
-                Choose your journey. Explore new sounds, generate the perfect party mix, or find music for this exact moment.
+                No DJ required. Tell us what you love, or how you feel — we’ll handle the rest.
               </p>
               <div className="flex flex-col md:flex-row gap-6 justify-center w-full max-w-3xl">
                 <button
@@ -859,7 +859,7 @@ export default function Home() {
                     <Sparkles className="opacity-40 group-hover:opacity-100 text-cyan-500 transition-colors" size={32} />
                   </motion.div>
                   <h3 className="text-2xl font-light mb-2">Explore Mode</h3>
-                  <p className="text-xs opacity-40 group-hover:opacity-60 uppercase tracking-widest">Discover new artists based on your input</p>
+                  <p className="text-xs opacity-40 group-hover:opacity-60 uppercase tracking-widest">Feed it 3 bands. Get artists you’ll actually love.</p>
                 </button>
                 <button
                   onClick={() => handleModeSelect("mood")}
@@ -869,7 +869,7 @@ export default function Home() {
                     <Heart className="opacity-40 group-hover:opacity-100 text-rose-400 transition-colors" size={32} />
                   </motion.div>
                   <h3 className="text-2xl font-light mb-2">Mood Mode</h3>
-                  <p className="text-xs opacity-40 group-hover:opacity-60 uppercase tracking-widest">Music for this exact emotional moment</p>
+                  <p className="text-xs opacity-40 group-hover:opacity-60 uppercase tracking-widest">Describe the feeling. We find the soundtrack.</p>
                 </button>
               </div>
             </motion.div>
