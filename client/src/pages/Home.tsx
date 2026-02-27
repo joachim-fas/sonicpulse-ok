@@ -165,6 +165,129 @@ const InfoModal = ({ type, onClose }: { type: "privacy" | "terms" | "spotify"; o
   );
 };
 
+// ─── Music Loading Bar ──────────────────────────────────────────────────────────
+const EXPLORE_MESSAGES = [
+  "Bribing the AI with concert tickets...",
+  "Asking Keith Richards what he thinks...",
+  "Cross-referencing 47 obscure Pitchfork reviews...",
+  "Consulting the ghost of John Peel...",
+  "Digging through a crate of forgotten 7-inches...",
+  "Calculating the exact BPM of your soul...",
+  "Translating your taste into 12 musical dimensions...",
+  "Arguing with the algorithm about shoegaze...",
+  "Checking if this band is still underground enough...",
+  "Asking Spotify's recommendation engine nicely...",
+  "Dusting off the B-sides...",
+  "Running a vibe check on 3,000 artists...",
+];
+
+const MOOD_MESSAGES = [
+  "Reading your emotional subtext between the lines...",
+  "Consulting the International Registry of Sad Songs...",
+  "Asking what Nick Cave would do in your situation...",
+  "Translating your feelings into chord progressions...",
+  "Scanning 40 years of heartbreak anthems...",
+  "Calibrating the melancholy-to-euphoria ratio...",
+  "Checking if Sufjan Stevens has a song for this...",
+  "Decoding your emotional frequency...",
+  "Matching your vibe to the perfect key signature...",
+  "Consulting the Spotify Sad Hours playlist...",
+  "Asking the universe what song this moment deserves...",
+  "Mapping your feelings to a Pitchfork 10.0...",
+];
+
+const MusicLoadingBar = ({ mode }: { mode: "explore" | "mood" }) => {
+  const messages = mode === "explore" ? EXPLORE_MESSAGES : MOOD_MESSAGES;
+  const [msgIdx, setMsgIdx] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const [fade, setFade] = useState(true);
+
+  useEffect(() => {
+    // Progress bar: fills over ~20s then stays near 95%
+    const progressInterval = setInterval(() => {
+      setProgress((p) => {
+        if (p >= 92) return p + 0.1;
+        return p + (92 - p) * 0.04;
+      });
+    }, 200);
+
+    // Message rotation every 2.5s with fade
+    const msgInterval = setInterval(() => {
+      setFade(false);
+      setTimeout(() => {
+        setMsgIdx((i) => (i + 1) % messages.length);
+        setFade(true);
+      }, 300);
+    }, 2500);
+
+    return () => {
+      clearInterval(progressInterval);
+      clearInterval(msgInterval);
+    };
+  }, [messages.length]);
+
+  const accentColor = mode === "explore" ? "#06b6d4" : "#fb7185";
+  const glowColor = mode === "explore" ? "rgba(6,182,212,0.4)" : "rgba(251,113,133,0.4)";
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      className="flex flex-col items-center gap-8 py-16 px-4"
+    >
+      {/* Animated disc */}
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
+        className="relative"
+      >
+        <div
+          className="w-16 h-16 rounded-full border-2 flex items-center justify-center"
+          style={{ borderColor: accentColor, boxShadow: `0 0 20px ${glowColor}` }}
+        >
+          <Disc size={28} style={{ color: accentColor }} />
+        </div>
+        <div
+          className="absolute inset-0 rounded-full animate-ping opacity-20"
+          style={{ backgroundColor: accentColor }}
+        />
+      </motion.div>
+
+      {/* Message */}
+      <div className="h-6 flex items-center">
+        <motion.p
+          animate={{ opacity: fade ? 1 : 0 }}
+          transition={{ duration: 0.3 }}
+          className="text-sm font-light tracking-wide text-center"
+          style={{ color: accentColor }}
+        >
+          {messages[msgIdx]}
+        </motion.p>
+      </div>
+
+      {/* Progress bar */}
+      <div className="w-full max-w-sm">
+        <div className="h-0.5 bg-white/5 rounded-full overflow-hidden">
+          <motion.div
+            className="h-full rounded-full"
+            style={{
+              width: `${progress}%`,
+              background: `linear-gradient(90deg, ${accentColor}80, ${accentColor})`,
+              boxShadow: `0 0 8px ${glowColor}`,
+            }}
+            transition={{ duration: 0.2 }}
+          />
+        </div>
+        <div className="flex justify-between mt-2">
+          <span className="text-[9px] uppercase tracking-widest text-white/15">Thinking</span>
+          <span className="text-[9px] uppercase tracking-widest text-white/15">{Math.round(progress)}%</span>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 // ─── Artist Input with MusicBrainz Autocomplete ───────────────────────────────
 const ArtistInput = ({
   value, onChange, onSelect, placeholder, accentColor = "cyan", onRemove, showRemove = false,
@@ -931,10 +1054,7 @@ export default function Home() {
                             transition={{ duration: 0.5 }}
                           >
                             {moodMutation.isPending && !emotionalProfile ? (
-                              <div className="p-5 bg-zinc-900/60 border border-rose-500/10 rounded-2xl space-y-2">
-                                <div className="h-4 bg-zinc-800 rounded-full animate-pulse w-1/3" />
-                                <div className="h-3 bg-zinc-800 rounded-full animate-pulse w-3/4" />
-                              </div>
+                              <AnimatePresence><MusicLoadingBar mode="mood" /></AnimatePresence>
                             ) : emotionalProfile && (
                               <div className="p-5 bg-gradient-to-br from-rose-950/30 to-zinc-900/50 border border-rose-500/15 rounded-2xl">
                                 <div className="flex items-center justify-between gap-3 mb-3">
@@ -961,7 +1081,7 @@ export default function Home() {
 
                           <div className="space-y-4">
                             {moodMutation.isPending && moodSongs.length === 0
-                              ? [...Array(3)].map((_, i) => <div key={i} className="h-36 bg-zinc-900 rounded-3xl animate-pulse" />)
+                              ? null
                               : moodSongs.map((song, idx) => (
                                 <div key={idx}>
                                   <motion.div
@@ -1081,7 +1201,7 @@ export default function Home() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
                     {exploreMutation.isPending && recommendations.length === 0
-                      ? [...Array(3)].map((_, i) => <div key={i} className="aspect-[4/5] bg-zinc-900 rounded-[32px] animate-pulse" />)
+                      ? <div className="col-span-full"><AnimatePresence><MusicLoadingBar mode="explore" /></AnimatePresence></div>
                       : recommendations.map((rec, idx) => (
                         <motion.div
                           key={idx}

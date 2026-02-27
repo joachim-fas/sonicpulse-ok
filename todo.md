@@ -198,3 +198,9 @@
 - [x] Fix: mouseDownOnDropdown-Guard verhindert vorzeitiges Schließen
 - [x] Fix: AbortController für ausstehende Fetch-Requests beim Tippen
 - [x] Fix: Dropdown-State nach Auswahl korrekt zurücksetzen
+
+## Loading State Redesign
+- [x] Animierter Ladebalken mit witzigen Musik-Nachrichten (statt Skeleton-Flächen)
+- [x] Explore Mode: eigene Nachrichten-Sequenz
+- [x] Mood Mode: eigene Nachrichten-Sequenz
+- [x] Ladebalken-Komponente mit Framer Motion
