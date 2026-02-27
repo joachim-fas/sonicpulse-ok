@@ -220,7 +220,9 @@ const MOOD_MESSAGES = [
 
 const MusicLoadingBar = ({ mode }: { mode: "explore" | "mood" }) => {
   const messages = mode === "explore" ? EXPLORE_MESSAGES : MOOD_MESSAGES;
-  const [msgIdx, setMsgIdx] = useState(0);
+  // Start at a random index so messages never repeat in the same order
+  const [msgIdx, setMsgIdx] = useState(() => Math.floor(Math.random() * messages.length));
+  const seenRef = useRef<Set<number>>(new Set([Math.floor(Math.random() * messages.length)]));
   const [progress, setProgress] = useState(0);
   const [fade, setFade] = useState(true);
 
@@ -233,11 +235,23 @@ const MusicLoadingBar = ({ mode }: { mode: "explore" | "mood" }) => {
       });
     }, 200);
 
-    // Message rotation every 2.5s with fade
+    // Message rotation every 2.5s with fade – never repeat until all seen
     const msgInterval = setInterval(() => {
       setFade(false);
       setTimeout(() => {
-        setMsgIdx((i) => (i + 1) % messages.length);
+        setMsgIdx((prev) => {
+          // Pick a random index that hasn't been shown yet
+          const unseen = messages.map((_, i) => i).filter(i => !seenRef.current.has(i));
+          if (unseen.length === 0) {
+            seenRef.current.clear();
+            const next = (prev + 1) % messages.length;
+            seenRef.current.add(next);
+            return next;
+          }
+          const next = unseen[Math.floor(Math.random() * unseen.length)];
+          seenRef.current.add(next);
+          return next;
+        });
         setFade(true);
       }, 300);
     }, 2500);
@@ -787,6 +801,56 @@ export default function Home() {
     });
   }, [moodPrompt, moodReference, moodDiscovery, moodMutation]);
 
+  // ─── Mouse / Touch tracking for interactive background ──────────────────
+  const mousePos = useRef({ x: 50, y: 50 });
+  const mousePosSmooth = useRef({ x: 50, y: 50 });
+  const [pulses, setPulses] = useState<{ id: number; x: number; y: number }[]>([]);
+  const pulseIdRef = useRef(0);
+
+  useEffect(() => {
+    // Smooth mouse tracking
+    const handleMouseMove = (e: MouseEvent) => {
+      mousePos.current = {
+        x: (e.clientX / window.innerWidth) * 100,
+        y: (e.clientY / window.innerHeight) * 100,
+      };
+    };
+
+    // Touch pulse on scroll touch
+    const handleTouchMove = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      if (!touch) return;
+      const x = (touch.clientX / window.innerWidth) * 100;
+      const y = (touch.clientY / window.innerHeight) * 100;
+      const id = ++pulseIdRef.current;
+      setPulses((prev) => [...prev.slice(-4), { id, x, y }]);
+      setTimeout(() => setPulses((prev) => prev.filter((p) => p.id !== id)), 1200);
+    };
+
+    // Lerp mouse position for smooth gradient follow
+    let rafId: number;
+    const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+    const tick = () => {
+      mousePosSmooth.current = {
+        x: lerp(mousePosSmooth.current.x, mousePos.current.x, 0.04),
+        y: lerp(mousePosSmooth.current.y, mousePos.current.y, 0.04),
+      };
+      // Update CSS custom properties for the gradient
+      document.documentElement.style.setProperty('--mx', `${mousePosSmooth.current.x}%`);
+      document.documentElement.style.setProperty('--my', `${mousePosSmooth.current.y}%`);
+      rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('touchmove', handleTouchMove);
+      cancelAnimationFrame(rafId);
+    };
+  }, []);
+
   // ─── Background Gradient ──────────────────────────────────────────────────
   const bgGradient = !hasStarted
     ? "radial-gradient(ellipse at 40% 10%, rgba(234,179,8,0.12) 0%, transparent 60%), radial-gradient(ellipse at 70% 80%, rgba(180,83,9,0.08) 0%, transparent 50%)"
@@ -818,6 +882,39 @@ export default function Home() {
           transition={{ duration: 3.5, ease: [0.4, 0, 0.2, 1] }}
           className="absolute inset-0"
         />
+        {/* Mouse-following radial glow – uses CSS vars --mx / --my updated via rAF */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `radial-gradient(ellipse 55% 45% at var(--mx, 50%) var(--my, 50%), ${
+              !hasStarted ? 'rgba(234,179,8,0.07)' : mode === 'explore' ? 'rgba(6,182,212,0.09)' : 'rgba(244,114,182,0.09)'
+            } 0%, transparent 70%)`,
+            transition: 'background-color 2s ease',
+          }}
+        />
+        {/* Touch pulses (mobile) */}
+        {pulses.map((p) => (
+          <motion.div
+            key={p.id}
+            initial={{ opacity: 0.5, scale: 0.2 }}
+            animate={{ opacity: 0, scale: 3.5 }}
+            transition={{ duration: 1.1, ease: [0.2, 0.8, 0.4, 1] }}
+            className="absolute rounded-full pointer-events-none"
+            style={{
+              left: `${p.x}%`,
+              top: `${p.y}%`,
+              width: 120,
+              height: 120,
+              marginLeft: -60,
+              marginTop: -60,
+              background: !hasStarted
+                ? 'radial-gradient(circle, rgba(234,179,8,0.35) 0%, transparent 70%)'
+                : mode === 'explore'
+                ? 'radial-gradient(circle, rgba(6,182,212,0.35) 0%, transparent 70%)'
+                : 'radial-gradient(circle, rgba(244,114,182,0.35) 0%, transparent 70%)',
+            }}
+          />
+        ))}
         {/* Blob 1 – slow organic drift, top-left */}
         <motion.div
           animate={{
