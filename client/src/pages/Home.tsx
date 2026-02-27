@@ -527,7 +527,7 @@ const ArtistInput = ({
           onFocus={() => suggestions.length > 0 && setOpen(true)}
           placeholder={placeholder}
           className={cn(
-            "sp-input w-full",
+            "form-input w-full",
             showRemove ? "pr-16" : "pr-10"
           )}
         />
@@ -1179,13 +1179,13 @@ export default function Home() {
                 >
                   <div className="mb-12">
                     <span className={cn(
-                      "text-xs uppercase tracking-[0.3em] mb-4 block font-medium",
-                      mode === "explore" ? "text-[var(--violet)]" : "text-[var(--pink-hot)]"
-                    )}>
+                      "text-xs uppercase tracking-[0.3em] mb-4 block",
+                      mode === "explore" ? "text-[var(--violet)]/70" : "text-[var(--pink-hot)]/70"
+                    )} style={{ fontFamily: 'var(--font-body)', letterSpacing: '0.25em' }}>
                       {mode === "explore" ? "Manual Input" : "Emotional Intelligence"}
                     </span>
                     <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 1.1, color: 'var(--text-primary)' }}>
-                      {mode === "explore" ? "Explore New Sounds" : "Mood Mode"}
+                      {mode === "explore" ? <>Explore <em className="gradient-text" style={{ fontStyle: 'italic', fontFamily: 'var(--font-accent)' }}>New Sounds</em></> : <>Mood <em className="gradient-text" style={{ fontStyle: 'italic', fontFamily: 'var(--font-accent)' }}>Mode</em></>}
                     </h2>
                   </div>
 
