@@ -38,6 +38,9 @@ interface Recommendation {
   genre: string;
   similarTo: string;
   youtubeId?: string | null;
+  similarityScore?: number | null;
+  listeners?: number | null;
+  lastfmUrl?: string | null;
   enriched?: { image?: string | null; url?: string | null; spotifyId?: string | null; previewUrl?: string | null };
 }
 
@@ -59,6 +62,8 @@ interface MoodSong {
   trackId?: string | null;
   trackUrl?: string | null;
   youtubeId?: string | null;
+  listeners?: number | null;
+  lastfmUrl?: string | null;
   enriched?: { image?: string | null; url?: string | null; spotifyId?: string | null };
 }
 
@@ -1325,13 +1330,20 @@ export default function Home() {
                                       </div>
                                     )}
                                     <div className={cn("mt-auto pt-4 border-t space-y-3", isLightMode ? "border-zinc-100" : "border-white/5")}>
-                                      {/* Not on Spotify badge */}
-                                      {!song.trackId && !song.enriched?.spotifyId && !extractSpotifyArtistId(song.enriched?.url) && (
-                                        <span className={cn("flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] uppercase tracking-widest border w-fit", isLightMode ? "bg-zinc-100 border-zinc-200 text-zinc-500" : "bg-white/5 border-white/8 text-white/30")}>
-                                          <CircleSlash size={8} />
-                                          Not on Spotify
-                                        </span>
-                                      )}
+                                      {/* Listeners + Not on Spotify badges */}
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        {song.listeners != null && song.listeners > 0 && (
+                                          <span className={cn("text-[8px] uppercase tracking-widest", isLightMode ? "text-zinc-400" : "text-white/35")}>
+                                            {song.listeners.toLocaleString()} listeners
+                                          </span>
+                                        )}
+                                        {!song.trackId && !song.enriched?.spotifyId && !extractSpotifyArtistId(song.enriched?.url) && (
+                                          <span className={cn("flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] uppercase tracking-widest border w-fit", isLightMode ? "bg-zinc-100 border-zinc-200 text-zinc-500" : "bg-white/5 border-white/8 text-white/30")}>
+                                            <CircleSlash size={8} />
+                                            Not on Spotify
+                                          </span>
+                                        )}
+                                      </div>
                                       {/* Spotify Track-Embed */}
                                       {song.trackId && (
                                         <iframe
@@ -1464,17 +1476,32 @@ export default function Home() {
                               <p className={cn("font-light leading-relaxed text-xs line-clamp-3", isLightMode ? "text-zinc-600" : "text-white/60")}>{rec.reason}</p>
                             </div>
                             <div className={cn("mt-auto pt-4 border-t space-y-3", isLightMode ? "border-zinc-100" : "border-white/5")}>
-                              <div className="flex items-center justify-between">
-                                <span className={cn("text-[8px] uppercase tracking-widest", isLightMode ? "text-zinc-500" : "text-white/50")}>
-                                  Similar to <span className={isLightMode ? "text-zinc-800" : "text-white/70"}>{rec.similarTo}</span>
-                                </span>
-                                {/* Not on Spotify badge */}
-                                {!rec.enriched?.spotifyId && !extractSpotifyArtistId(rec.enriched?.url) && (
-                                  <span className={cn("flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] uppercase tracking-widest border", isLightMode ? "bg-zinc-100 border-zinc-200 text-zinc-500" : "bg-white/5 border-white/8 text-white/30")}>
-                                    <CircleSlash size={8} />
-                                    Not on Spotify
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex flex-col gap-0.5 min-w-0">
+                                  <span className={cn("text-[8px] uppercase tracking-widest", isLightMode ? "text-zinc-500" : "text-white/50")}>
+                                    Similar to <span className={isLightMode ? "text-zinc-800" : "text-white/70"}>{rec.similarTo}</span>
                                   </span>
-                                )}
+                                  {rec.listeners != null && rec.listeners > 0 && (
+                                    <span className={cn("text-[8px] uppercase tracking-widest", isLightMode ? "text-zinc-400" : "text-white/35")}>
+                                      {rec.listeners.toLocaleString()} listeners
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-1 shrink-0">
+                                  {/* Last.fm Similarity Score */}
+                                  {rec.similarityScore != null && rec.similarityScore > 0 && (
+                                    <span className="flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-400 text-[8px] uppercase tracking-widest border border-cyan-500/20">
+                                      {rec.similarityScore}% match
+                                    </span>
+                                  )}
+                                  {/* Not on Spotify badge */}
+                                  {!rec.enriched?.spotifyId && !extractSpotifyArtistId(rec.enriched?.url) && (
+                                    <span className={cn("flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] uppercase tracking-widest border", isLightMode ? "bg-zinc-100 border-zinc-200 text-zinc-500" : "bg-white/5 border-white/8 text-white/30")}>
+                                      <CircleSlash size={8} />
+                                      Not on Spotify
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                               {/* Spotify Player – wenn Spotify-ID vorhanden */}
                               {(rec.enriched?.spotifyId || extractSpotifyArtistId(rec.enriched?.url)) && (

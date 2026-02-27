@@ -4,6 +4,7 @@ import { invokeLLM } from "../_core/llm";
 import { resolveArtist, resolveMultipleArtists } from "../artistService";
 import { getSpotifyToken } from "../spotify";
 import { searchYouTubeVideoId } from "../youtube";
+import { getSimilarArtists, getTopTracks } from "../lastfm";
 
 /**
  * SonicPulse Router
@@ -163,15 +164,30 @@ export const sonicpulseRouter = router({
         })
       );
 
+      // Last.fm: Similarity Scores für alle empfohlenen Künstler parallel abrufen
+      // Wir nutzen den ersten Input-Künstler als Referenz für getSimilar
+      const referenceArtist = input.artists[0];
+      const similarFromLastfm = await getSimilarArtists(referenceArtist, 50).catch(() => []);
+
       const recommendations = rawRecs.map((rec, i) => {
         const profile = profiles[i];
         const youtubeId = youtubeIds[i];
+        // Similarity Score: Last.fm Match-Score für diesen Künstler suchen
+        const lfmMatch = similarFromLastfm.find(
+          (s) => s.name.toLowerCase() === rec.artist.toLowerCase()
+        );
+        const similarityScore = lfmMatch ? Math.round(lfmMatch.match * 100) : null;
+        // Listeners aus Last.fm-Profil (falls vorhanden)
+        const listeners = profile?.lastfm_listeners ?? null;
         return {
           artist:    rec.artist,
           reason:    rec.reason,
           genre:     rec.genre,
           similarTo: rec.similarTo,
           youtubeId: youtubeId ?? null,
+          similarityScore,
+          listeners,
+          lastfmUrl: profile?.lastfm_url ?? null,
           enriched: profile
             ? {
                 image:     profile.image_url,
@@ -362,6 +378,8 @@ Respond with a JSON object with keys: emotionalProfile and songs.`,
           trackId:         trackId ?? null,
           trackUrl:        trackId ? `https://open.spotify.com/track/${trackId}` : null,
           youtubeId:       youtubeId ?? null,
+          listeners:       profile?.lastfm_listeners ?? null,
+          lastfmUrl:       profile?.lastfm_url ?? null,
           enriched: profile
             ? {
                 image:     profile.image_url,

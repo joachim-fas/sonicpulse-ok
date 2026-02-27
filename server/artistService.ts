@@ -17,6 +17,7 @@ import { searchSpotifyArtist } from "./spotify";
 import { searchMusicBrainzArtist } from "./musicbrainz";
 import { searchWikidataArtist } from "./wikidata";
 import { getArtistImageFromDiscogs } from "./artistImage";
+import { getArtistInfo as getLastfmArtistInfo } from "./lastfm";
 
 export interface ArtistProfile {
   display_name: string;
@@ -28,6 +29,9 @@ export interface ArtistProfile {
   followers: number | null;
   popularity: number | null;
   source: "spotify" | "musicbrainz" | "wikidata";
+  lastfm_listeners?: number | null;
+  lastfm_tags?: string[];
+  lastfm_url?: string | null;
 }
 
 /**
@@ -87,18 +91,36 @@ export async function resolveArtist(artistName: string): Promise<ArtistProfile |
 
     if (mbResult?.spotify_id) {
       const direct_link = `https://open.spotify.com/artist/${mbResult.spotify_id}`;
-      // Bild über Discogs holen, da MusicBrainz keine Bilder liefert
-      const image_url = await getArtistImageFromDiscogs(artistName).catch(() => null);
+      // Bild: Last.fm zuerst (bessere Künstlerfotos), dann Discogs als Fallback
+      let image_url: string | null = null;
+      let lastfm_listeners: number | null = null;
+      let lastfm_tags: string[] = [];
+      let lastfm_url: string | null = null;
+      try {
+        const lfm = await getLastfmArtistInfo(artistName);
+        if (lfm?.image) {
+          image_url = lfm.image;
+          lastfm_listeners = lfm.listeners;
+          lastfm_tags = lfm.tags;
+          lastfm_url = lfm.url;
+        }
+      } catch { /* ignore */ }
+      if (!image_url) {
+        image_url = await getArtistImageFromDiscogs(artistName).catch(() => null);
+      }
       return {
         display_name: artistName,
         spotify_name: mbResult.name,
         spotify_id:   mbResult.spotify_id,
         direct_link,
         image_url,
-        genres:       mbResult.genres,
+        genres:       mbResult.genres.length > 0 ? mbResult.genres : lastfm_tags,
         followers:    null,
         popularity:   null,
         source:       "musicbrainz",
+        lastfm_listeners,
+        lastfm_tags,
+        lastfm_url,
       };
     }
 
@@ -115,18 +137,36 @@ export async function resolveArtist(artistName: string): Promise<ArtistProfile |
     const wdResult = await withRetry(() => searchWikidataArtist(artistName), 3, 400);
 
     if (wdResult?.spotify_id) {
-      // Bild über Discogs holen, da Wikidata keine Bilder liefert
-      const image_url = await getArtistImageFromDiscogs(artistName).catch(() => null);
+      // Bild: Last.fm zuerst, dann Discogs als Fallback
+      let image_url: string | null = null;
+      let lastfm_listeners: number | null = null;
+      let lastfm_tags: string[] = [];
+      let lastfm_url: string | null = null;
+      try {
+        const lfm = await getLastfmArtistInfo(artistName);
+        if (lfm?.image) {
+          image_url = lfm.image;
+          lastfm_listeners = lfm.listeners;
+          lastfm_tags = lfm.tags;
+          lastfm_url = lfm.url;
+        }
+      } catch { /* ignore */ }
+      if (!image_url) {
+        image_url = await getArtistImageFromDiscogs(artistName).catch(() => null);
+      }
       return {
         display_name: artistName,
         spotify_name: wdResult.name,
         spotify_id:   wdResult.spotify_id,
         direct_link:  wdResult.direct_link, // https://open.spotify.com/artist/{id}
         image_url,
-        genres:       [],
+        genres:       lastfm_tags,
         followers:    null,
         popularity:   null,
         source:       "wikidata",
+        lastfm_listeners,
+        lastfm_tags,
+        lastfm_url,
       };
     }
   } catch (err: unknown) {
@@ -134,8 +174,30 @@ export async function resolveArtist(artistName: string): Promise<ArtistProfile |
     console.warn(`[ArtistService] Wikidata nicht verfügbar für "${artistName}" (${msg})`);
   }
 
-  // ── Alle Quellen erschöpft – aber Discogs-Bild noch versuchen ─────────────
-  console.info(`[ArtistService] Keine Spotify-ID für "${artistName}" gefunden – versuche Discogs-Bild`);
+  // ── Alle Quellen erschöpft – Last.fm dann Discogs als letzter Bild-Fallback ──
+  console.info(`[ArtistService] Keine Spotify-ID für "${artistName}" gefunden – versuche Last.fm + Discogs`);
+  try {
+    const lfm = await getLastfmArtistInfo(artistName);
+    if (lfm) {
+      // Last.fm kennt den Künstler – auch ohne Spotify-ID ein Profil zurückgeben
+      const image_url = lfm.image ?? await getArtistImageFromDiscogs(artistName).catch(() => null);
+      return {
+        display_name: artistName,
+        spotify_name: artistName,
+        spotify_id:   "",
+        direct_link:  "",
+        image_url,
+        genres:       lfm.tags,
+        followers:    null,
+        popularity:   null,
+        source:       "musicbrainz" as const,
+        lastfm_listeners: lfm.listeners,
+        lastfm_tags:  lfm.tags,
+        lastfm_url:   lfm.url,
+      };
+    }
+  } catch { /* ignore */ }
+  // Discogs als absolut letzter Fallback
   try {
     const image_url = await getArtistImageFromDiscogs(artistName).catch(() => null);
     if (image_url) {
