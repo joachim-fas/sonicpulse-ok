@@ -215,3 +215,11 @@
 - [ ] Auto-Scroll: beim Start der Suche zum Reasoning-Bereich scrollen (mobile-first)
 - [ ] Auto-Scroll: nach Abschluss zum ersten Ergebnis scrollen
 - [ ] Hintergrundanimation: weicher, mehr Dynamik, keine harten Sprünge
+
+## Empfehlungs-Diversifizierung
+- [ ] Backend: Temperature auf 1.1 erhöhen (mehr Kreativität)
+- [ ] Backend: Zufalls-Perspektiven-Element im Prompt (wechselnde Anweisung)
+- [ ] Backend: exclude-Parameter in explore-Prozedur (Blacklist bereits gesehener Künstler)
+- [ ] Backend: exclude-Parameter in mood-Prozedur (Blacklist bereits gesehener Songs)
+- [ ] Frontend: Zuletzt gezeigte Künstler/Songs in sessionStorage speichern
+- [ ] Frontend: Bei neuer Suche Blacklist an Backend übergeben

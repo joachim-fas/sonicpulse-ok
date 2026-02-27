@@ -67,28 +67,45 @@ export const sonicpulseRouter = router({
     .input(z.object({
       artists: z.array(z.string()).min(1).max(10),
       discoveryLevel: z.enum(["mainstream", "underground", "exotics"]).default("underground"),
+      exclude: z.array(z.string()).max(20).optional(),
     }))
     .mutation(async ({ input }) => {
       const artistList = input.artists.filter((a) => a.trim()).join(", ");
       if (!artistList) return { recommendations: [] };
 
       const discoveryText = {
-        mainstream: "popular, established, and mainstream",
-        underground: "relatively unknown, underground, and niche",
+        mainstream: "popular, established, and mainstream artists with broad appeal",
+        underground: "relatively unknown, underground, and niche artists – hidden gems with cult followings",
         exotics: "highly exotic, unusual, and unique artists from around the world, but still fitting the vibe",
       }[input.discoveryLevel];
 
+      // Diversification: rotate perspective instruction each call
+      const perspectives = [
+        "Focus on artists from unexpected countries or regions that share this sound.",
+        "Think about artists from the 70s, 80s, 90s, 2000s, or 2010s that fit this taste.",
+        "Prioritize female-fronted or non-binary artists if they fit the sound.",
+        "Look for side projects, supergroups, or solo careers of members from similar bands.",
+        "Consider artists who are critically acclaimed but commercially overlooked.",
+        "Think about artists who influenced the input bands, not just similar contemporaries.",
+        "Consider artists who blend genres in unexpected ways while fitting the overall vibe.",
+        "Look for artists from non-English speaking countries who match this sound.",
+      ];
+      const perspective = perspectives[Math.floor(Math.random() * perspectives.length)];
+
+      const excludeClause = input.exclude && input.exclude.length > 0
+        ? `\nIMPORTANT: Do NOT recommend any of these artists (already shown): ${input.exclude.join(", ")}. Suggest completely different artists.`
+        : "";
+
       const llmResponse = await invokeLLM({
+        temperature: 1.2,
         messages: [
           {
             role: "system",
-            content: "You are a music expert. Respond only with valid JSON. No explanations.",
+            content: "You are a music expert with encyclopedic knowledge of global music across all eras. Be creative and diverse in your recommendations. Respond only with valid JSON. No explanations.",
           },
           {
             role: "user",
-            content: `Based on these artists: ${artistList}, suggest 5 new bands or artists I might like.
-The user prefers ${discoveryText} artists.
-Respond with a JSON object containing an "items" array of objects with keys: artist, reason, genre, similarTo.`,
+            content: `Based on these artists: ${artistList}, suggest 5 new bands or artists I might like.\nThe user prefers ${discoveryText} artists.\n${perspective}${excludeClause}\nRespond with a JSON object containing an "items" array of objects with keys: artist, reason, genre, similarTo.`,
           },
         ],
         response_format: {
@@ -166,9 +183,28 @@ Respond with a JSON object containing an "items" array of objects with keys: art
       songCount:       z.number().min(1).max(3).default(3),
       musicReference:  z.string().max(200).optional(),
       discoveryFilter: z.enum(["mainstream", "underground", "exotic"]).default("mainstream"),
+      exclude:         z.array(z.string()).max(20).optional(),
     }))
     .mutation(async ({ input }) => {
+      // Diversification: rotate emotional lens each call
+      const emotionalLenses = [
+        "Consider songs that approach this emotion from an unexpected angle – perhaps through metaphor or contrast.",
+        "Look for songs from different decades or eras that capture this feeling.",
+        "Consider non-English language songs that embody this emotional state.",
+        "Think about instrumental or ambient pieces that convey this emotion without words.",
+        "Look for songs that represent the turning point or resolution of this emotion.",
+        "Consider songs that validate and sit with this feeling rather than trying to resolve it.",
+        "Think about songs that pair this emotion with an unexpected musical genre.",
+        "Look for deep cuts and album tracks rather than singles.",
+      ];
+      const emotionalLens = emotionalLenses[Math.floor(Math.random() * emotionalLenses.length)];
+
+      const excludeClause = input.exclude && input.exclude.length > 0
+        ? `\nIMPORTANT: Do NOT recommend any of these songs (already shown to the user): ${input.exclude.join(", ")}. Suggest completely different songs.`
+        : "";
+
       const llmResponse = await invokeLLM({
+        temperature: 1.2,
         messages: [
           {
             role: "system",
@@ -190,6 +226,8 @@ First, deeply analyze the emotional landscape of this message:
 
 Discovery filter: "${input.discoveryFilter}"
 ${input.discoveryFilter === "mainstream" ? "Recommend well-known, widely recognized songs that most people would know. Prioritize chart hits, iconic tracks, and artists with broad mainstream appeal." : input.discoveryFilter === "underground" ? "Recommend lesser-known, cult, or indie songs. Avoid mainstream chart hits. Prioritize artists with dedicated followings but limited mainstream exposure – hidden gems that feel like a personal discovery." : "Recommend rare, niche, or globally diverse songs. Think world music, experimental, obscure genres, non-English language music, or deeply underground artists. Surprise the listener with something truly unexpected."}
+
+Curatorial approach for this search: ${emotionalLens}${excludeClause}
 
 Then recommend exactly ${input.songCount} song${input.songCount === 1 ? "" : "s"} that are emotionally aligned with this state${input.musicReference ? ` and musically inspired by the style of "${input.musicReference}"` : ""}.
 For each song, explain WHY it resonates with this specific emotional moment – not just the genre, but the emotional journey the song takes the listener on.

@@ -526,19 +526,7 @@ const SpotifySaveSection = ({
     : "bg-[#1DB954] text-black hover:bg-[#1ed760]";
 
   if (!isLoggedIn) {
-    return (
-      <button
-        onClick={onLogin}
-        disabled={isLoginPending}
-        className={cn(
-          "flex items-center gap-2 px-5 py-2.5 rounded-full font-medium text-xs uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed",
-          "bg-[#1DB954] text-black hover:bg-[#1ed760]"
-        )}
-      >
-        {isLoginPending ? <Loader2 size={14} className="animate-spin" /> : <SpotifyLogo size={14} />}
-        Connect Spotify
-      </button>
-    );
+    return null;
   }
 
   return (
@@ -605,34 +593,22 @@ const FloatingSaveButton = ({
     ? "bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:from-rose-400 hover:to-pink-400 shadow-rose-900/40"
     : "bg-[#1DB954] text-black hover:bg-[#1ed760] shadow-green-900/40";
 
+  if (!isLoggedIn) return null;
+
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="pt-8 flex justify-center">
-      {isLoggedIn ? (
-        <button
-          onClick={onSave}
-          disabled={isSaving || !tracks.length}
-          className={cn(
-            "flex items-center gap-3 px-8 py-4 rounded-full font-medium text-sm uppercase tracking-widest transition-all active:scale-95 shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed",
-            saveBtn,
-            isSaving && "animate-pulse"
-          )}
-        >
-          {isSaving ? <Loader2 size={18} className="animate-spin" /> : <ListMusic size={18} />}
-          {isSaving ? "Creating playlist..." : `Save playlist (${tracks.length} tracks)`}
-        </button>
-      ) : (
-        <div className="flex flex-col items-center gap-3">
-          <p className="text-white/40 text-xs uppercase tracking-widest">Connect Spotify to save this playlist</p>
-          <button
-            onClick={onLogin}
-            disabled={isLoginPending}
-            className="flex items-center gap-3 px-8 py-4 rounded-full font-medium text-sm uppercase tracking-widest bg-[#1DB954] text-black hover:bg-[#1ed760] transition-all active:scale-95 shadow-2xl disabled:opacity-50"
-          >
-            {isLoginPending ? <Loader2 size={18} className="animate-spin" /> : <SpotifyLogo size={18} />}
-            Connect Spotify & save playlist
-          </button>
-        </div>
-      )}
+      <button
+        onClick={onSave}
+        disabled={isSaving || !tracks.length}
+        className={cn(
+          "flex items-center gap-3 px-8 py-4 rounded-full font-medium text-sm uppercase tracking-widest transition-all active:scale-95 shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed",
+          saveBtn,
+          isSaving && "animate-pulse"
+        )}
+      >
+        {isSaving ? <Loader2 size={18} className="animate-spin" /> : <ListMusic size={18} />}
+        {isSaving ? "Creating playlist..." : `Save playlist (${tracks.length} tracks)`}
+      </button>
     </motion.div>
   );
 };
@@ -658,13 +634,12 @@ const IntensityBadge = ({ intensity }: { intensity: "subtle" | "moderate" | "int
 export default function Home() {
   const [hasStarted, setHasStarted] = useState(false);
   const [mode, setMode] = useState<"explore" | "mood">("explore");
-
-  // Explore
   const [exploreBands, setExploreBands] = useState<string[]>(["", "", ""]);
   const [discoveryLevel, setDiscoveryLevel] = useState<"mainstream" | "underground" | "exotics">("underground");
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [explorePlaylistName, setExplorePlaylistName] = useState("SonicPulse Explore Mix");
   const [showExplorePlaylistInput, setShowExplorePlaylistInput] = useState(false);
+  const [seenArtists, setSeenArtists] = useState<string[]>([]); // Blacklist for explore
 
   // Mood
   const [moodPrompt, setMoodPrompt] = useState("");
@@ -675,6 +650,7 @@ export default function Home() {
   const [emotionalProfile, setEmotionalProfile] = useState<EmotionalProfile | null>(null);
   const [moodPlaylistName, setMoodPlaylistName] = useState("SonicPulse Mood Mix");
   const [showMoodPlaylistInput, setShowMoodPlaylistInput] = useState(false);
+  const [seenSongs, setSeenSongs] = useState<string[]>([]); // Blacklist for mood
 
   // UI
   const [infoModal, setInfoModal] = useState<"privacy" | "terms" | "spotify" | null>(null);
@@ -743,8 +719,13 @@ export default function Home() {
   // ─── Mutations ────────────────────────────────────────────────────────────
   const exploreMutation = trpc.sonicpulse.explore.useMutation({
     onSuccess: (data) => {
-      setRecommendations(data.recommendations as Recommendation[]);
-      // Scroll to first result after loading
+      const recs = data.recommendations as Recommendation[];
+      setRecommendations(recs);
+      // Add newly shown artists to blacklist (keep last 20)
+      setSeenArtists(prev => {
+        const newSeen = [...prev, ...recs.map(r => r.artist)];
+        return newSeen.slice(-20);
+      });
       setTimeout(() => {
         resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 300);
@@ -752,9 +733,14 @@ export default function Home() {
   });
   const moodMutation = trpc.sonicpulse.mood.useMutation({
     onSuccess: (data) => {
-      setMoodSongs(data.songs as MoodSong[]);
+      const songs = data.songs as MoodSong[];
+      setMoodSongs(songs);
       setEmotionalProfile(data.emotionalProfile as EmotionalProfile | null);
-      // Scroll to first result after loading
+      // Add newly shown songs to blacklist (keep last 20)
+      setSeenSongs(prev => {
+        const newSeen = [...prev, ...songs.map(s => `${s.artist} - ${s.title}`)];
+        return newSeen.slice(-20);
+      });
       setTimeout(() => {
         resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 300);
@@ -781,7 +767,7 @@ export default function Home() {
     setTimeout(() => {
       loadingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 100);
-    exploreMutation.mutate({ artists, discoveryLevel });
+    exploreMutation.mutate({ artists, discoveryLevel, exclude: seenArtists.length > 0 ? seenArtists : undefined });
   }, [exploreBands, discoveryLevel, exploreMutation, loadingRef]);
 
   const generateMoodPlaylist = useCallback(() => {
@@ -798,6 +784,7 @@ export default function Home() {
       songCount: 3,
       musicReference: moodReference.trim() || undefined,
       discoveryFilter: moodDiscovery,
+      exclude: seenSongs.length > 0 ? seenSongs : undefined,
     });
   }, [moodPrompt, moodReference, moodDiscovery, moodMutation]);
 
