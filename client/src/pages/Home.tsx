@@ -27,6 +27,7 @@ import { twMerge } from "tailwind-merge";
 import { trpc } from "@/lib/trpc";
 import { SpotifyEmbedCard } from "@/components/SpotifyEmbedCard";
 import { YouTubeEmbedCard } from "@/components/YouTubeEmbedCard";
+import { AnimatedArtistFallback } from "@/components/AnimatedArtistFallback";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -1292,7 +1293,7 @@ export default function Home() {
                                   <div className="relative aspect-[16/10] overflow-hidden">
                                     {song.enriched?.image
                                       ? <img src={song.enriched.image} alt={song.artist} className={cn("w-full h-full object-cover transition-all duration-700 group-hover:scale-110", isLightMode ? "opacity-75 group-hover:opacity-95" : "opacity-55 group-hover:opacity-75")} />
-                                      : <div className={cn("w-full h-full flex items-center justify-center", isLightMode ? "bg-zinc-100" : "bg-zinc-800")}><Heart className={isLightMode ? "text-zinc-300" : "text-white/10"} size={32} /></div>
+                                      : <AnimatedArtistFallback artistName={song.artist} accentColor="rose" className="w-full h-full" />
                                     }
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                                     <div className="absolute bottom-0 left-0 p-6 w-full">
@@ -1449,7 +1450,7 @@ export default function Home() {
                           <div className="relative aspect-[16/10] overflow-hidden">
                             {rec.enriched?.image
                               ? <img src={rec.enriched.image} alt={rec.artist} className={cn("w-full h-full object-cover transition-all duration-700 group-hover:scale-110", isLightMode ? "opacity-75 group-hover:opacity-95" : "opacity-55 group-hover:opacity-75")} />
-                              : <div className={cn("w-full h-full flex items-center justify-center", isLightMode ? "bg-zinc-100" : "bg-zinc-800")}><Music className={isLightMode ? "text-zinc-300" : "text-white/10"} size={32} /></div>
+                              : <AnimatedArtistFallback artistName={rec.artist} accentColor="cyan" className="w-full h-full" />
                             }
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                             <div className="absolute bottom-0 left-0 p-6 w-full">
