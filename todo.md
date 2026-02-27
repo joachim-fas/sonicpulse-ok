@@ -310,3 +310,12 @@
 - [x] Export JSON + Reset-Funktion
 - [x] Auto-Save in localStorage
 - [x] Alle 85 Tests bestehen
+
+## v3-Design auf alle Seiten anwenden
+- [ ] Dashboard Explore-Controls: Inputs, Buttons, Filter-Pills auf v3-Klassen
+- [ ] Dashboard Mood-Controls: Textarea, Buttons, Discovery-Slider auf v3-Klassen
+- [ ] MusicLoadingBar: v3-Styling (feature-card, gradient-text, tag-*)
+- [ ] ArtistInput-Komponente: form-input Klasse, v3-Farben
+- [ ] Artist Result Cards: feature-card, tag-violet/pink/blue, btn-icon
+- [ ] Mood Song Cards: feature-card, v3-Typografie, tag-*
+- [ ] Design Customizer (/design): komplettes v3-Redesign

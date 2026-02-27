@@ -409,7 +409,7 @@ const MusicLoadingBar = ({
     };
   }, [messages.length]);
 
-  const accentColor = mode === "explore" ? "var(--sp-violet)" : "var(--sp-pink-hot)";
+  const accentColor = mode === "explore" ? "var(--violet)" : "var(--pink-hot)";
   const accentHex = mode === "explore" ? "#954aaf" : "#eb518b";
   const glowColor = mode === "explore" ? "rgba(149,74,175,0.4)" : "rgba(235,81,139,0.4)";
 
@@ -544,7 +544,7 @@ const ArtistInput = ({
         {open && suggestions.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-            className="absolute z-20 left-0 right-0 mt-1 rounded-xl overflow-hidden shadow-2xl border bg-[var(--sp-bg-elevated)] border-white/10"
+            className="absolute z-20 left-0 right-0 mt-1 rounded-xl overflow-hidden shadow-2xl border border-white/10" style={{ background: 'var(--bg-elevated)' }}
             onMouseDown={() => { mouseDownOnDropdown.current = true; }}
             onMouseUp={() => { mouseDownOnDropdown.current = false; }}
             onMouseLeave={() => { mouseDownOnDropdown.current = false; }}
@@ -657,7 +657,7 @@ const SpotifySaveSection = ({
             value={playlistName}
             onChange={(e) => onPlaylistNameChange(e.target.value)}
             placeholder="Playlist name..."
-            className="sp-input text-sm w-full md:w-64"
+                              className="form-input text-sm w-full md:w-64"
           />
         </motion.div>
       )}
@@ -1197,11 +1197,11 @@ export default function Home() {
                   <div className="mb-12">
                     <span className={cn(
                       "text-xs uppercase tracking-[0.3em] mb-4 block font-medium",
-                      mode === "explore" ? "text-[var(--sp-violet)]" : "text-[var(--sp-pink-hot)]"
+                      mode === "explore" ? "text-[var(--violet)]" : "text-[var(--pink-hot)]"
                     )}>
                       {mode === "explore" ? "Manual Input" : "Emotional Intelligence"}
                     </span>
-                    <h2 className="sp-display text-5xl font-semibold tracking-tight">
+                    <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 1.1, color: 'var(--text-primary)' }}>
                       {mode === "explore" ? "Explore New Sounds" : "Mood Mode"}
                     </h2>
                   </div>
@@ -1223,7 +1223,7 @@ export default function Home() {
                       </div>
                       <div className={cn(
                         "flex flex-col sm:flex-row items-center justify-between gap-4 p-5 md:p-6 rounded-[28px] border max-w-4xl mx-auto",
-                        isLightMode ? "bg-zinc-100 border-zinc-200" : "sp-card"
+                        isLightMode ? "bg-zinc-100 border-zinc-200" : "feature-card"
                       )}>
                         {/* Discovery Filter */}
                         <div className="flex flex-col gap-1.5 items-center sm:items-start">
@@ -1240,10 +1240,10 @@ export default function Home() {
                                   "px-4 py-1.5 rounded-full text-[9px] uppercase tracking-widest transition-all whitespace-nowrap",
                                   discoveryLevel === level
                                     ? level === "mainstream"
-                                      ? "bg-gradient-to-r from-[var(--sp-violet)] to-[var(--sp-blue-sky)] text-white"
+                                      ? "bg-gradient-to-r from-[var(--violet)] to-[var(--blue-sky)] text-white"
                                       : level === "underground"
-                                      ? "bg-[var(--sp-violet-deep)] text-white"
-                                      : "bg-gradient-to-r from-[var(--sp-blue-deep)] to-[var(--sp-blue-sky)] text-white"
+                                      ? "bg-[var(--violet-deep)] text-white"
+                                      : "bg-gradient-to-r from-[var(--blue-deep)] to-[var(--blue-sky)] text-white"
                                     : isLightMode ? "text-zinc-500 hover:text-zinc-900" : "text-white/50 hover:text-white"
                                 )}
                               >{level}</button>
@@ -1255,7 +1255,7 @@ export default function Home() {
                           onClick={generateRecommendations}
                           disabled={isGenerating || exploreBands.every((b) => !b.trim())}
                           className={cn(
-                            "sp-btn-primary flex items-center justify-center gap-2 shrink-0",
+                            "btn btn-primary flex items-center justify-center gap-2 shrink-0",
                             isGenerating && "animate-pulse"
                           )}
                         >
@@ -1279,7 +1279,7 @@ export default function Home() {
                           placeholder={moodPlaceholder}
                           rows={4}
                           maxLength={1000}
-                          className="sp-input w-full rounded-2xl resize-none leading-relaxed"
+                          className="form-input w-full rounded-2xl resize-none leading-relaxed"
                         />
                         <div className={cn("absolute bottom-3 right-4 text-[9px] uppercase tracking-widest", isLightMode ? "text-zinc-400" : "text-white/20")}>
                           {moodPrompt.length}/1000
@@ -1289,7 +1289,7 @@ export default function Home() {
                       {/* Filter + CTA Card */}
                       <div className={cn(
                         "flex flex-col sm:flex-row items-center justify-between gap-4 p-5 md:p-6 rounded-[28px] border max-w-4xl mx-auto",
-                        isLightMode ? "bg-zinc-100 border-zinc-200" : "sp-card"
+                        isLightMode ? "bg-zinc-100 border-zinc-200" : "feature-card"
                       )}>
                         <div className="flex flex-col gap-1.5 items-center sm:items-start">
                           <span className={cn("text-[8px] uppercase tracking-widest", isLightMode ? "text-zinc-400" : "text-white/20")}>Discovery</span>
@@ -1305,10 +1305,10 @@ export default function Home() {
                                   "px-4 py-1.5 rounded-full text-[9px] uppercase tracking-widest transition-all whitespace-nowrap",
                                   moodDiscovery === f
                                     ? f === "mainstream"
-                                      ? "bg-gradient-to-r from-[var(--sp-pink-hot)] to-[var(--sp-pink-rose)] text-white"
+                                      ? "bg-gradient-to-r from-[var(--pink-hot)] to-[var(--pink-rose)] text-white"
                                       : f === "underground"
-                                      ? "bg-[var(--sp-pink-hot)] text-white"
-                                      : "bg-gradient-to-r from-[var(--sp-violet)] to-[var(--sp-pink-hot)] text-white"
+                                      ? "bg-[var(--pink-hot)] text-white"
+                                      : "bg-gradient-to-r from-[var(--violet)] to-[var(--pink-hot)] text-white"
                                     : isLightMode ? "text-zinc-500 hover:text-zinc-900" : "text-white/40 hover:text-white"
                                 )}
                               >{f}</button>
@@ -1320,7 +1320,7 @@ export default function Home() {
                           onClick={generateMoodPlaylist}
                           disabled={isGenerating || !moodPrompt.trim()}
                           className={cn(
-                            "sp-btn-mood flex items-center justify-center gap-2 shrink-0",
+                            "btn btn-mood flex items-center justify-center gap-2 shrink-0",
                             isGenerating && "animate-pulse"
                           )}
                         >
@@ -1380,14 +1380,14 @@ export default function Home() {
                             ) : emotionalProfile && (
                               <div className={cn(
                                 "p-5 rounded-2xl border",
-                                isLightMode ? "bg-rose-50 border-rose-200" : "sp-card border-[var(--sp-pink-hot)]/15"
+                                isLightMode ? "bg-rose-50 border-rose-200" : "feature-card border-[var(--pink-hot)]/15"
                               )}>
                                 <div className="flex items-center justify-between gap-3 mb-3">
-                                  <h3 className={cn("text-lg font-light tracking-tight", isLightMode ? "text-rose-800" : "text-[var(--sp-pink-rose)]")}>{emotionalProfile.coreEmotion}</h3>
+                                  <h3 className={cn("text-lg font-light tracking-tight", isLightMode ? "text-rose-800" : "text-[var(--text-primary)]")}>{emotionalProfile.coreEmotion}</h3>
                                   <IntensityBadge intensity={emotionalProfile.intensity} />
                                 </div>
                                 <div className="flex gap-2">
-                                  <Quote size={12} className="text-[var(--sp-pink-hot)]/40 shrink-0 mt-0.5" />
+                                  <Quote size={12} className="shrink-0 mt-0.5" style={{ color: 'rgba(235,81,139,0.4)' }} />
                                   <p className={cn("text-xs font-light leading-relaxed italic", isLightMode ? "text-zinc-600" : "text-white/60")}>{emotionalProfile.emotionalNote}</p>
                                 </div>
                               </div>
@@ -1400,8 +1400,7 @@ export default function Home() {
                       {(moodSongs.length > 0 || moodMutation.isPending) && (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
                           <div className="flex items-center justify-between gap-4 mb-6">
-                            <span className={cn("text-xs uppercase tracking-[0.3em]", isLightMode ? "text-[var(--sp-pink-hot)]" : "text-[var(--sp-pink-hot)]/70")}>Your Emotional Soundtrack</span>
-                            <span className="px-2 py-1 rounded-full text-[9px] uppercase tracking-widest bg-[var(--sp-pink-hot)]/10 border border-[var(--sp-pink-hot)]/20 text-[var(--sp-pink-hot)]">{moodDiscovery}</span>
+                          <span className={cn("text-xs uppercase tracking-[0.3em]", isLightMode ? "text-[var(--pink-hot)]" : "text-[var(--pink-hot)]/70")}>Your Emotional Soundtrack</span>                         <span className="tag tag-pink">{moodDiscovery}</span>
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
@@ -1413,7 +1412,7 @@ export default function Home() {
                             ref={idx === 0 ? resultsRef : undefined}
                             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.1 }}
-                            className="sp-card overflow-hidden flex flex-col group sp-card-hover"
+                            className="feature-card overflow-hidden flex flex-col group"
                           >
                             <div className="relative aspect-[16/10] overflow-hidden rounded-t-[28px]">
                               {song.enriched?.image
@@ -1423,20 +1422,20 @@ export default function Home() {
                               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                               <div className="absolute bottom-0 left-0 p-6 w-full">
                                 <div className="mb-2">
-                                  <p className="text-[9px] uppercase tracking-widest font-medium mb-1 drop-shadow text-[var(--sp-pink-rose)]">Now Playing</p>
-                                  <SpotifyLink url={song.trackUrl ?? song.enriched?.url} className="group/name flex items-start gap-2 text-white hover:text-[var(--sp-pink-rose)] transition-colors text-left">
+                                  <p className="text-[9px] uppercase tracking-widest font-medium mb-1 drop-shadow" style={{ color: 'var(--pink-rose)' }}>Now Playing</p>
+                                  <SpotifyLink url={song.trackUrl ?? song.enriched?.url} className="group/name flex items-start gap-2 text-white hover:text-[var(--pink-rose)] transition-colors text-left">
                                     <div>
                                       <h3 className="text-xl font-semibold tracking-tight drop-shadow-md leading-tight">{song.title}</h3>
                                       <p className="text-sm text-white/70 font-light mt-0.5 drop-shadow">{song.artist}</p>
                                     </div>
                                     {(song.trackUrl ?? song.enriched?.url) && (
-                                      <div className="p-1 rounded-full bg-[var(--sp-pink-hot)]/10 text-[var(--sp-pink-hot)] opacity-0 group-hover/name:opacity-100 transition-all mt-1 shrink-0">
+                                      <div className="p-1 rounded-full opacity-0 group-hover/name:opacity-100 transition-all mt-1 shrink-0" style={{ background: 'rgba(235,81,139,0.1)', color: 'var(--pink-hot)' }}>
                                         <ExternalLink size={11} />
                                       </div>
                                     )}
                                   </SpotifyLink>
                                 </div>
-                                <span className="px-2 py-0.5 rounded-full bg-black/60 text-white/90 text-[8px] uppercase tracking-widest inline-block">{song.genre}</span>
+                                <span className="tag tag-pink">{song.genre}</span>
                               </div>
                             </div>
 
@@ -1445,7 +1444,7 @@ export default function Home() {
                                 <motion.div
                                   animate={{ y: [0, -4, 0], rotate: [0, 10, -10, 0] }}
                                   transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                                  className="mt-0.5 shrink-0 text-[var(--sp-pink-hot)]"
+                                  className="mt-0.5 shrink-0" style={{ color: 'var(--pink-hot)' }}
                                 >
                                   <Music size={14} />
                                 </motion.div>
@@ -1453,7 +1452,7 @@ export default function Home() {
                               </div>
                               {song.lyricMoment && (
                                 <div className="flex gap-1.5 mb-4">
-                                  <Quote size={9} className="shrink-0 mt-0.5 text-[var(--sp-pink-hot)]/30" />
+                                  <Quote size={9} className="shrink-0 mt-0.5" style={{ color: 'rgba(235,81,139,0.3)' }} />
                                   <p className={cn("text-[10px] italic font-light leading-relaxed line-clamp-2", isLightMode ? "text-zinc-500" : "text-white/45")}>{song.lyricMoment}</p>
                                 </div>
                               )}
@@ -1520,9 +1519,9 @@ export default function Home() {
               {(recommendations.length > 0 || exploreMutation.isPending) && mode === "explore" && (
                 <section className="pb-20">
                   <div className="mb-12">
-                    <span className={cn("text-xs uppercase tracking-[0.3em] mb-4 block font-medium", isLightMode ? "text-[var(--sp-violet)]" : "text-[var(--sp-violet)]/80")}>The Future</span>
-                    <h2 className="sp-display text-5xl font-semibold tracking-tight">
-                      Curated <em className="sp-accent font-normal" style={{ fontStyle: "italic" }}>for you</em>
+                    <span className={cn("text-xs uppercase tracking-[0.3em] mb-4 block font-medium", isLightMode ? "text-[var(--violet)]" : "text-[var(--violet)]/80")}>The Future</span>
+                    <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 1.1, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
+                      Curated <em className="gradient-text" style={{ fontStyle: 'italic', fontFamily: 'var(--font-accent)' }}>for you</em>
                     </h2>
                   </div>
 
@@ -1554,7 +1553,7 @@ export default function Home() {
                           ref={idx === 0 ? resultsRef : undefined}
                           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: idx * 0.1 }}
-                          className="sp-card overflow-hidden flex flex-col group sp-card-hover"
+                          className="feature-card overflow-hidden flex flex-col group"
                         >
                           <div className="relative aspect-[16/10] overflow-hidden rounded-t-[28px]">
                             {rec.enriched?.image
@@ -1563,15 +1562,15 @@ export default function Home() {
                             }
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                             <div className="absolute bottom-0 left-0 p-6 w-full">
-                              <SpotifyLink url={rec.enriched?.url} className="group/name flex items-center gap-2 transition-colors text-left text-white hover:text-[var(--sp-violet)]">
-                                <h3 className="text-2xl font-light tracking-tight drop-shadow-md">{rec.artist}</h3>
+                              <SpotifyLink url={rec.enriched?.url} className="group/name flex items-center gap-2 transition-colors text-left text-white hover:text-[var(--violet)]">
+                                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 600, letterSpacing: '-0.02em' }} className="drop-shadow-md">{rec.artist}</h3>
                                 {rec.enriched?.url && (
-                                  <div className="p-1 rounded-full bg-[var(--sp-violet)]/10 text-[var(--sp-violet)] opacity-0 group-hover/name:opacity-100 transition-all">
+                                  <div className="p-1 rounded-full opacity-0 group-hover/name:opacity-100 transition-all" style={{ background: 'rgba(149,74,175,0.1)', color: 'var(--violet)' }}>
                                     <ExternalLink size={12} />
                                   </div>
                                 )}
                               </SpotifyLink>
-                              <span className="px-2 py-0.5 rounded-full bg-black/60 text-white/90 text-[8px] uppercase tracking-widest">{rec.genre}</span>
+                              <span className="tag tag-violet">{rec.genre}</span>
                             </div>
                           </div>
                           <div className="p-6 flex-1 flex flex-col">
@@ -1579,7 +1578,7 @@ export default function Home() {
                               <motion.div
                                 animate={{ y: [0, -4, 0], rotate: [0, 10, -10, 0] }}
                                 transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                                className="mt-0.5 shrink-0 text-[var(--sp-violet)]"
+                                  className="mt-0.5 shrink-0" style={{ color: 'var(--violet)' }}
                               >
                                 <Music size={14} />
                               </motion.div>
@@ -1599,7 +1598,7 @@ export default function Home() {
                                 </div>
                                 <div className="flex items-center gap-1 shrink-0">
                                   {rec.similarityScore != null && (
-                                    <span className="flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-[var(--sp-violet)]/15 text-[var(--sp-violet)] text-[8px] uppercase tracking-widest border border-[var(--sp-violet)]/20">
+                                    <span className="tag tag-violet">
                                       {rec.similarityScore}% match
                                     </span>
                                   )}

@@ -106,20 +106,20 @@ function saveConfig(cfg: DesignConfig) {
 // ─── Apply config to CSS variables ───────────────────────────────────────────
 function applyConfig(cfg: DesignConfig) {
   const root = document.documentElement;
-  root.style.setProperty("--sp-bg", cfg.bgColor);
-  root.style.setProperty("--sp-blob-blur", `${cfg.blobBlur}px`);
-  root.style.setProperty("--sp-blob-opacity", String(cfg.blobIntensity));
-  root.style.setProperty("--sp-card-blur", `${cfg.cardBlur}px`);
-  root.style.setProperty("--sp-card-opacity", String(cfg.cardOpacity));
-  root.style.setProperty("--sp-card-border-opacity", String(cfg.cardBorderOpacity));
-  root.style.setProperty("--sp-card-radius", `${cfg.cardRadius}px`);
-  root.style.setProperty("--sp-accent-from", cfg.accentGradient[0]);
-  root.style.setProperty("--sp-accent-via", cfg.accentGradient[1]);
-  root.style.setProperty("--sp-accent-to", cfg.accentGradient[2]);
+  root.style.setProperty("--bg-primary", cfg.bgColor);
+  root.style.setProperty("--blob-blur", `${cfg.blobBlur}px`);
+  root.style.setProperty("--blob-opacity", String(cfg.blobIntensity));
+  root.style.setProperty("--card-blur", `${cfg.cardBlur}px`);
+  root.style.setProperty("--card-opacity", String(cfg.cardOpacity));
+  root.style.setProperty("--card-border-opacity", String(cfg.cardBorderOpacity));
+  root.style.setProperty("--card-radius", `${cfg.cardRadius}px`);
+  root.style.setProperty("--accent-from", cfg.accentGradient[0]);
+  root.style.setProperty("--accent-via", cfg.accentGradient[1]);
+  root.style.setProperty("--accent-to", cfg.accentGradient[2]);
   // Blob colors
-  cfg.landingBlobs.forEach((b, i) => root.style.setProperty(`--sp-blob-landing-${i + 1}`, b.color));
-  cfg.exploreBlobs.forEach((b, i) => root.style.setProperty(`--sp-blob-explore-${i + 1}`, b.color));
-  cfg.moodBlobs.forEach((b, i) => root.style.setProperty(`--sp-blob-mood-${i + 1}`, b.color));
+  cfg.landingBlobs.forEach((b, i) => root.style.setProperty(`--blob-landing-${i + 1}`, b.color));
+  cfg.exploreBlobs.forEach((b, i) => root.style.setProperty(`--blob-explore-${i + 1}`, b.color));
+  cfg.moodBlobs.forEach((b, i) => root.style.setProperty(`--blob-mood-${i + 1}`, b.color));
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -127,12 +127,12 @@ function applyConfig(cfg: DesignConfig) {
 const SectionHeader = ({ icon, title, open, onToggle }: {
   icon: React.ReactNode; title: string; open: boolean; onToggle: () => void;
 }) => (
-  <button
+    <button
     onClick={onToggle}
     className="w-full flex items-center justify-between py-3 border-b border-white/8 hover:border-white/15 transition-colors group"
   >
     <div className="flex items-center gap-2.5 text-white/80 group-hover:text-white transition-colors">
-      <span className="text-[var(--sp-violet-light)]">{icon}</span>
+      <span style={{ color: 'var(--violet-light)' }}>{icon}</span>
       <span className="text-xs font-medium uppercase tracking-widest">{title}</span>
     </div>
     {open ? <ChevronUp size={14} className="text-white/30" /> : <ChevronDown size={14} className="text-white/30" />}
@@ -191,7 +191,7 @@ const ToggleRow = ({ label, value, onChange }: {
       onClick={() => onChange(!value)}
       className={cn(
         "w-10 h-5 rounded-full transition-all relative",
-        value ? "bg-[var(--sp-violet)]" : "bg-white/10"
+        value ? "bg-[var(--violet)]" : "bg-white/10"
       )}
     >
       <div className={cn(
@@ -349,13 +349,13 @@ export default function DesignCustomizer() {
   };
 
   return (
-    <div className="min-h-screen sp-bg text-white">
+    <div className="min-h-screen text-white" style={{ background: 'var(--bg-primary)' }}>
       {/* Blob background (uses current config) */}
-      <div className="sp-bg-system" aria-hidden="true">
+      <div className="bg-system" aria-hidden="true">
         {cfg.landingBlobs.slice(0, cfg.blobCount).map((blob, i) => (
           <div
             key={i}
-            className={`sp-blob sp-blob-${i + 1}`}
+            className={`blob blob-${i + 1}`}
             style={{
               background: `radial-gradient(circle, ${blob.color} 0%, transparent 70%)`,
               filter: `blur(${cfg.blobBlur}px)`,
@@ -365,23 +365,23 @@ export default function DesignCustomizer() {
         ))}
         {cfg.showPulseRings && (
           <>
-            <div className="sp-pulse-ring sp-pulse-ring-1" />
-            <div className="sp-pulse-ring sp-pulse-ring-2" />
+            <div className="pulse-ring pulse-ring-1" />
+            <div className="pulse-ring pulse-ring-2" />
           </>
         )}
         {cfg.showWaveLines && (
           <>
-            <div className="sp-wave-line sp-wave-line-1" />
-            <div className="sp-wave-line sp-wave-line-2" />
+            <div className="wave-line wave-line-1" />
+            <div className="wave-line wave-line-2" />
           </>
         )}
-        {cfg.showGrain && <div className="sp-grain" />}
+        {cfg.showGrain && <div className="grain" />}
       </div>
 
       {/* Content */}
       <div className="relative z-10">
         {/* Header */}
-        <nav className="sp-nav border-b border-white/8 px-6 py-4 flex items-center justify-between sticky top-0 z-20">
+        <nav className="nav border-b border-white/8 px-6 py-4 flex items-center justify-between sticky top-0 z-20">
           <div className="flex items-center gap-4">
             <Link href="/">
               <button className="flex items-center gap-2 text-white/40 hover:text-white/80 transition-colors text-sm">
@@ -391,8 +391,8 @@ export default function DesignCustomizer() {
             </Link>
             <div className="w-px h-5 bg-white/10" />
             <div className="flex items-center gap-2">
-              <Sliders size={14} className="text-[var(--sp-violet-light)]" />
-              <span className="sp-display text-sm font-semibold tracking-tight">Design Customizer</span>
+              <Sliders size={14} style={{ color: 'var(--violet-light)' }} />
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: '0.875rem', fontWeight: 600, letterSpacing: '-0.02em' }}>Design Customizer</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -453,7 +453,7 @@ export default function DesignCustomizer() {
                             onChange={(e) => {
                               if (/^#[0-9a-fA-F]{0,6}$/.test(e.target.value)) update("bgColor", e.target.value);
                             }}
-                            className="sp-input flex-1 font-mono text-xs py-2"
+                            className="form-input flex-1 font-mono text-xs py-2"
                             placeholder="#0a0a0f"
                           />
                         </div>
