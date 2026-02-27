@@ -81,7 +81,37 @@
   --spotify-green: oklch(0.72 0.20 145);
 }
 
-/* Dark mode ist identisch mit Root – App ist immer dark */
+/* Light Mode – aktiviert durch .light-Klasse auf dem Root-Element */
+.light {
+  --background: oklch(0.97 0.003 240);
+  --foreground: oklch(0.12 0.010 240);
+  --card: oklch(0.93 0.005 240);
+  --card-foreground: oklch(0.12 0.010 240);
+  --popover: oklch(0.96 0.004 240);
+  --popover-foreground: oklch(0.12 0.010 240);
+  --primary: oklch(0.55 0.20 145);
+  --primary-foreground: oklch(0.97 0.005 240);
+  --secondary: oklch(0.88 0.008 240);
+  --secondary-foreground: oklch(0.20 0.010 240);
+  --muted: oklch(0.90 0.006 240);
+  --muted-foreground: oklch(0.45 0.012 240);
+  --accent: oklch(0.55 0.20 145);
+  --accent-foreground: oklch(0.97 0.005 240);
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(0.97 0.005 240);
+  --border: oklch(0.82 0.008 240);
+  --input: oklch(0.90 0.006 240);
+  --ring: oklch(0.55 0.20 145);
+  --sidebar: oklch(0.93 0.005 240);
+  --sidebar-foreground: oklch(0.12 0.010 240);
+  --sidebar-primary: oklch(0.55 0.20 145);
+  --sidebar-primary-foreground: oklch(0.97 0.005 240);
+  --sidebar-accent: oklch(0.88 0.008 240);
+  --sidebar-accent-foreground: oklch(0.12 0.010 240);
+  --sidebar-border: oklch(0.82 0.008 240);
+  --sidebar-ring: oklch(0.55 0.20 145);
+  --spotify-green: oklch(0.55 0.20 145);
+}
 
 @layer base {
   * {

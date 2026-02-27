@@ -19,6 +19,8 @@ import {
   Guitar,
   ChevronDown,
   CircleSlash,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -659,6 +661,17 @@ export default function Home() {
   // UI
   const [infoModal, setInfoModal] = useState<"privacy" | "terms" | "spotify" | null>(null);
   const [loadingMessage, setLoadingMessage] = useState("");
+  const [isLightMode, setIsLightMode] = useState(false);
+
+  // Apply theme class to document root
+  useEffect(() => {
+    if (isLightMode) {
+      document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
+    } else {
+      document.documentElement.classList.remove('light');
+    }
+  }, [isLightMode]);
   const [playlistSuccess, setPlaylistSuccess] = useState<{
     url: string; tracksAdded: number; tracksNotFound: string[];
   } | null>(null);
@@ -864,7 +877,7 @@ export default function Home() {
   const [moodPlaceholder] = useState(() => moodExamples[Math.floor(Math.random() * moodExamples.length)]);
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans overflow-x-hidden relative">
+    <div className={cn("min-h-screen font-sans overflow-x-hidden relative transition-colors duration-500", isLightMode ? "bg-background text-foreground" : "bg-black text-white")}>
 
       {/* ── Animated Background ── */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
@@ -943,30 +956,46 @@ export default function Home() {
       </div>
 
       {/* ── Navbar ── */}
-      <nav className="relative z-10 flex items-center justify-between px-4 md:px-8 py-6 border-b border-white/5 backdrop-blur-md sticky top-0">
+      <nav className={cn("relative z-10 flex items-center justify-between px-4 md:px-8 py-6 border-b backdrop-blur-md sticky top-0", isLightMode ? "border-black/10 bg-white/70" : "border-white/5")}>
         <button
           onClick={() => setHasStarted(false)}
           className="flex items-center gap-2 hover:opacity-80 transition-opacity"
         >
-          <Disc className="text-white" size={24} />
+          <Disc className={isLightMode ? "text-zinc-800" : "text-white"} size={24} />
           <span className="text-xl font-light tracking-widest uppercase">SonicPulse</span>
         </button>
 
         <div className="flex items-center gap-3">
           {hasStarted && (
-            <div className="flex items-center gap-1 bg-black/40 p-1 rounded-full border border-white/5">
+            <div className={cn("flex items-center gap-1 p-1 rounded-full border", isLightMode ? "bg-zinc-100 border-zinc-200" : "bg-black/40 border-white/5")}>
               {(["explore", "mood"] as const).map((m) => (
                 <button
                   key={m}
                   onClick={() => handleModeSelect(m)}
                   className={cn(
                     "px-3 md:px-4 py-1.5 rounded-full text-[10px] md:text-xs uppercase tracking-widest transition-all whitespace-nowrap",
-                    mode === m ? "bg-white text-black" : "text-white/40 hover:text-white"
+                    mode === m
+                      ? isLightMode ? "bg-zinc-900 text-white" : "bg-white text-black"
+                      : isLightMode ? "text-zinc-500 hover:text-zinc-900" : "text-white/40 hover:text-white"
                   )}
                 >{m}</button>
               ))}
             </div>
           )}
+
+          {/* Theme Toggle */}
+          <button
+            onClick={() => setIsLightMode(!isLightMode)}
+            title={isLightMode ? "Switch to Dark Mode" : "Switch to Light Mode"}
+            className={cn(
+              "p-2 rounded-full transition-all",
+              isLightMode
+                ? "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200"
+                : "text-white/30 hover:text-white/60 hover:bg-white/5"
+            )}
+          >
+            {isLightMode ? <Moon size={14} /> : <Sun size={14} />}
+          </button>
 
           {isSpotifyLoggedIn ? (
             <div className="flex items-center gap-2">
@@ -1047,7 +1076,7 @@ export default function Home() {
                   transition={{ duration: 0.4 }}
                 >
                   <div className="mb-12">
-                    <span className="text-xs uppercase tracking-[0.3em] text-white/40 mb-4 block">
+                    <span className={cn("text-xs uppercase tracking-[0.3em] mb-4 block", isLightMode ? "text-zinc-400" : "text-white/40")}>
                       {mode === "explore" ? "Manual Input" : "Emotional Intelligence"}
                     </span>
                     <h2 className="text-5xl font-light tracking-tight">
@@ -1116,19 +1145,19 @@ export default function Home() {
                           placeholder={moodPlaceholder}
                           rows={4}
                           maxLength={1000}
-                          className="w-full bg-zinc-950 border border-rose-500/20 focus:border-rose-400/50 rounded-2xl px-5 py-4 text-sm font-light text-white/90 placeholder:text-white/25 focus:outline-none transition-all resize-none focus:shadow-[0_0_30px_rgba(244,114,182,0.12)] leading-relaxed"
+                          className={cn("w-full rounded-2xl px-5 py-4 text-sm font-light focus:outline-none transition-all resize-none leading-relaxed", isLightMode ? "bg-white border border-zinc-200 focus:border-rose-300 text-zinc-800 placeholder:text-zinc-400" : "bg-zinc-950 border border-rose-500/20 focus:border-rose-400/50 text-white/90 placeholder:text-white/25")}
                         />
-                        <div className="absolute bottom-3 right-4 text-[9px] text-white/20 uppercase tracking-widest">
+                        <div className={cn("absolute bottom-3 right-4 text-[9px] uppercase tracking-widest", isLightMode ? "text-zinc-400" : "text-white/20")}>
                           {moodPrompt.length}/1000
                         </div>
                       </div>
 
                       {/* Filter + CTA Card – gleiche Struktur wie Explore */}
-                      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 md:p-6 bg-zinc-900/30 rounded-[28px] border border-white/5 max-w-4xl mx-auto">
+                      <div className={cn("flex flex-col sm:flex-row items-center justify-between gap-4 p-5 md:p-6 rounded-[28px] border max-w-4xl mx-auto", isLightMode ? "bg-zinc-100 border-zinc-200" : "bg-zinc-900/30 border-white/5")}>
                         {/* Discovery Filter */}
                         <div className="flex flex-col gap-1.5 items-center sm:items-start">
-                          <span className="text-[8px] uppercase tracking-widest text-white/20">Discovery</span>
-                          <div className="flex items-center gap-1 bg-black/40 p-1 rounded-full border border-white/5">
+                          <span className={cn("text-[8px] uppercase tracking-widest", isLightMode ? "text-zinc-400" : "text-white/20")}>Discovery</span>
+                          <div className={cn("flex items-center gap-1 p-1 rounded-full border", isLightMode ? "bg-white border-zinc-200" : "bg-black/40 border-white/5")}>
                             {(["mainstream", "underground", "exotic"] as const).map((f) => (
                               <button
                                 key={f}
@@ -1136,10 +1165,10 @@ export default function Home() {
                                 className={cn(
                                   "px-4 py-1.5 rounded-full text-[9px] uppercase tracking-widest transition-all whitespace-nowrap",
                                   moodDiscovery === f
-                                    ? f === "mainstream" ? "bg-white text-black"
+                                    ? f === "mainstream" ? isLightMode ? "bg-zinc-900 text-white" : "bg-white text-black"
                                       : f === "underground" ? "bg-rose-500 text-white"
                                       : "bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white"
-                                    : "text-white/40 hover:text-white"
+                                    : isLightMode ? "text-zinc-500 hover:text-zinc-900" : "text-white/40 hover:text-white"
                                 )}
                               >{f}</button>
                             ))}
@@ -1165,7 +1194,7 @@ export default function Home() {
                       <div className="max-w-4xl mx-auto">
                         <button
                           onClick={() => setShowMoodReference(!showMoodReference)}
-                          className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-white/25 hover:text-white/50 transition-colors"
+                          className={cn("flex items-center gap-2 text-[10px] uppercase tracking-widest transition-colors", isLightMode ? "text-zinc-400 hover:text-zinc-700" : "text-white/25 hover:text-white/50")}
                         >
                           <Guitar size={11} />
                           <span>Musical reference</span>
@@ -1210,14 +1239,14 @@ export default function Home() {
                             {moodMutation.isPending && !emotionalProfile ? (
                               <div ref={loadingRef}><AnimatePresence><MusicLoadingBar mode="mood" /></AnimatePresence></div>
                             ) : emotionalProfile && (
-                              <div className="p-5 bg-gradient-to-br from-rose-950/30 to-zinc-900/50 border border-rose-500/15 rounded-2xl">
+                              <div className={cn("p-5 rounded-2xl border", isLightMode ? "bg-rose-50 border-rose-200" : "bg-gradient-to-br from-rose-950/30 to-zinc-900/50 border-rose-500/15")}>
                                 <div className="flex items-center justify-between gap-3 mb-3">
-                                  <h3 className="text-lg font-light tracking-tight text-rose-100">{emotionalProfile.coreEmotion}</h3>
+                                  <h3 className={cn("text-lg font-light tracking-tight", isLightMode ? "text-rose-800" : "text-rose-100")}>{emotionalProfile.coreEmotion}</h3>
                                   <IntensityBadge intensity={emotionalProfile.intensity} />
                                 </div>
                                 <div className="flex gap-2">
                                   <Quote size={12} className="text-rose-400/40 shrink-0 mt-0.5" />
-                                  <p className="text-xs text-white/55 font-light leading-relaxed italic">{emotionalProfile.emotionalNote}</p>
+                                  <p className={cn("text-xs font-light leading-relaxed italic", isLightMode ? "text-zinc-600" : "text-white/55")}>{emotionalProfile.emotionalNote}</p>
                                 </div>
                               </div>
                             )}
@@ -1229,103 +1258,107 @@ export default function Home() {
                       {(moodSongs.length > 0 || moodMutation.isPending) && (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
                           <div className="flex items-center justify-between gap-4 mb-6">
-                            <span className="text-xs uppercase tracking-[0.3em] text-white/35">Your Emotional Soundtrack</span>
-                            <span className="text-[9px] uppercase tracking-widest text-white/20 px-2 py-1 rounded-full border border-white/8">{moodDiscovery}</span>
+                            <span className={cn("text-xs uppercase tracking-[0.3em]", isLightMode ? "text-zinc-500" : "text-white/35")}>Your Emotional Soundtrack</span>
+                            <span className={cn("text-[9px] uppercase tracking-widest px-2 py-1 rounded-full border", isLightMode ? "text-zinc-500 border-zinc-200" : "text-white/20 border-white/8")}>{moodDiscovery}</span>
                           </div>
 
-                          <div className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
                             {moodMutation.isPending && moodSongs.length === 0
                               ? null
                               : moodSongs.map((song, idx) => (
-                                <div key={idx} ref={idx === 0 ? resultsRef : undefined}>
-                                  <motion.div
-                                    initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: idx * 0.1 }}
-                                    className="group p-5 bg-zinc-900/40 border border-white/5 rounded-2xl hover:bg-zinc-900/60 hover:border-rose-500/10 transition-all duration-300"
-                                  >
-                                    <div className="flex items-start gap-4">
-                                      {/* Artist image */}
-                                      <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center overflow-hidden shrink-0">
-                                        {song.enriched?.image
-                                          ? <img src={song.enriched.image} alt={song.artist} className="w-full h-full object-cover opacity-60 group-hover:opacity-90 transition-opacity" />
-                                          : <Heart size={16} className="text-rose-400/30" />
-                                        }
-                                      </div>
-
-                                      {/* Title + meta */}
-                                      <div className="flex-1 min-w-0">
-                                        <div className="flex items-start justify-between gap-2">
-                                          <div>
-                                            <p className="text-[10px] text-rose-400/60 uppercase tracking-widest font-medium">{song.artist}</p>
-                                            <h4 className="text-base font-light tracking-tight leading-snug">{song.title}</h4>
-                                          </div>
-                                          <span className="px-2 py-0.5 rounded-full bg-white/5 text-[8px] uppercase tracking-widest text-white/25 shrink-0 mt-0.5">{song.genre}</span>
+                                <motion.div
+                                  key={idx}
+                                  ref={idx === 0 ? resultsRef : undefined}
+                                  initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: idx * 0.1 }}
+                                  className={cn("group rounded-[32px] overflow-hidden transition-all duration-500 flex flex-col border", isLightMode ? "bg-white border-zinc-200 hover:border-zinc-300 hover:shadow-lg" : "bg-zinc-900/30 border-white/5 hover:bg-zinc-900/50")}
+                                >
+                                  {/* Image header – same as Explore */}
+                                  <div className="relative aspect-[16/10] overflow-hidden">
+                                    {song.enriched?.image
+                                      ? <img src={song.enriched.image} alt={song.artist} className={cn("w-full h-full object-cover transition-all duration-700 group-hover:scale-110", isLightMode ? "opacity-70 group-hover:opacity-90" : "opacity-40 group-hover:opacity-60")} />
+                                      : <div className={cn("w-full h-full flex items-center justify-center", isLightMode ? "bg-zinc-100" : "bg-zinc-800")}><Heart className={isLightMode ? "text-zinc-300" : "text-white/10"} size={32} /></div>
+                                    }
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                                    <div className="absolute bottom-0 left-0 p-6 w-full">
+                                      <SpotifyLink url={song.enriched?.url} className="group/name flex items-center gap-2 text-white hover:text-rose-400 transition-colors text-left">
+                                        <div>
+                                          <p className="text-[10px] text-rose-400/70 uppercase tracking-widest font-medium mb-0.5">{song.artist}</p>
+                                          <h3 className="text-xl font-light tracking-tight">{song.title}</h3>
                                         </div>
-                                        <p className="text-xs text-white/45 font-light leading-relaxed mt-2">{song.emotionalBridge}</p>
-                                        {song.lyricMoment && (
-                                          <div className="flex gap-1.5 mt-2">
-                                            <Quote size={9} className="text-rose-400/30 shrink-0 mt-0.5" />
-                                            <p className="text-[10px] text-white/30 italic font-light leading-relaxed">{song.lyricMoment}</p>
+                                        {song.enriched?.url && (
+                                          <div className="p-1 rounded-full bg-rose-500/10 text-rose-400 opacity-0 group-hover/name:opacity-100 transition-all">
+                                            <ExternalLink size={12} />
                                           </div>
                                         )}
-                                      </div>
+                                      </SpotifyLink>
+                                      <span className="px-2 py-0.5 rounded-full bg-white/10 text-[8px] uppercase tracking-widest mt-2 inline-block">{song.genre}</span>
                                     </div>
-                                  </motion.div>
+                                  </div>
 
-                                  {/* Track-Embed direkt integriert – immer sichtbar */}
-                                  {song.trackId && (
-                                    <div className="mt-4 pt-4 border-t border-white/5">
-                                      <iframe
-                                        src={`https://open.spotify.com/embed/track/${song.trackId}?utm_source=generator&theme=0`}
-                                        width="100%"
-                                        height="80"
-                                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                                        loading="lazy"
-                                        title={`${song.title} – ${song.artist}`}
-                                        className="rounded-xl border-0 w-full"
-                                        style={{ minHeight: "80px" }}
-                                      />
+                                  {/* Body – same structure as Explore */}
+                                  <div className="p-6 flex-1 flex flex-col">
+                                    <div className="flex items-start gap-2 mb-4">
+                                      <motion.div
+                                        animate={{ y: [0, -4, 0], rotate: [0, 10, -10, 0] }}
+                                        transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                                        className="text-rose-400 mt-0.5 shrink-0"
+                                      >
+                                        <Music size={14} />
+                                      </motion.div>
+                                      <p className={cn("font-light leading-relaxed text-xs line-clamp-3", isLightMode ? "text-zinc-600" : "text-white/60")}>{song.emotionalBridge}</p>
                                     </div>
-                                  )}
-                                  {/* Fallback: Artist-Embed wenn kein Track gefunden aber Spotify-Artist-ID vorhanden */}
-                                  {!song.trackId && (song.enriched?.spotifyId || extractSpotifyArtistId(song.enriched?.url)) && (
-                                    <div className="mt-2">
-                                      <SpotifyEmbedCard
-                                        artistId={song.enriched?.spotifyId ?? extractSpotifyArtistId(song.enriched?.url)}
-                                        artistName={song.artist}
-                                        accentColor="rose"
-                                        defaultOpen={true}
-                                      />
-                                    </div>
-                                  )}
-                                  {/* YouTube Fallback – wenn weder Track noch Spotify-Artist-ID vorhanden */}
-                                  {!song.trackId && !song.enriched?.spotifyId && !extractSpotifyArtistId(song.enriched?.url) && song.youtubeId && (
-                                    <div className="mt-2">
-                                      <div className="flex items-center gap-2 mb-2">
-                                        <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/5 border border-white/8 text-[8px] uppercase tracking-widest text-white/30">
+                                    {song.lyricMoment && (
+                                      <div className="flex gap-1.5 mb-4">
+                                        <Quote size={9} className="text-rose-400/30 shrink-0 mt-0.5" />
+                                        <p className={cn("text-[10px] italic font-light leading-relaxed line-clamp-2", isLightMode ? "text-zinc-400" : "text-white/30")}>{song.lyricMoment}</p>
+                                      </div>
+                                    )}
+                                    <div className={cn("mt-auto pt-4 border-t space-y-3", isLightMode ? "border-zinc-100" : "border-white/5")}>
+                                      {/* Not on Spotify badge */}
+                                      {!song.trackId && !song.enriched?.spotifyId && !extractSpotifyArtistId(song.enriched?.url) && (
+                                        <span className={cn("flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] uppercase tracking-widest border w-fit", isLightMode ? "bg-zinc-100 border-zinc-200 text-zinc-500" : "bg-white/5 border-white/8 text-white/30")}>
                                           <CircleSlash size={8} />
                                           Not on Spotify
                                         </span>
-                                      </div>
-                                      <YouTubeEmbedCard
-                                        videoId={song.youtubeId}
-                                        label={`${song.title} on YouTube`}
-                                        accentColor="rose"
-                                        defaultOpen={true}
-                                      />
+                                      )}
+                                      {/* Spotify Track-Embed */}
+                                      {song.trackId && (
+                                        <iframe
+                                          src={`https://open.spotify.com/embed/track/${song.trackId}?utm_source=generator&theme=0`}
+                                          width="100%" height="80"
+                                          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                                          loading="lazy"
+                                          title={`${song.title} – ${song.artist}`}
+                                          className="rounded-xl border-0 w-full"
+                                          style={{ minHeight: "80px" }}
+                                        />
+                                      )}
+                                      {/* Fallback: Artist-Embed */}
+                                      {!song.trackId && (song.enriched?.spotifyId || extractSpotifyArtistId(song.enriched?.url)) && (
+                                        <SpotifyEmbedCard
+                                          artistId={song.enriched?.spotifyId ?? extractSpotifyArtistId(song.enriched?.url)}
+                                          artistName={song.artist}
+                                          accentColor="rose"
+                                          defaultOpen={true}
+                                        />
+                                      )}
+                                      {/* YouTube Fallback */}
+                                      {!song.trackId && !song.enriched?.spotifyId && !extractSpotifyArtistId(song.enriched?.url) && song.youtubeId && (
+                                        <YouTubeEmbedCard
+                                          videoId={song.youtubeId}
+                                          label={`${song.title} on YouTube`}
+                                          accentColor="rose"
+                                          defaultOpen={true}
+                                        />
+                                      )}
+                                      {/* Letzter Fallback */}
+                                      {!song.trackId && !song.enriched?.spotifyId && !extractSpotifyArtistId(song.enriched?.url) && !song.youtubeId && (
+                                        <SpotifyEmbedCard artistId={null} artistName={song.artist} accentColor="rose" />
+                                      )}
                                     </div>
-                                  )}
-                                  {/* Letzter Fallback: Spotify-Suche wenn gar nichts gefunden */}
-                                  {!song.trackId && !song.enriched?.spotifyId && !extractSpotifyArtistId(song.enriched?.url) && !song.youtubeId && (
-                                    <div className="mt-2">
-                                      <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/5 border border-white/8 text-[8px] uppercase tracking-widest text-white/30 mb-2 inline-flex">
-                                        <CircleSlash size={8} />
-                                        Not on Spotify
-                                      </span>
-                                      <SpotifyEmbedCard artistId={null} artistName={song.artist} accentColor="rose" />
-                                    </div>
-                                  )}
-                                </div>
+                                  </div>
+                                </motion.div>
                               ))
                             }
                           </div>
@@ -1354,7 +1387,7 @@ export default function Home() {
               {(recommendations.length > 0 || exploreMutation.isPending) && mode === "explore" && (
                 <section className="pb-20">
                   <div className="mb-12">
-                    <span className="text-xs uppercase tracking-[0.3em] text-white/40 mb-4 block">The Future</span>
+                    <span className={cn("text-xs uppercase tracking-[0.3em] mb-4 block", isLightMode ? "text-zinc-400" : "text-white/40")}>The Future</span>
                     <h2 className="text-5xl font-light tracking-tight italic" style={{ fontFamily: "Georgia, serif" }}>
                       Curated for you
                     </h2>
@@ -1389,12 +1422,12 @@ export default function Home() {
                           ref={idx === 0 ? resultsRef : undefined}
                           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: idx * 0.1 }}
-                          className="group bg-zinc-900/30 border border-white/5 rounded-[32px] overflow-hidden hover:bg-zinc-900/50 transition-all duration-500 flex flex-col"
+                          className={cn("group rounded-[32px] overflow-hidden transition-all duration-500 flex flex-col border", isLightMode ? "bg-white border-zinc-200 hover:border-zinc-300 hover:shadow-lg" : "bg-zinc-900/30 border-white/5 hover:bg-zinc-900/50")}
                         >
                           <div className="relative aspect-[16/10] overflow-hidden">
                             {rec.enriched?.image
-                              ? <img src={rec.enriched.image} alt={rec.artist} className="w-full h-full object-cover opacity-40 group-hover:opacity-60 transition-all duration-700 group-hover:scale-110" />
-                              : <div className="w-full h-full bg-zinc-800 flex items-center justify-center"><Music className="text-white/10" size={32} /></div>
+                              ? <img src={rec.enriched.image} alt={rec.artist} className={cn("w-full h-full object-cover transition-all duration-700 group-hover:scale-110", isLightMode ? "opacity-70 group-hover:opacity-90" : "opacity-40 group-hover:opacity-60")} />
+                              : <div className={cn("w-full h-full flex items-center justify-center", isLightMode ? "bg-zinc-100" : "bg-zinc-800")}><Music className={isLightMode ? "text-zinc-300" : "text-white/10"} size={32} /></div>
                             }
                             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
                             <div className="absolute bottom-0 left-0 p-6 w-full">
@@ -1418,16 +1451,16 @@ export default function Home() {
                               >
                                 <Music size={14} />
                               </motion.div>
-                              <p className="text-white/60 font-light leading-relaxed text-xs line-clamp-3">{rec.reason}</p>
+                              <p className={cn("font-light leading-relaxed text-xs line-clamp-3", isLightMode ? "text-zinc-600" : "text-white/60")}>{rec.reason}</p>
                             </div>
-                            <div className="mt-auto pt-4 border-t border-white/5 space-y-3">
+                            <div className={cn("mt-auto pt-4 border-t space-y-3", isLightMode ? "border-zinc-100" : "border-white/5")}>
                               <div className="flex items-center justify-between">
-                                <span className="text-[8px] uppercase tracking-widest text-white/20">
-                                  Similar to <span className="text-white/40">{rec.similarTo}</span>
+                                <span className={cn("text-[8px] uppercase tracking-widest", isLightMode ? "text-zinc-400" : "text-white/20")}>
+                                  Similar to <span className={isLightMode ? "text-zinc-600" : "text-white/40"}>{rec.similarTo}</span>
                                 </span>
                                 {/* Not on Spotify badge */}
                                 {!rec.enriched?.spotifyId && !extractSpotifyArtistId(rec.enriched?.url) && (
-                                  <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/5 border border-white/8 text-[8px] uppercase tracking-widest text-white/30">
+                                  <span className={cn("flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] uppercase tracking-widest border", isLightMode ? "bg-zinc-100 border-zinc-200 text-zinc-500" : "bg-white/5 border-white/8 text-white/30")}>
                                     <CircleSlash size={8} />
                                     Not on Spotify
                                   </span>
@@ -1471,7 +1504,7 @@ export default function Home() {
       </main>
 
       {/* ── Footer ── */}
-      <footer className="relative z-10 border-t border-white/5 px-8 py-12 mt-20">
+      <footer className={cn("relative z-10 border-t px-8 py-12 mt-20", isLightMode ? "border-zinc-200" : "border-white/5")}>
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8 opacity-40">
           <div className="flex items-center gap-2">
             <Disc size={16} />
