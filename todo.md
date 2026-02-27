@@ -183,3 +183,11 @@
 - [x] Backend: party-Prozedur um trackId/trackUrl erweitern (searchSpotifyTrack)
 - [x] Frontend: Track-Embed direkt unter jede Party-Track-Card (80px iframe, kein Toggle)
 - [x] Frontend: Fallback auf Artist-Embed wenn kein Track gefunden
+
+## Party Mode entfernen
+- [x] Backend: party-Prozedur aus sonicpulse.ts entfernen
+- [x] Frontend: Party Mode Tab aus Navigation entfernen
+- [x] Frontend: Party Mode State-Variablen entfernen (partyArtists, partyLength, partyEnergy, partyPlaylist, etc.)
+- [x] Frontend: Party Mode UI-Bereich aus Home.tsx entfernen
+- [x] Frontend: mode-Typ auf "explore" | "mood" reduzieren
+- [x] Tests: Party-bezogene Tests entfernen oder anpassen

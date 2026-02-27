@@ -8,7 +8,6 @@ import {
   Mic2,
   Plus,
   X,
-  PartyPopper,
   Trash2,
   ExternalLink,
   ListMusic,
@@ -477,7 +476,7 @@ const IntensityBadge = ({ intensity }: { intensity: "subtle" | "moderate" | "int
 // ─── Main App ─────────────────────────────────────────────────────────────────
 export default function Home() {
   const [hasStarted, setHasStarted] = useState(false);
-  const [mode, setMode] = useState<"explore" | "party" | "mood">("explore");
+  const [mode, setMode] = useState<"explore" | "mood">("explore");
 
   // Explore
   const [exploreBands, setExploreBands] = useState<string[]>(["", "", ""]);
@@ -485,14 +484,6 @@ export default function Home() {
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [explorePlaylistName, setExplorePlaylistName] = useState("SonicPulse Explore Mix");
   const [showExplorePlaylistInput, setShowExplorePlaylistInput] = useState(false);
-
-  // Party
-  const [partyArtists, setPartyArtists] = useState<string[]>(["", "", ""]);
-  const [partyLength, setPartyLength] = useState(10);
-  const [partyEnergy, setPartyEnergy] = useState<"chill" | "medium" | "high">("high");
-  const [partyPlaylist, setPartyPlaylist] = useState<Track[]>([]);
-  const [partyPlaylistName, setPartyPlaylistName] = useState("SonicPulse Party Mix");
-  const [showPartyPlaylistInput, setShowPartyPlaylistInput] = useState(false);
 
   // Mood
   const [moodPrompt, setMoodPrompt] = useState("");
@@ -545,7 +536,7 @@ export default function Home() {
       sessionQuery.refetch();
       window.history.replaceState({}, "", window.location.pathname);
       setHasStarted(true);
-      setMode("party");
+      setMode("mood");
     }
     if (params.get("spotify_error")) {
       console.error("[Spotify] OAuth error:", params.get("spotify_error"));
@@ -572,9 +563,6 @@ export default function Home() {
   const exploreMutation = trpc.sonicpulse.explore.useMutation({
     onSuccess: (data) => setRecommendations(data.recommendations as Recommendation[]),
   });
-  const partyMutation = trpc.sonicpulse.party.useMutation({
-    onSuccess: (data) => setPartyPlaylist(data.tracks as Track[]),
-  });
   const moodMutation = trpc.sonicpulse.mood.useMutation({
     onSuccess: (data) => {
       setMoodSongs(data.songs as MoodSong[]);
@@ -582,9 +570,9 @@ export default function Home() {
     },
   });
 
-  const isGenerating = exploreMutation.isPending || partyMutation.isPending || moodMutation.isPending;
+  const isGenerating = exploreMutation.isPending || moodMutation.isPending;
 
-  const handleModeSelect = (newMode: "explore" | "party" | "mood") => {
+  const handleModeSelect = (newMode: "explore" | "mood") => {
     setMode(newMode);
     setHasStarted(true);
   };
@@ -596,14 +584,6 @@ export default function Home() {
     setLoadingMessage("Consulting the AI oracle...");
     exploreMutation.mutate({ artists, discoveryLevel });
   }, [exploreBands, discoveryLevel, exploreMutation]);
-
-  const generatePartyPlaylist = useCallback(() => {
-    const artists = partyArtists.filter((a) => a.trim());
-    if (!artists.length) return;
-    setPartyPlaylist([]);
-    setLoadingMessage("Setting the mood...");
-    partyMutation.mutate({ artists, energy: partyEnergy, trackCount: partyLength });
-  }, [partyArtists, partyEnergy, partyLength, partyMutation]);
 
   const generateMoodPlaylist = useCallback(() => {
     if (!moodPrompt.trim()) return;
@@ -623,12 +603,10 @@ export default function Home() {
     ? "radial-gradient(circle at 50% 0%, rgba(234,179,8,0.15) 0%, transparent 70%)"
     : mode === "explore"
     ? "radial-gradient(circle at 50% 0%, rgba(6,182,212,0.15) 0%, transparent 70%)"
-    : mode === "party"
-    ? "radial-gradient(circle at 50% 0%, rgba(217,70,239,0.15) 0%, transparent 70%)"
     : "radial-gradient(circle at 50% 0%, rgba(244,114,182,0.18) 0%, transparent 70%)";
 
-  const blob1 = !hasStarted ? "bg-yellow-900/40" : mode === "explore" ? "bg-cyan-900/40" : mode === "party" ? "bg-fuchsia-900/40" : "bg-rose-900/40";
-  const blob2 = !hasStarted ? "bg-amber-900/40" : mode === "explore" ? "bg-blue-900/40" : mode === "party" ? "bg-orange-900/40" : "bg-pink-900/30";
+  const blob1 = !hasStarted ? "bg-yellow-900/40" : mode === "explore" ? "bg-cyan-900/40" : "bg-rose-900/40";
+  const blob2 = !hasStarted ? "bg-amber-900/40" : mode === "explore" ? "bg-blue-900/40" : "bg-pink-900/30";
 
   // ─── Mood Placeholder Examples ────────────────────────────────────────────
   const moodExamples = [
@@ -676,7 +654,7 @@ export default function Home() {
         <div className="flex items-center gap-3">
           {hasStarted && (
             <div className="flex items-center gap-1 bg-black/40 p-1 rounded-full border border-white/5">
-              {(["explore", "party", "mood"] as const).map((m) => (
+              {(["explore", "mood"] as const).map((m) => (
                 <button
                   key={m}
                   onClick={() => handleModeSelect(m)}
@@ -739,16 +717,6 @@ export default function Home() {
                   <p className="text-xs opacity-40 group-hover:opacity-60 uppercase tracking-widest">Discover new artists based on your input</p>
                 </button>
                 <button
-                  onClick={() => handleModeSelect("party")}
-                  className="relative flex-1 group p-6 md:p-8 bg-zinc-900/30 border border-white/5 rounded-[32px] hover:bg-white hover:text-black transition-all duration-500 text-left"
-                >
-                  <motion.div whileHover={{ rotate: -15, scale: 1.1 }} className="inline-block mb-4">
-                    <PartyPopper className="opacity-40 group-hover:opacity-100 text-fuchsia-500 transition-colors" size={32} />
-                  </motion.div>
-                  <h3 className="text-2xl font-light mb-2">Party Mode</h3>
-                  <p className="text-xs opacity-40 group-hover:opacity-60 uppercase tracking-widest">Generate high-energy playlists for any vibe</p>
-                </button>
-                <button
                   onClick={() => handleModeSelect("mood")}
                   className="relative flex-1 group p-6 md:p-8 bg-zinc-900/30 border border-white/5 rounded-[32px] hover:bg-white hover:text-black transition-all duration-500 text-left"
                 >
@@ -772,17 +740,17 @@ export default function Home() {
               <AnimatePresence mode="wait">
                 <motion.section
                   key={mode}
-                  initial={{ opacity: 0, x: mode === "explore" ? -20 : mode === "party" ? 20 : 0, y: mode === "mood" ? 20 : 0 }}
+                  initial={{ opacity: 0, x: mode === "explore" ? -20 : 0, y: mode === "mood" ? 20 : 0 }}
                   animate={{ opacity: 1, x: 0, y: 0 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.4 }}
                 >
                   <div className="mb-12">
                     <span className="text-xs uppercase tracking-[0.3em] text-white/40 mb-4 block">
-                      {mode === "explore" ? "Manual Input" : mode === "party" ? "Party Vibes" : "Emotional Intelligence"}
+                      {mode === "explore" ? "Manual Input" : "Emotional Intelligence"}
                     </span>
                     <h2 className="text-5xl font-light tracking-tight">
-                      {mode === "explore" ? "Explore New Sounds" : mode === "party" ? "Party Mode" : "Mood Mode"}
+                      {mode === "explore" ? "Explore New Sounds" : "Mood Mode"}
                     </h2>
                   </div>
 
@@ -831,147 +799,6 @@ export default function Home() {
                           </button>
                         </div>
                       </div>
-                    </div>
-                  )}
-
-                  {/* ── Party ── */}
-                  {mode === "party" && (
-                    <div className="space-y-12 max-w-4xl mx-auto">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {partyArtists.map((artist, idx) => (
-                          <ArtistInput
-                            key={idx}
-                            value={artist}
-                            accentColor="fuchsia"
-                            placeholder={`Artist #${idx + 1}`}
-                            showRemove={partyArtists.length > 1}
-                            onChange={(val) => { const n = [...partyArtists]; n[idx] = val; setPartyArtists(n); }}
-                            onSelect={(name) => { const n = [...partyArtists]; n[idx] = name; setPartyArtists(n); }}
-                            onRemove={() => partyArtists.length > 1 && setPartyArtists(partyArtists.filter((_, i) => i !== idx))}
-                          />
-                        ))}
-                      </div>
-                      <div className="flex justify-center">
-                        <button
-                          onClick={() => setPartyArtists([...partyArtists, ""])}
-                          className="flex items-center gap-2 text-xs uppercase tracking-widest text-white/40 hover:text-white transition-colors"
-                        >
-                          <Plus size={16} />Add more artists
-                        </button>
-                      </div>
-                      <div className="flex flex-col md:flex-row items-center justify-center gap-8 p-4 md:p-8 bg-zinc-900/30 rounded-[32px] border border-white/5">
-                        <div className="flex flex-wrap items-center justify-center gap-8 w-full">
-                          <div className="flex flex-col gap-2">
-                            <span className="text-[8px] uppercase tracking-widest text-white/20 text-center">Energy</span>
-                            <div className="flex items-center justify-center gap-2 bg-black/40 p-1 rounded-full border border-white/5">
-                              {(["chill", "medium", "high"] as const).map((level) => (
-                                <button
-                                  key={level}
-                                  onClick={() => setPartyEnergy(level)}
-                                  className={cn(
-                                    "px-3 py-1 rounded-full text-[9px] uppercase tracking-widest transition-all",
-                                    partyEnergy === level ? "bg-white text-black" : "text-white/40 hover:text-white"
-                                  )}
-                                >{level}</button>
-                              ))}
-                            </div>
-                          </div>
-                          <div className="flex flex-col gap-2 items-center">
-                            <span className="text-[8px] uppercase tracking-widest text-white/20">Tracks: {partyLength}</span>
-                            <input
-                              type="range" min={5} max={20} value={partyLength}
-                              onChange={(e) => setPartyLength(Number(e.target.value))}
-                              className="w-32 accent-fuchsia-500"
-                            />
-                          </div>
-                          <button
-                            onClick={generatePartyPlaylist}
-                            disabled={isGenerating || partyArtists.every((a) => !a.trim())}
-                            className={cn(
-                              "flex items-center justify-center gap-2 px-8 py-2.5 rounded-full font-medium transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-xs uppercase tracking-widest bg-fuchsia-600 text-white hover:bg-fuchsia-500",
-                              isGenerating && "animate-pulse"
-                            )}
-                          >
-                            {isGenerating ? <Loader2 size={18} className="animate-spin" /> : <PartyPopper size={18} />}
-                            {isGenerating ? loadingMessage : "Generate Playlist"}
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Party Playlist */}
-                      {(partyPlaylist.length > 0 || partyMutation.isPending) && (
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-                          <div className="mb-8">
-                            <span className="text-xs uppercase tracking-[0.3em] text-white/40 mb-4 block">The Lineup</span>
-                            <h2 className="text-4xl font-light tracking-tight italic" style={{ fontFamily: "Georgia, serif" }}>
-                              Your Party Playlist
-                            </h2>
-                          </div>
-
-                          <div className="space-y-3">
-                            {partyMutation.isPending && partyPlaylist.length === 0
-                              ? [...Array(3)].map((_, i) => <div key={i} className="h-28 bg-zinc-900 rounded-2xl animate-pulse" />)
-                              : partyPlaylist.map((track, idx) => (
-                                <div key={idx}>
-                                  <motion.div
-                                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: idx * 0.05 }}
-                                    className="group flex flex-col md:flex-row items-start md:items-center gap-6 p-6 bg-zinc-900/50 border border-white/5 rounded-2xl hover:bg-zinc-800/50 transition-all duration-300"
-                                  >
-                                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-xl bg-white/5 flex items-center justify-center text-white/20 overflow-hidden relative shrink-0 shadow-lg">
-                                      {track.enriched?.image
-                                        ? <img src={track.enriched.image} alt={track.artist} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" />
-                                        : <span className="text-xl font-mono opacity-50">{String(idx + 1).padStart(2, "0")}</span>
-                                      }
-                                    </div>
-                                    <div className="flex-1 flex flex-col gap-1.5 w-full">
-                                      <p className="text-sm text-fuchsia-400 uppercase tracking-widest font-medium">{track.artist}</p>
-                                      <h4 className="text-xl font-light tracking-tight">{track.title}</h4>
-                                      <p className="text-xs text-white/40 italic font-light leading-relaxed line-clamp-2">{track.reason}</p>
-                                      {track.enriched?.url ? (
-                                        <a href={track.enriched.url} target="_blank" rel="noopener noreferrer"
-                                          className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#1DB954]/10 border border-[#1DB954]/30 text-[#1DB954] text-[10px] uppercase tracking-widest hover:bg-[#1DB954]/20 transition-all w-fit">
-                                          <SpotifyLogo size={12} />Open on Spotify
-                                        </a>
-                                      ) : (
-                                        <span className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 text-white/20 text-[10px] uppercase tracking-widest w-fit">
-                                          Not on Spotify
-                                        </span>
-                                      )}
-                                    </div>
-                                  </motion.div>
-                                  {/* Track-Embed: Track-ID hat Priorität, Artist-Embed als Fallback */}
-                                  {track.trackId ? (
-                                    <div className="mt-3 pt-3 border-t border-white/5">
-                                      <iframe
-                                        src={`https://open.spotify.com/embed/track/${track.trackId}?utm_source=generator&theme=0`}
-                                        width="100%"
-                                        height="80"
-                                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                                        loading="lazy"
-                                        title={`${track.title} – ${track.artist}`}
-                                        className="rounded-xl border-0 w-full"
-                                        style={{ minHeight: "80px" }}
-                                      />
-                                    </div>
-                                  ) : extractSpotifyArtistId(track.enriched?.url) ? (
-                                    <div className="mt-2">
-                                      <SpotifyEmbedCard
-                                        artistId={extractSpotifyArtistId(track.enriched?.url)}
-                                        artistName={track.artist}
-                                        accentColor="fuchsia"
-                                        defaultOpen={true}
-                                      />
-                                    </div>
-                                  ) : null}
-                                </div>
-                              ))
-                            }
-                          </div>
-
-
-                        </motion.div>
-                      )}
                     </div>
                   )}
 

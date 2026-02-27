@@ -8,9 +8,7 @@ import { getSpotifyToken } from "../spotify";
  * SonicPulse Router
  * - musicbrainzSearch: Autocomplete für Künstlereingaben
  * - enrichArtist: Spotify-Bild, URL und Preview für einen Künstler
- * - enrichTrack: Spotify-Daten für einen Track (Party Mode)
  * - explore: KI-Empfehlungen basierend auf Lieblingsbands
- * - party: KI-generierte Party-Playlist
  * - mood: Emotionale Intelligenz – Songs nach Anlass/Gefühl
  */
 export const sonicpulseRouter = router({
@@ -57,27 +55,6 @@ export const sonicpulseRouter = router({
         image: profile.image_url,
         url: profile.direct_link,
         previewUrl: null, // Preview via Spotify Embed (iframe), kein direkter Audio-URL
-      };
-    }),
-
-  /**
-   * Spotify Track Enrichment (für Party Mode)
-   * Sucht einen Track über MusicBrainz/Spotify und gibt Metadaten zurück.
-   */
-  enrichTrack: publicProcedure
-    .input(z.object({ title: z.string(), artist: z.string() }))
-    .query(async ({ input }) => {
-      // Artist-Profil beschaffen um Spotify-URL zu erhalten
-      const profile = await resolveArtist(input.artist);
-      if (!profile) {
-        return { found: false as const, image: null, url: null, previewUrl: null, uri: null };
-      }
-      return {
-        found: true as const,
-        image: profile.image_url,
-        url: profile.direct_link,
-        previewUrl: null,
-        uri: `spotify:artist:${profile.spotify_id}`,
       };
     }),
 
@@ -172,125 +149,6 @@ Respond with a JSON object containing an "items" array of objects with keys: art
       });
 
       return { recommendations };
-    }),
-
-  /**
-   * Party Mode: KI-generierte Playlist
-   * Gibt {partyLength} Tracks mit Titel, Künstler und Grund zurück.
-   * Jeder Track wird mit Spotify-Daten angereichert.
-   */
-  party: publicProcedure
-    .input(z.object({
-      artists:     z.array(z.string()).min(1).max(15),
-      energy:      z.enum(["chill", "medium", "high"]).default("high"),
-      trackCount:  z.number().min(5).max(20).default(10),
-    }))
-    .mutation(async ({ input }) => {
-      const artistList = input.artists.filter((a) => a.trim()).join(", ");
-      if (!artistList) return { tracks: [] };
-
-      const llmResponse = await invokeLLM({
-        messages: [
-          {
-            role: "system",
-            content: "You are a music expert and DJ. Respond only with valid JSON. No explanations.",
-          },
-          {
-            role: "user",
-            content: `Generate a ${input.energy} energy party playlist based on these artists: ${artistList}.
-Suggest ${input.trackCount} tracks that would fit well together in a party setting with ${input.energy} energy.
-CRITICAL RULES:
-1. Each track MUST be from a different artist.
-2. Do not repeat any artist in the playlist.
-3. Each artist should appear exactly once.
-Respond with a JSON object containing a "tracks" array with keys: title, artist, reason.`,
-          },
-        ],
-        response_format: {
-          type: "json_schema",
-          json_schema: {
-            name: "party_playlist",
-            strict: true,
-            schema: {
-              type: "object",
-              properties: {
-                tracks: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      title:  { type: "string" },
-                      artist: { type: "string" },
-                      reason: { type: "string" },
-                    },
-                    required: ["title", "artist", "reason"],
-                    additionalProperties: false,
-                  },
-                },
-              },
-              required: ["tracks"],
-              additionalProperties: false,
-            },
-          },
-        },
-      });
-
-      let rawTracks: Array<{ title: string; artist: string; reason: string }> = [];
-      try {
-        const content = llmResponse.choices[0]?.message?.content;
-        if (typeof content === "string") {
-          const parsed = JSON.parse(content) as { tracks: typeof rawTracks };
-          rawTracks = parsed.tracks?.slice(0, input.trackCount) ?? [];
-        }
-      } catch {
-        return { tracks: [] };
-      }
-
-      // Alle Künstler anreichern
-      const profiles = await resolveMultipleArtists(rawTracks.map((t) => t.artist));
-
-      // Spotify Track-IDs via Client Credentials (kein User-Login nötig)
-      let spotifyToken: string | null = null;
-      try { spotifyToken = await getSpotifyToken(); } catch { /* ignore */ }
-
-      async function searchPartyTrackId(artist: string, title: string): Promise<string | null> {
-        if (!spotifyToken) return null;
-        try {
-          const q = encodeURIComponent(`artist:${artist} track:${title}`);
-          const res = await fetch(`https://api.spotify.com/v1/search?q=${q}&type=track&limit=1`, {
-            headers: { Authorization: `Bearer ${spotifyToken}` },
-          });
-          if (!res.ok) return null;
-          const data = await res.json() as { tracks: { items: Array<{ id: string }> } };
-          return data.tracks?.items?.[0]?.id ?? null;
-        } catch { return null; }
-      }
-
-      // Track-IDs parallel suchen
-      const trackIds = await Promise.all(
-        rawTracks.map((t) => searchPartyTrackId(t.artist, t.title))
-      );
-
-      const tracks = rawTracks.map((track, i) => {
-        const profile = profiles[i];
-        const trackId = trackIds[i];
-        return {
-          title:    track.title,
-          artist:   track.artist,
-          reason:   track.reason,
-          trackId:  trackId ?? null,
-          trackUrl: trackId ? `https://open.spotify.com/track/${trackId}` : null,
-          enriched: profile
-            ? {
-                image:      profile.image_url,
-                url:        profile.direct_link,
-                spotifyId:  profile.spotify_id,
-              }
-            : undefined,
-        };
-      });
-
-      return { tracks };
     }),
 
   /**
