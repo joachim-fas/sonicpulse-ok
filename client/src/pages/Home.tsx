@@ -322,8 +322,8 @@ const MusicLoadingBar = ({ mode }: { mode: "explore" | "mood" }) => {
           />
         </div>
         <div className="flex justify-between mt-2">
-          <span className="text-[9px] uppercase tracking-widest text-white/40">Thinking</span>
-          <span className="text-[9px] uppercase tracking-widest text-white/40">{Math.round(progress)}%</span>
+          <span className="text-[9px] uppercase tracking-widest" style={{ color: accentColor + '80' }}>Thinking</span>
+          <span className="text-[9px] uppercase tracking-widest" style={{ color: accentColor + '80' }}>{Math.round(progress)}%</span>
         </div>
       </div>
     </motion.div>
@@ -963,8 +963,8 @@ export default function Home() {
           onClick={() => setHasStarted(false)}
           className="flex items-center gap-2 hover:opacity-80 transition-opacity"
         >
-          <Disc className={isLightMode ? "text-zinc-800" : "text-white"} size={24} />
-          <span className="text-xl font-light tracking-widest uppercase">SonicPulse</span>
+          <Disc className={cn(isLightMode ? "text-zinc-800" : "text-white", "transition-colors duration-300")} size={24} />
+          <span className={cn("text-xl font-light tracking-widest uppercase", isLightMode ? "text-zinc-900" : "text-white")}>SonicPulse</span>
         </button>
 
         <div className="flex items-center gap-3">
@@ -977,7 +977,8 @@ export default function Home() {
                   className={cn(
                     "px-3 md:px-4 py-1.5 rounded-full text-[10px] md:text-xs uppercase tracking-widest transition-all whitespace-nowrap",
                     mode === m
-                      ? isLightMode ? "bg-zinc-900 text-white" : "bg-white text-black"
+                      ? m === "explore" ? "bg-gradient-to-r from-cyan-500 to-teal-500 text-white shadow-sm"
+                        : "bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-sm"
                       : isLightMode ? "text-zinc-500 hover:text-zinc-900" : "text-white/40 hover:text-white"
                   )}
                 >{m}</button>
@@ -1030,7 +1031,7 @@ export default function Home() {
               transition={{ duration: 0.5 }}
               className="flex flex-col items-center justify-center min-h-[70vh] text-center"
             >
-              <h1 className="text-6xl md:text-8xl font-light tracking-tighter mb-8 leading-none">
+              <h1 className={cn("text-6xl md:text-8xl font-light tracking-tighter mb-8 leading-none", isLightMode ? "text-zinc-900" : "text-white")}>
                 Your sound,<br />
                 <span className="italic" style={{ fontFamily: "Georgia, serif" }}>reimagined.</span>
               </h1>
@@ -1078,10 +1079,10 @@ export default function Home() {
                   transition={{ duration: 0.4 }}
                 >
                   <div className="mb-12">
-                    <span className={cn("text-xs uppercase tracking-[0.3em] mb-4 block", isLightMode ? "text-zinc-400" : "text-white/40")}>
+                    <span className={cn("text-xs uppercase tracking-[0.3em] mb-4 block", mode === "explore" ? "text-cyan-400/70" : "text-rose-400/70")}>
                       {mode === "explore" ? "Manual Input" : "Emotional Intelligence"}
                     </span>
-                    <h2 className="text-5xl font-light tracking-tight">
+                    <h2 className={cn("text-5xl font-light tracking-tight", isLightMode ? "text-zinc-900" : "text-white")}>
                       {mode === "explore" ? "Explore New Sounds" : "Mood Mode"}
                     </h2>
                   </div>
@@ -1267,8 +1268,8 @@ export default function Home() {
                       {(moodSongs.length > 0 || moodMutation.isPending) && (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
                           <div className="flex items-center justify-between gap-4 mb-6">
-                            <span className={cn("text-xs uppercase tracking-[0.3em]", isLightMode ? "text-zinc-500" : "text-white/35")}>Your Emotional Soundtrack</span>
-                            <span className={cn("text-[9px] uppercase tracking-widest px-2 py-1 rounded-full border", isLightMode ? "text-zinc-500 border-zinc-200" : "text-white/20 border-white/8")}>{moodDiscovery}</span>
+                            <span className="text-xs uppercase tracking-[0.3em] text-rose-400/70">Your Emotional Soundtrack</span>
+                            <span className="px-2 py-1 rounded-full text-[9px] uppercase tracking-widest bg-gradient-to-r from-rose-500/20 to-pink-500/20 border border-rose-500/30 text-rose-400">{moodDiscovery}</span>
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
@@ -1285,10 +1286,10 @@ export default function Home() {
                                   {/* Image header – same as Explore */}
                                   <div className="relative aspect-[16/10] overflow-hidden">
                                     {song.enriched?.image
-                                      ? <img src={song.enriched.image} alt={song.artist} className={cn("w-full h-full object-cover transition-all duration-700 group-hover:scale-110", isLightMode ? "opacity-70 group-hover:opacity-90" : "opacity-40 group-hover:opacity-60")} />
+                                      ? <img src={song.enriched.image} alt={song.artist} className={cn("w-full h-full object-cover transition-all duration-700 group-hover:scale-110", isLightMode ? "opacity-75 group-hover:opacity-95" : "opacity-55 group-hover:opacity-75")} />
                                       : <div className={cn("w-full h-full flex items-center justify-center", isLightMode ? "bg-zinc-100" : "bg-zinc-800")}><Heart className={isLightMode ? "text-zinc-300" : "text-white/10"} size={32} /></div>
                                     }
-                                    <div className={cn("absolute inset-0 bg-gradient-to-t", isLightMode ? "from-black/70 via-black/10 to-transparent" : "from-black/90 via-black/20 to-transparent")} />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                                     <div className="absolute bottom-0 left-0 p-6 w-full">
                                       <SpotifyLink url={song.enriched?.url} className="group/name flex items-center gap-2 text-white hover:text-rose-400 transition-colors text-left">
                                         <div>
@@ -1301,7 +1302,7 @@ export default function Home() {
                                           </div>
                                         )}
                                       </SpotifyLink>
-                                      <span className="px-2 py-0.5 rounded-full bg-black/50 text-white text-[8px] uppercase tracking-widest mt-2 inline-block">{song.genre}</span>
+                                      <span className="px-2 py-0.5 rounded-full bg-black/60 text-white/90 text-[8px] uppercase tracking-widest mt-2 inline-block">{song.genre}</span>
                                     </div>
                                   </div>
 
@@ -1396,8 +1397,8 @@ export default function Home() {
               {(recommendations.length > 0 || exploreMutation.isPending) && mode === "explore" && (
                 <section className="pb-20">
                   <div className="mb-12">
-                    <span className={cn("text-xs uppercase tracking-[0.3em] mb-4 block", isLightMode ? "text-zinc-400" : "text-white/40")}>The Future</span>
-                    <h2 className="text-5xl font-light tracking-tight italic" style={{ fontFamily: "Georgia, serif" }}>
+                    <span className="text-xs uppercase tracking-[0.3em] mb-4 block text-cyan-400/70">The Future</span>
+                    <h2 className={cn("text-5xl font-light tracking-tight italic", isLightMode ? "text-zinc-900" : "text-white")} style={{ fontFamily: "Georgia, serif" }}>
                       Curated for you
                     </h2>
                   </div>
@@ -1435,20 +1436,20 @@ export default function Home() {
                         >
                           <div className="relative aspect-[16/10] overflow-hidden">
                             {rec.enriched?.image
-                              ? <img src={rec.enriched.image} alt={rec.artist} className={cn("w-full h-full object-cover transition-all duration-700 group-hover:scale-110", isLightMode ? "opacity-70 group-hover:opacity-90" : "opacity-40 group-hover:opacity-60")} />
+                              ? <img src={rec.enriched.image} alt={rec.artist} className={cn("w-full h-full object-cover transition-all duration-700 group-hover:scale-110", isLightMode ? "opacity-75 group-hover:opacity-95" : "opacity-55 group-hover:opacity-75")} />
                               : <div className={cn("w-full h-full flex items-center justify-center", isLightMode ? "bg-zinc-100" : "bg-zinc-800")}><Music className={isLightMode ? "text-zinc-300" : "text-white/10"} size={32} /></div>
                             }
-                            <div className={cn("absolute inset-0 bg-gradient-to-t", isLightMode ? "from-black/70 via-black/10 to-transparent" : "from-black/90 via-black/20 to-transparent")} />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                             <div className="absolute bottom-0 left-0 p-6 w-full">
-                              <SpotifyLink url={rec.enriched?.url} className="group/name flex items-center gap-2 text-white hover:text-emerald-400 transition-colors text-left">
+                              <SpotifyLink url={rec.enriched?.url} className="group/name flex items-center gap-2 text-white hover:text-cyan-400 transition-colors text-left">
                                 <h3 className="text-2xl font-light tracking-tight drop-shadow-md">{rec.artist}</h3>
                                 {rec.enriched?.url && (
-                                  <div className="p-1 rounded-full bg-emerald-500/10 text-emerald-500 opacity-0 group-hover/name:opacity-100 transition-all">
+                                  <div className="p-1 rounded-full bg-cyan-500/10 text-cyan-400 opacity-0 group-hover/name:opacity-100 transition-all">
                                     <ExternalLink size={12} />
                                   </div>
                                 )}
                               </SpotifyLink>
-                              <span className="px-2 py-0.5 rounded-full bg-black/50 text-white text-[8px] uppercase tracking-widest">{rec.genre}</span>
+                              <span className="px-2 py-0.5 rounded-full bg-black/60 text-white/90 text-[8px] uppercase tracking-widest">{rec.genre}</span>
                             </div>
                           </div>
                           <div className="p-6 flex-1 flex flex-col">
@@ -1456,7 +1457,7 @@ export default function Home() {
                               <motion.div
                                 animate={{ y: [0, -4, 0], rotate: [0, 10, -10, 0] }}
                                 transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                                className="text-cyan-500 mt-0.5 shrink-0"
+                                className="text-cyan-400 mt-0.5 shrink-0"
                               >
                                 <Music size={14} />
                               </motion.div>
@@ -1464,8 +1465,8 @@ export default function Home() {
                             </div>
                             <div className={cn("mt-auto pt-4 border-t space-y-3", isLightMode ? "border-zinc-100" : "border-white/5")}>
                               <div className="flex items-center justify-between">
-                                <span className={cn("text-[8px] uppercase tracking-widest", isLightMode ? "text-zinc-400" : "text-white/40")}>
-                                  Similar to <span className={isLightMode ? "text-zinc-700" : "text-white/60"}>{rec.similarTo}</span>
+                                <span className={cn("text-[8px] uppercase tracking-widest", isLightMode ? "text-zinc-500" : "text-white/50")}>
+                                  Similar to <span className={isLightMode ? "text-zinc-800" : "text-white/70"}>{rec.similarTo}</span>
                                 </span>
                                 {/* Not on Spotify badge */}
                                 {!rec.enriched?.spotifyId && !extractSpotifyArtistId(rec.enriched?.url) && (
