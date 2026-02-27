@@ -223,3 +223,10 @@
 - [ ] Backend: exclude-Parameter in mood-Prozedur (Blacklist bereits gesehener Songs)
 - [ ] Frontend: Zuletzt gezeigte Künstler/Songs in sessionStorage speichern
 - [ ] Frontend: Bei neuer Suche Blacklist an Backend übergeben
+
+## Kontrast & Lesbarkeit Fix
+- [ ] Light Mode: weißer Text auf weißem Hintergrund eliminieren (Karten-Overlay, Genre-Badges, Buttons)
+- [ ] Light Mode: ArtistInput-Felder auf hellen Hintergrund umstellen
+- [ ] Light Mode: SpotifyEmbedCard / YouTubeEmbedCard für hellen Hintergrund
+- [ ] Dark Mode: zu niedrige Kontrastverhältnisse (white/10, white/20) auf mindestens white/50 erhöhen
+- [ ] Dark Mode: Genre-Badges, Footer-Links, Discovery-Labels besser lesbar machen

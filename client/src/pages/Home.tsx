@@ -310,7 +310,7 @@ const MusicLoadingBar = ({ mode }: { mode: "explore" | "mood" }) => {
 
       {/* Progress bar */}
       <div className="w-full max-w-sm">
-        <div className="h-0.5 bg-white/5 rounded-full overflow-hidden">
+        <div className="h-0.5 bg-white/10 rounded-full overflow-hidden">
           <motion.div
             className="h-full rounded-full"
             style={{
@@ -322,8 +322,8 @@ const MusicLoadingBar = ({ mode }: { mode: "explore" | "mood" }) => {
           />
         </div>
         <div className="flex justify-between mt-2">
-          <span className="text-[9px] uppercase tracking-widest text-white/15">Thinking</span>
-          <span className="text-[9px] uppercase tracking-widest text-white/15">{Math.round(progress)}%</span>
+          <span className="text-[9px] uppercase tracking-widest text-white/40">Thinking</span>
+          <span className="text-[9px] uppercase tracking-widest text-white/40">{Math.round(progress)}%</span>
         </div>
       </div>
     </motion.div>
@@ -332,7 +332,7 @@ const MusicLoadingBar = ({ mode }: { mode: "explore" | "mood" }) => {
 
 // ─── Artist Input with MusicBrainz Autocomplete ───────────────────────────────
 const ArtistInput = ({
-  value, onChange, onSelect, placeholder, accentColor = "cyan", onRemove, showRemove = false,
+  value, onChange, onSelect, placeholder, accentColor = "cyan", onRemove, showRemove = false, isLightMode = false,
 }: {
   value: string;
   onChange: (val: string) => void;
@@ -341,6 +341,7 @@ const ArtistInput = ({
   accentColor?: "cyan" | "fuchsia" | "rose";
   onRemove?: () => void;
   showRemove?: boolean;
+  isLightMode?: boolean;
 }) => {
   const [suggestions, setSuggestions] = useState<MBSuggestion[]>([]);
   const [open, setOpen] = useState(false);
@@ -379,12 +380,12 @@ const ArtistInput = ({
   };
 
   const borderColor = {
-    cyan:    "border-cyan-500/30 focus:border-cyan-500 focus:shadow-[0_0_15px_rgba(6,182,212,0.3)]",
-    fuchsia: "border-fuchsia-500/30 focus:border-fuchsia-500 focus:shadow-[0_0_15px_rgba(217,70,239,0.3)]",
-    rose:    "border-rose-500/30 focus:border-rose-400 focus:shadow-[0_0_15px_rgba(244,114,182,0.25)]",
+    cyan:    "border-cyan-500/30 focus:border-cyan-500",
+    fuchsia: "border-fuchsia-500/30 focus:border-fuchsia-500",
+    rose:    "border-rose-500/30 focus:border-rose-400",
   }[accentColor];
 
-  const textColor = {
+  const textColor = isLightMode ? "text-zinc-800" : {
     cyan:    "text-cyan-50",
     fuchsia: "text-fuchsia-50",
     rose:    "text-rose-50",
@@ -401,24 +402,25 @@ const ArtistInput = ({
           onFocus={() => suggestions.length > 0 && setOpen(true)}
           placeholder={placeholder}
           className={cn(
-            "w-full bg-black border rounded-xl px-4 py-3 text-sm font-light focus:outline-none transition-all placeholder:text-white/40",
+            "w-full border rounded-xl px-4 py-3 text-sm font-light focus:outline-none transition-all",
+            isLightMode ? "bg-white placeholder:text-zinc-400" : "bg-black placeholder:text-white/40",
             borderColor, textColor, showRemove ? "pr-16" : "pr-10"
           )}
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
           {showRemove && (
-            <button onClick={onRemove} className="text-white/10 hover:text-red-400 transition-colors">
+            <button onClick={onRemove} className={cn("transition-colors hover:text-red-400", isLightMode ? "text-zinc-300" : "text-white/10")}>
               <Trash2 size={14} />
             </button>
           )}
-          <Mic2 size={14} className="text-white/10" />
+          <Mic2 size={14} className={cn(isLightMode ? "text-zinc-300" : "text-white/10")} />
         </div>
       </div>
       <AnimatePresence>
         {open && suggestions.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-            className="absolute z-20 left-0 right-0 mt-1 bg-zinc-900 border border-white/10 rounded-xl overflow-hidden shadow-2xl"
+            className={cn("absolute z-20 left-0 right-0 mt-1 rounded-xl overflow-hidden shadow-2xl border", isLightMode ? "bg-white border-zinc-200" : "bg-zinc-900 border-white/10")}
             onMouseDown={() => { mouseDownOnDropdown.current = true; }}
             onMouseUp={() => { mouseDownOnDropdown.current = false; }}
             onMouseLeave={() => { mouseDownOnDropdown.current = false; }}
@@ -430,10 +432,10 @@ const ArtistInput = ({
                   e.preventDefault(); // Prevent input blur
                   handleSelect(s.name);
                 }}
-                className="w-full px-4 py-2 text-left hover:bg-white/5 transition-colors border-b border-white/5 last:border-0 flex justify-between items-center"
+                className={cn("w-full px-4 py-2 text-left transition-colors flex justify-between items-center border-b last:border-0", isLightMode ? "hover:bg-zinc-50 border-zinc-100 text-zinc-800" : "hover:bg-white/5 border-white/5 text-white")}
               >
                 <span className="text-xs font-light">{s.name}</span>
-                <span className="text-[8px] uppercase tracking-widest text-white/20">{s.country ?? "Artist"}</span>
+                <span className={cn("text-[8px] uppercase tracking-widest", isLightMode ? "text-zinc-400" : "text-white/40")}>{s.country ?? "Artist"}</span>
               </button>
             ))}
           </motion.div>
@@ -544,7 +546,7 @@ const SpotifySaveSection = ({
             value={playlistName}
             onChange={(e) => onPlaylistNameChange(e.target.value)}
             placeholder="Playlist name..."
-            className="bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-sm font-light focus:outline-none focus:border-[#1DB954]/50 text-white placeholder:text-white/30 w-full md:w-64"
+            className="bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-sm font-light focus:outline-none focus:border-[#1DB954]/50 text-white placeholder:text-white/30 w-full md:w-64 dark:bg-zinc-900"
           />
         </motion.div>
       )}
@@ -1006,7 +1008,7 @@ export default function Home() {
               <button
                 onClick={() => logoutMutation.mutate({ sessionId })}
                 title="Disconnect Spotify"
-                className="p-2 rounded-full text-white/30 hover:text-white/60 hover:bg-white/5 transition-all"
+                className={cn("p-2 rounded-full transition-all", isLightMode ? "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100" : "text-white/30 hover:text-white/60 hover:bg-white/5")}
               >
                 <LogOut size={14} />
               </button>
@@ -1032,13 +1034,13 @@ export default function Home() {
                 Your sound,<br />
                 <span className="italic" style={{ fontFamily: "Georgia, serif" }}>reimagined.</span>
               </h1>
-              <p className="text-white/40 max-w-md mb-12 text-lg font-light leading-relaxed">
-                No DJ required. Tell us what you love, or how you feel — we’ll handle the rest.
+              <p className={cn("max-w-md mb-12 text-lg font-light leading-relaxed", isLightMode ? "text-zinc-500" : "text-white/40")}>
+                No DJ required. Tell us what you love, or how you feel — we'll handle the rest.
               </p>
               <div className="flex flex-col md:flex-row gap-6 justify-center w-full max-w-3xl">
                 <button
                   onClick={() => handleModeSelect("explore")}
-                  className="relative flex-1 group p-6 md:p-8 bg-zinc-900/30 border border-white/5 rounded-[32px] hover:bg-white hover:text-black transition-all duration-500 text-left"
+                  className={cn("relative flex-1 group p-6 md:p-8 rounded-[32px] transition-all duration-500 text-left border", isLightMode ? "bg-zinc-100 border-zinc-200 hover:bg-zinc-900 hover:text-white hover:border-zinc-900" : "bg-zinc-900/30 border-white/5 hover:bg-white hover:text-black")}
                 >
                   <motion.div whileHover={{ rotate: 15, scale: 1.1 }} className="inline-block mb-4">
                     <Sparkles className="opacity-40 group-hover:opacity-100 text-cyan-500 transition-colors" size={32} />
@@ -1048,7 +1050,7 @@ export default function Home() {
                 </button>
                 <button
                   onClick={() => handleModeSelect("mood")}
-                  className="relative flex-1 group p-6 md:p-8 bg-zinc-900/30 border border-white/5 rounded-[32px] hover:bg-white hover:text-black transition-all duration-500 text-left"
+                  className={cn("relative flex-1 group p-6 md:p-8 rounded-[32px] transition-all duration-500 text-left border", isLightMode ? "bg-zinc-100 border-zinc-200 hover:bg-zinc-900 hover:text-white hover:border-zinc-900" : "bg-zinc-900/30 border-white/5 hover:bg-white hover:text-black")}
                 >
                   <motion.div whileHover={{ scale: 1.15 }} className="inline-block mb-4">
                     <Heart className="opacity-40 group-hover:opacity-100 text-rose-400 transition-colors" size={32} />
@@ -1093,24 +1095,27 @@ export default function Home() {
                             key={idx}
                             value={band}
                             accentColor="cyan"
+                            isLightMode={isLightMode}
                             placeholder={`Band #${idx + 1}`}
                             onChange={(val) => { const n = [...exploreBands]; n[idx] = val; setExploreBands(n); }}
                             onSelect={(name) => { const n = [...exploreBands]; n[idx] = name; setExploreBands(n); }}
                           />
                         ))}
                       </div>
-                      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 md:p-6 bg-zinc-900/30 rounded-[28px] border border-white/5 max-w-4xl mx-auto">
+                      <div className={cn("flex flex-col sm:flex-row items-center justify-between gap-4 p-5 md:p-6 rounded-[28px] border max-w-4xl mx-auto", isLightMode ? "bg-zinc-100 border-zinc-200" : "bg-zinc-900/30 border-white/5")}>
                         {/* Discovery Filter */}
                         <div className="flex flex-col gap-1.5 items-center sm:items-start">
-                          <span className="text-[8px] uppercase tracking-widest text-white/20">Discovery</span>
-                          <div className="flex items-center gap-1 bg-black/40 p-1 rounded-full border border-white/5">
+                          <span className={cn("text-[8px] uppercase tracking-widest", isLightMode ? "text-zinc-500" : "text-white/40")}>Discovery</span>
+                          <div className={cn("flex items-center gap-1 p-1 rounded-full border", isLightMode ? "bg-white border-zinc-200" : "bg-black/40 border-white/5")}>
                             {(["mainstream", "underground", "exotics"] as const).map((level) => (
                               <button
                                 key={level}
                                 onClick={() => setDiscoveryLevel(level)}
                                 className={cn(
                                   "px-4 py-1.5 rounded-full text-[9px] uppercase tracking-widest transition-all whitespace-nowrap",
-                                  discoveryLevel === level ? "bg-white text-black" : "text-white/40 hover:text-white"
+                                  discoveryLevel === level
+                                    ? isLightMode ? "bg-zinc-900 text-white" : "bg-white text-black"
+                                    : isLightMode ? "text-zinc-500 hover:text-zinc-900" : "text-white/50 hover:text-white"
                                 )}
                               >{level}</button>
                             ))}
@@ -1121,7 +1126,8 @@ export default function Home() {
                           onClick={generateRecommendations}
                           disabled={isGenerating || exploreBands.every((b) => !b.trim())}
                           className={cn(
-                            "flex items-center justify-center gap-2 px-8 py-3 rounded-full font-medium transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-xs uppercase tracking-widest bg-white text-black hover:bg-white/90 shrink-0",
+                            "flex items-center justify-center gap-2 px-8 py-3 rounded-full font-medium transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-xs uppercase tracking-widest shrink-0",
+                            isLightMode ? "bg-zinc-900 text-white hover:bg-zinc-700" : "bg-white text-black hover:bg-white/90",
                             isGenerating && "animate-pulse"
                           )}
                         >
@@ -1198,7 +1204,7 @@ export default function Home() {
                         >
                           <Guitar size={11} />
                           <span>Musical reference</span>
-                          <span className="text-white/15">(optional)</span>
+                          <span className={cn(isLightMode ? "text-zinc-400" : "text-white/40")}>(optional)</span>
                           <motion.span animate={{ rotate: showMoodReference ? 180 : 0 }} transition={{ duration: 0.2 }}>
                             <ChevronDown size={11} />
                           </motion.span>
@@ -1217,8 +1223,9 @@ export default function Home() {
                                   onSelect={setMoodReference}
                                   placeholder="e.g. Radiohead, Nick Cave, Portishead..."
                                   accentColor="rose"
+                                  isLightMode={isLightMode}
                                 />
-                                <p className="text-[10px] text-white/20 font-light">
+                                <p className={cn("text-[10px] font-light", isLightMode ? "text-zinc-500" : "text-white/40")}>
                                   Sonic style only — not emotional context.
                                 </p>
                               </div>
@@ -1279,12 +1286,12 @@ export default function Home() {
                                       ? <img src={song.enriched.image} alt={song.artist} className={cn("w-full h-full object-cover transition-all duration-700 group-hover:scale-110", isLightMode ? "opacity-70 group-hover:opacity-90" : "opacity-40 group-hover:opacity-60")} />
                                       : <div className={cn("w-full h-full flex items-center justify-center", isLightMode ? "bg-zinc-100" : "bg-zinc-800")}><Heart className={isLightMode ? "text-zinc-300" : "text-white/10"} size={32} /></div>
                                     }
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                                    <div className={cn("absolute inset-0 bg-gradient-to-t", isLightMode ? "from-black/70 via-black/10 to-transparent" : "from-black/90 via-black/20 to-transparent")} />
                                     <div className="absolute bottom-0 left-0 p-6 w-full">
                                       <SpotifyLink url={song.enriched?.url} className="group/name flex items-center gap-2 text-white hover:text-rose-400 transition-colors text-left">
                                         <div>
-                                          <p className="text-[10px] text-rose-400/70 uppercase tracking-widest font-medium mb-0.5">{song.artist}</p>
-                                          <h3 className="text-xl font-light tracking-tight">{song.title}</h3>
+                                          <p className="text-[10px] text-rose-300 uppercase tracking-widest font-medium mb-0.5 drop-shadow">{song.artist}</p>
+                                          <h3 className="text-xl font-light tracking-tight drop-shadow-md">{song.title}</h3>
                                         </div>
                                         {song.enriched?.url && (
                                           <div className="p-1 rounded-full bg-rose-500/10 text-rose-400 opacity-0 group-hover/name:opacity-100 transition-all">
@@ -1292,7 +1299,7 @@ export default function Home() {
                                           </div>
                                         )}
                                       </SpotifyLink>
-                                      <span className="px-2 py-0.5 rounded-full bg-white/10 text-[8px] uppercase tracking-widest mt-2 inline-block">{song.genre}</span>
+                                      <span className="px-2 py-0.5 rounded-full bg-black/50 text-white text-[8px] uppercase tracking-widest mt-2 inline-block">{song.genre}</span>
                                     </div>
                                   </div>
 
@@ -1311,7 +1318,7 @@ export default function Home() {
                                     {song.lyricMoment && (
                                       <div className="flex gap-1.5 mb-4">
                                         <Quote size={9} className="text-rose-400/30 shrink-0 mt-0.5" />
-                                        <p className={cn("text-[10px] italic font-light leading-relaxed line-clamp-2", isLightMode ? "text-zinc-400" : "text-white/30")}>{song.lyricMoment}</p>
+                                        <p className={cn("text-[10px] italic font-light leading-relaxed line-clamp-2", isLightMode ? "text-zinc-500" : "text-white/45")}>{song.lyricMoment}</p>
                                       </div>
                                     )}
                                     <div className={cn("mt-auto pt-4 border-t space-y-3", isLightMode ? "border-zinc-100" : "border-white/5")}>
@@ -1429,17 +1436,17 @@ export default function Home() {
                               ? <img src={rec.enriched.image} alt={rec.artist} className={cn("w-full h-full object-cover transition-all duration-700 group-hover:scale-110", isLightMode ? "opacity-70 group-hover:opacity-90" : "opacity-40 group-hover:opacity-60")} />
                               : <div className={cn("w-full h-full flex items-center justify-center", isLightMode ? "bg-zinc-100" : "bg-zinc-800")}><Music className={isLightMode ? "text-zinc-300" : "text-white/10"} size={32} /></div>
                             }
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                            <div className={cn("absolute inset-0 bg-gradient-to-t", isLightMode ? "from-black/70 via-black/10 to-transparent" : "from-black/90 via-black/20 to-transparent")} />
                             <div className="absolute bottom-0 left-0 p-6 w-full">
                               <SpotifyLink url={rec.enriched?.url} className="group/name flex items-center gap-2 text-white hover:text-emerald-400 transition-colors text-left">
-                                <h3 className="text-2xl font-light tracking-tight">{rec.artist}</h3>
+                                <h3 className="text-2xl font-light tracking-tight drop-shadow-md">{rec.artist}</h3>
                                 {rec.enriched?.url && (
                                   <div className="p-1 rounded-full bg-emerald-500/10 text-emerald-500 opacity-0 group-hover/name:opacity-100 transition-all">
                                     <ExternalLink size={12} />
                                   </div>
                                 )}
                               </SpotifyLink>
-                              <span className="px-2 py-0.5 rounded-full bg-white/10 text-[8px] uppercase tracking-widest">{rec.genre}</span>
+                              <span className="px-2 py-0.5 rounded-full bg-black/50 text-white text-[8px] uppercase tracking-widest">{rec.genre}</span>
                             </div>
                           </div>
                           <div className="p-6 flex-1 flex flex-col">
@@ -1455,8 +1462,8 @@ export default function Home() {
                             </div>
                             <div className={cn("mt-auto pt-4 border-t space-y-3", isLightMode ? "border-zinc-100" : "border-white/5")}>
                               <div className="flex items-center justify-between">
-                                <span className={cn("text-[8px] uppercase tracking-widest", isLightMode ? "text-zinc-400" : "text-white/20")}>
-                                  Similar to <span className={isLightMode ? "text-zinc-600" : "text-white/40"}>{rec.similarTo}</span>
+                                <span className={cn("text-[8px] uppercase tracking-widest", isLightMode ? "text-zinc-400" : "text-white/40")}>
+                                  Similar to <span className={isLightMode ? "text-zinc-700" : "text-white/60"}>{rec.similarTo}</span>
                                 </span>
                                 {/* Not on Spotify badge */}
                                 {!rec.enriched?.spotifyId && !extractSpotifyArtistId(rec.enriched?.url) && (
@@ -1505,15 +1512,15 @@ export default function Home() {
 
       {/* ── Footer ── */}
       <footer className={cn("relative z-10 border-t px-8 py-12 mt-20", isLightMode ? "border-zinc-200" : "border-white/5")}>
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8 opacity-40">
+        <div className={cn("max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8", isLightMode ? "text-zinc-400" : "text-white/40")}>
           <div className="flex items-center gap-2">
             <Disc size={16} />
             <span className="text-xs uppercase tracking-widest">SONICPULSE © 2026</span>
           </div>
           <div className="flex gap-8 text-[10px] uppercase tracking-[0.2em]">
-            <button onClick={() => setInfoModal("privacy")} className="hover:text-white transition-colors">Privacy</button>
-            <button onClick={() => setInfoModal("terms")} className="hover:text-white transition-colors">Terms</button>
-            <button onClick={() => setInfoModal("spotify")} className="hover:text-white transition-colors">Spotify API</button>
+            <button onClick={() => setInfoModal("privacy")} className={cn("transition-colors", isLightMode ? "hover:text-zinc-800" : "hover:text-white")}>Privacy</button>
+            <button onClick={() => setInfoModal("terms")} className={cn("transition-colors", isLightMode ? "hover:text-zinc-800" : "hover:text-white")}>Terms</button>
+            <button onClick={() => setInfoModal("spotify")} className={cn("transition-colors", isLightMode ? "hover:text-zinc-800" : "hover:text-white")}>Spotify API</button>
           </div>
         </div>
       </footer>
