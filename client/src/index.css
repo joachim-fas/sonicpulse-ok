@@ -264,6 +264,72 @@
     overflow: hidden;
   }
 
+  /* ─── Liquid Orb Theme ─────────────────────────────────────────────────── */
+
+  /* Glassmorphism card for Liquid Orb theme */
+  .liquid-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 32px;
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .liquid-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow:
+      0 12px 48px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  }
+
+  /* Glassmorphism navbar for Liquid Orb theme */
+  .liquid-nav {
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(32px) saturate(150%);
+    -webkit-backdrop-filter: blur(32px) saturate(150%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  /* Glassmorphism input for Liquid Orb theme */
+  .liquid-input {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    color: rgba(255, 255, 255, 0.90);
+  }
+
+  .liquid-input::placeholder {
+    color: rgba(255, 255, 255, 0.30);
+  }
+
+  .liquid-input:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.09);
+  }
+
+  /* Glassmorphism pill/filter for Liquid Orb theme */
+  .liquid-pill {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  /* Text glow for Liquid Orb theme accent text */
+  .liquid-glow-cyan {
+    text-shadow: 0 0 20px rgba(0, 212, 255, 0.6), 0 0 40px rgba(0, 212, 255, 0.3);
+  }
+
+  .liquid-glow-rose {
+    text-shadow: 0 0 20px rgba(255, 45, 120, 0.6), 0 0 40px rgba(255, 45, 120, 0.3);
+  }
+
   /* Shimmer Skeleton */
   @keyframes shimmer {
     0% { background-position: -200% 0; }

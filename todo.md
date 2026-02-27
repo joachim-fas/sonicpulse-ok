@@ -224,6 +224,18 @@
 - [ ] Frontend: Zuletzt gezeigte Künstler/Songs in sessionStorage speichern
 - [ ] Frontend: Bei neuer Suche Blacklist an Backend übergeben
 
+## Liquid Orb Theme
+- [x] OrganicBackground-Komponente mit 8 Shape-Typen und Mouse/Touch-Parallax
+- [x] Explore Mode: Cosmic Deep Palette (Cyan/Blue/Teal) – kalte, kosmische Shapes
+- [x] Mood Mode: Emotional Heat Palette (Rose/Coral/Magenta) – warme, organische Shapes
+- [x] Landing: Mixed Palette (beide Modi kombiniert)
+- [x] Glassmorphism-Styles: liquid-card, liquid-nav, liquid-input, liquid-pill
+- [x] Text-Glow-Klassen: liquid-glow-cyan, liquid-glow-rose
+- [x] Toggle-Button (Wellen-Icon) in Navbar neben Light/Dark-Toggle
+- [x] Theme-Präferenz in localStorage persistieren
+- [x] Alle UI-Elemente (Karten, Inputs, Nav, Filter, Buttons) im Liquid-Modus angepasst
+- [x] Explore und Mood bleiben bewusst unterschiedlich (Farbe, Shapes, Rhythmus)
+
 ## Kontrast & Lesbarkeit Fix
 - [ ] Light Mode: weißer Text auf weißem Hintergrund eliminieren (Karten-Overlay, Genre-Badges, Buttons)
 - [ ] Light Mode: ArtistInput-Felder auf hellen Hintergrund umstellen
