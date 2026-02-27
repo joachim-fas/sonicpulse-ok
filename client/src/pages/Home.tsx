@@ -30,10 +30,8 @@ import { YouTubeEmbedCard } from "@/components/YouTubeEmbedCard";
 import { AnimatedArtistFallback } from "@/components/AnimatedArtistFallback";
 import { OrganicBackground } from "@/components/OrganicBackground";
 import { AuraBackground } from "@/components/AuraBackground";
-import { GrainBackground } from "@/components/GrainBackground";
 import { LiquidWaveIcon } from "@/components/LiquidWaveIcon";
 import { AuraIcon } from "@/components/AuraIcon";
-import { GrainIcon } from "@/components/GrainIcon";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -337,7 +335,7 @@ const MusicLoadingBar = ({ mode, isLiquid = false }: { mode: "explore" | "mood";
 
 // ─── Artist Input with MusicBrainz Autocomplete ───────────────────────────────
 const ArtistInput = ({
-  value, onChange, onSelect, placeholder, accentColor = "cyan", onRemove, showRemove = false, isLightMode = false, isLiquid = false, isGrain = false, isAura = false,
+  value, onChange, onSelect, placeholder, accentColor = "cyan", onRemove, showRemove = false, isLightMode = false, isLiquid = false, isAura = false,
 }: {
   value: string;
   onChange: (val: string) => void;
@@ -348,7 +346,6 @@ const ArtistInput = ({
   showRemove?: boolean;
   isLightMode?: boolean;
   isLiquid?: boolean;
-  isGrain?: boolean;
   isAura?: boolean;
 }) => {
   const [suggestions, setSuggestions] = useState<MBSuggestion[]>([]);
@@ -398,9 +395,7 @@ const ArtistInput = ({
     rose:    "text-rose-50",
   }[accentColor];
 
-  const inputClass = isGrain
-    ? cn("w-full rounded-xl px-4 py-3 text-sm font-light transition-all bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:border-white/50 backdrop-blur-sm", showRemove ? "pr-16" : "pr-10")
-    : isLiquid
+  const inputClass = isLiquid
     ? cn("w-full rounded-xl px-4 py-3 text-sm font-light transition-all liquid-input", showRemove ? "pr-16" : "pr-10")
     : isAura
     ? cn("w-full rounded-xl px-4 py-3 text-sm font-light transition-all bg-white/70 border border-zinc-200/60 text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-zinc-400/60 backdrop-blur-sm", showRemove ? "pr-16" : "pr-10")
@@ -670,19 +665,16 @@ export default function Home() {
   const [isAuraTheme, setIsAuraTheme] = useState(() => {
     try { return localStorage.getItem("sonicpulse_aura_theme") === "true"; } catch { return false; }
   });
-  const [isGrainTheme, setIsGrainTheme] = useState(() => {
-    try { return localStorage.getItem("sonicpulse_grain_theme") === "true"; } catch { return false; }
-  });
 
   // Apply theme classes to document root
   useEffect(() => {
-    if (isLightMode && !isLiquidTheme && !isAuraTheme && !isGrainTheme) {
+    if (isLightMode && !isLiquidTheme && !isAuraTheme) {
       document.documentElement.classList.add('light');
       document.documentElement.classList.remove('dark');
     } else {
       document.documentElement.classList.remove('light');
     }
-  }, [isLightMode, isLiquidTheme, isAuraTheme, isGrainTheme]);
+  }, [isLightMode, isLiquidTheme, isAuraTheme]);
 
   // Persist theme preferences
   useEffect(() => {
@@ -691,9 +683,6 @@ export default function Home() {
   useEffect(() => {
     try { localStorage.setItem("sonicpulse_aura_theme", String(isAuraTheme)); } catch { /* ignore */ }
   }, [isAuraTheme]);
-  useEffect(() => {
-    try { localStorage.setItem("sonicpulse_grain_theme", String(isGrainTheme)); } catch { /* ignore */ }
-  }, [isGrainTheme]);
 
   const [playlistSuccess, setPlaylistSuccess] = useState<{
     url: string; tracksAdded: number; tracksNotFound: string[];
@@ -831,7 +820,7 @@ export default function Home() {
   const pulseIdRef = useRef(0);
 
   useEffect(() => {
-    if (isLiquidTheme || isAuraTheme || isGrainTheme) return; // OrganicBackground / AuraBackground / GrainBackground handle their own tracking
+    if (isLiquidTheme || isAuraTheme) return; // OrganicBackground / AuraBackground handle their own tracking
 
     const handleMouseMove = (e: MouseEvent) => {
       mousePos.current = {
@@ -895,9 +884,7 @@ export default function Home() {
 
   // ─── Derived theme helpers ────────────────────────────────────────────────
   // Priority: Aura > Liquid > Light/Dark Standard
-  const cardClass = isGrainTheme
-    ? "grain-card transition-all duration-500"
-    : isAuraTheme
+  const cardClass = isAuraTheme
     ? "aura-card transition-all duration-500"
     : isLiquidTheme
     ? "liquid-card transition-all duration-500"
@@ -906,17 +893,13 @@ export default function Home() {
         isLightMode ? "bg-white border-zinc-200 hover:border-zinc-300 hover:shadow-lg" : "bg-zinc-900/30 border-white/5 hover:bg-zinc-900/50"
       );
 
-  const filterPillContainerClass = isGrainTheme
-    ? "flex items-center gap-1 p-1 rounded-full grain-pill"
-    : isAuraTheme
+  const filterPillContainerClass = isAuraTheme
     ? "flex items-center gap-1 p-1 rounded-full aura-pill"
     : isLiquidTheme
     ? "flex items-center gap-1 p-1 rounded-full liquid-pill"
     : cn("flex items-center gap-1 p-1 rounded-full border", isLightMode ? "bg-white border-zinc-200" : "bg-black/40 border-white/5");
 
-  const controlCardClass = isGrainTheme
-    ? "flex flex-col sm:flex-row items-center justify-between gap-4 p-5 md:p-6 rounded-[28px] grain-card max-w-4xl mx-auto"
-    : isAuraTheme
+  const controlCardClass = isAuraTheme
     ? "flex flex-col sm:flex-row items-center justify-between gap-4 p-5 md:p-6 rounded-[28px] aura-card max-w-4xl mx-auto"
     : isLiquidTheme
     ? "flex flex-col sm:flex-row items-center justify-between gap-4 p-5 md:p-6 rounded-[28px] liquid-card max-w-4xl mx-auto"
@@ -925,11 +908,11 @@ export default function Home() {
         isLightMode ? "bg-zinc-100 border-zinc-200" : "bg-zinc-900/30 border-white/5"
       );
 
-  const textMuted = isGrainTheme ? "text-white/55" : isAuraTheme ? "text-zinc-500" : isLiquidTheme ? "text-white/50" : isLightMode ? "text-zinc-500" : "text-white/40";
-  const textDim   = isGrainTheme ? "text-white/35" : isAuraTheme ? "text-zinc-400" : isLiquidTheme ? "text-white/30" : isLightMode ? "text-zinc-400" : "text-white/20";
-  const textBody  = isGrainTheme ? "text-white/75" : isAuraTheme ? "text-zinc-600" : isLiquidTheme ? "text-white/70" : isLightMode ? "text-zinc-600" : "text-white/60";
-  const headingClass = isGrainTheme ? "text-white" : isAuraTheme ? "text-zinc-900" : isLiquidTheme ? "text-white" : isLightMode ? "text-zinc-900" : "text-white";
-  const dividerClass = isGrainTheme ? "border-white/10" : isAuraTheme ? "border-zinc-200/80" : isLiquidTheme ? "border-white/8" : isLightMode ? "border-zinc-100" : "border-white/5";
+  const textMuted = isAuraTheme ? "text-zinc-500" : isLiquidTheme ? "text-white/50" : isLightMode ? "text-zinc-500" : "text-white/40";
+  const textDim   = isAuraTheme ? "text-zinc-400" : isLiquidTheme ? "text-white/30" : isLightMode ? "text-zinc-400" : "text-white/20";
+  const textBody  = isAuraTheme ? "text-zinc-600" : isLiquidTheme ? "text-white/70" : isLightMode ? "text-zinc-600" : "text-white/60";
+  const headingClass = isAuraTheme ? "text-zinc-900" : isLiquidTheme ? "text-white" : isLightMode ? "text-zinc-900" : "text-white";
+  const dividerClass = isAuraTheme ? "border-zinc-200/80" : isLiquidTheme ? "border-white/8" : isLightMode ? "border-zinc-100" : "border-white/5";
 
   // Determine organic background mode
   const organicMode: "explore" | "mood" | "landing" = !hasStarted ? "landing" : mode;
@@ -937,13 +920,11 @@ export default function Home() {
   return (
     <div className={cn(
       "min-h-screen font-sans overflow-x-hidden relative transition-colors duration-500",
-      isGrainTheme ? "bg-black text-white" : isAuraTheme ? "text-zinc-900" : isLiquidTheme ? "text-white" : isLightMode ? "bg-background text-foreground" : "bg-black text-white"
+      isAuraTheme ? "text-zinc-900" : isLiquidTheme ? "text-white" : isLightMode ? "bg-background text-foreground" : "bg-black text-white"
     )}>
 
       {/* ── Animated Background ── */}
-      {isGrainTheme ? (
-        <GrainBackground mode={organicMode} shapeCount={3} />
-      ) : isAuraTheme ? (
+      {isAuraTheme ? (
         <AuraBackground mode={organicMode} blobCount={5} />
       ) : isLiquidTheme ? (
         <OrganicBackground mode={organicMode} shapeCount={6} />
@@ -1008,19 +989,17 @@ export default function Home() {
       {/* ── Navbar ── */}
       <nav className={cn(
         "relative z-10 flex items-center justify-between px-4 md:px-8 py-6 border-b sticky top-0",
-        isGrainTheme ? "grain-nav" : isAuraTheme ? "aura-nav" : isLiquidTheme ? "liquid-nav" : isLightMode ? "border-black/10 bg-white/70 backdrop-blur-md" : "border-white/5 backdrop-blur-md"
+        isAuraTheme ? "aura-nav" : isLiquidTheme ? "liquid-nav" : isLightMode ? "border-black/10 bg-white/70 backdrop-blur-md" : "border-white/5 backdrop-blur-md"
       )}>
         <button
           onClick={() => setHasStarted(false)}
           className="flex items-center gap-2 hover:opacity-80 transition-opacity"
         >
-          <Disc className={cn(isGrainTheme || isLiquidTheme || !isLightMode ? "text-white" : "text-zinc-800", "transition-colors duration-300")} size={24} />
+          <Disc className={cn(isLiquidTheme || !isLightMode ? "text-white" : "text-zinc-800", "transition-colors duration-300")} size={24} />
           <span className={cn(
             "text-xl font-light tracking-widest uppercase",
             isAuraTheme
               ? cn("text-zinc-900", hasStarted && mode === "explore" ? "aura-glow-blue" : hasStarted && mode === "mood" ? "aura-glow-pink" : "")
-              : isGrainTheme
-              ? cn("text-white tracking-[0.3em]", hasStarted && mode === "explore" ? "grain-glow-cyan" : hasStarted && mode === "mood" ? "grain-glow-rose" : "")
               : isLiquidTheme
               ? cn("text-white", hasStarted && mode === "explore" ? "liquid-glow-cyan" : hasStarted && mode === "mood" ? "liquid-glow-rose" : "")
               : isLightMode ? "text-zinc-900" : "text-white"
@@ -1049,29 +1028,9 @@ export default function Home() {
             </div>
           )}
 
-          {/* Grain Theme Toggle */}
-          <button
-            onClick={() => { const next = !isGrainTheme; setIsGrainTheme(next); if (next) { setIsLiquidTheme(false); setIsAuraTheme(false); } }}
-            title={isGrainTheme ? "Switch to Standard Theme" : "Switch to Grain Gradient Theme"}
-            className={cn(
-              "p-2 rounded-full transition-all",
-              isGrainTheme
-                ? mode === "explore"
-                  ? "text-cyan-300 hover:text-cyan-200 hover:bg-white/10 ring-1 ring-cyan-400/40"
-                  : "text-rose-300 hover:text-rose-200 hover:bg-white/10 ring-1 ring-rose-400/40"
-                : isAuraTheme
-                ? "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100"
-                : isLiquidTheme || !isLightMode
-                ? "text-white/30 hover:text-white/60 hover:bg-white/5"
-                : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100"
-            )}
-          >
-            <GrainIcon size={14} />
-          </button>
-
           {/* Aura Theme Toggle */}
           <button
-            onClick={() => { const next = !isAuraTheme; setIsAuraTheme(next); if (next) { setIsLiquidTheme(false); setIsGrainTheme(false); } }}
+            onClick={() => { const next = !isAuraTheme; setIsAuraTheme(next); if (next) { setIsLiquidTheme(false); } }}
             title={isAuraTheme ? "Switch to Standard Theme" : "Switch to Aura Theme"}
             className={cn(
               "p-2 rounded-full transition-all",
@@ -1089,7 +1048,7 @@ export default function Home() {
 
           {/* Liquid Orb Toggle */}
           <button
-            onClick={() => { const next = !isLiquidTheme; setIsLiquidTheme(next); if (next) { setIsAuraTheme(false); setIsGrainTheme(false); } }}
+            onClick={() => { const next = !isLiquidTheme; setIsLiquidTheme(next); if (next) { setIsAuraTheme(false); } }}
             title={isLiquidTheme ? "Switch to Standard Theme" : "Switch to Liquid Orb Theme"}
             className={cn(
               "p-2 rounded-full transition-all",
@@ -1105,8 +1064,8 @@ export default function Home() {
             <LiquidWaveIcon size={14} />
           </button>
 
-          {/* Light/Dark Toggle (hidden in Liquid/Aura/Grain mode) */}
-          {!isLiquidTheme && !isAuraTheme && !isGrainTheme && (
+          {/* Light/Dark Toggle (hidden in Liquid/Aura mode) */}
+          {!isLiquidTheme && !isAuraTheme && (
             <button
               onClick={() => setIsLightMode(!isLightMode)}
               title={isLightMode ? "Switch to Dark Mode" : "Switch to Light Mode"}
@@ -1157,7 +1116,7 @@ export default function Home() {
             >
               <h1 className={cn(
                 "text-6xl md:text-8xl font-light tracking-tighter mb-8 leading-none",
-              isGrainTheme ? "text-white font-thin tracking-tight" : isAuraTheme ? "text-zinc-900" : isLiquidTheme ? "text-white" : isLightMode ? "text-zinc-900" : "text-white"
+              isAuraTheme ? "text-zinc-900" : isLiquidTheme ? "text-white" : isLightMode ? "text-zinc-900" : "text-white"
             )}>
                 Your sound,<br />
                 <span className="italic" style={{ fontFamily: "Georgia, serif" }}>reimagined.</span>
@@ -1170,9 +1129,7 @@ export default function Home() {
                   onClick={() => handleModeSelect("explore")}
                   className={cn(
                     "relative flex-1 group p-6 md:p-8 rounded-[32px] transition-all duration-500 text-left border",
-                    isGrainTheme
-                      ? "grain-card hover:bg-white/10"
-                      : isAuraTheme
+                    isAuraTheme
                       ? "aura-card hover:shadow-blue-200/60"
                       : isLiquidTheme
                       ? "liquid-card hover:bg-white/10"
@@ -1182,16 +1139,14 @@ export default function Home() {
                   <motion.div whileHover={{ rotate: 15, scale: 1.1 }} className="inline-block mb-4">
                     <Sparkles className="opacity-40 group-hover:opacity-100 text-cyan-500 transition-colors" size={32} />
                   </motion.div>
-                  <h3 className={cn("text-2xl font-light mb-2", isGrainTheme ? "text-white" : isAuraTheme ? "text-zinc-900" : "")}>Explore Mode</h3>
-                  <p className={cn("text-xs opacity-40 group-hover:opacity-60 uppercase tracking-widest", isGrainTheme ? "text-white/70" : isAuraTheme ? "text-zinc-700" : "")}>Feed it 3 bands. Get artists you'll actually love.</p>
+                  <h3 className={cn("text-2xl font-light mb-2", isAuraTheme ? "text-zinc-900" : "")}>Explore Mode</h3>
+                  <p className={cn("text-xs opacity-40 group-hover:opacity-60 uppercase tracking-widest", isAuraTheme ? "text-zinc-700" : "")}>Feed it 3 bands. Get artists you'll actually love.</p>
                 </button>
                 <button
                   onClick={() => handleModeSelect("mood")}
                   className={cn(
                     "relative flex-1 group p-6 md:p-8 rounded-[32px] transition-all duration-500 text-left border",
-                    isGrainTheme
-                      ? "grain-card hover:bg-white/10"
-                      : isAuraTheme
+                    isAuraTheme
                       ? "aura-card hover:shadow-fuchsia-200/60"
                       : isLiquidTheme
                       ? "liquid-card hover:bg-white/10"
@@ -1201,8 +1156,8 @@ export default function Home() {
                   <motion.div whileHover={{ scale: 1.15 }} className="inline-block mb-4">
                     <Heart className="opacity-40 group-hover:opacity-100 text-rose-400 transition-colors" size={32} />
                   </motion.div>
-                  <h3 className={cn("text-2xl font-light mb-2", isGrainTheme ? "text-white" : isAuraTheme ? "text-zinc-900" : "")}>Mood Mode</h3>
-                  <p className={cn("text-xs opacity-40 group-hover:opacity-60 uppercase tracking-widest", isGrainTheme ? "text-white/70" : isAuraTheme ? "text-zinc-700" : "")}>Describe the feeling. We find the soundtrack.</p>
+                  <h3 className={cn("text-2xl font-light mb-2", isAuraTheme ? "text-zinc-900" : "")}>Mood Mode</h3>
+                  <p className={cn("text-xs opacity-40 group-hover:opacity-60 uppercase tracking-widest", isAuraTheme ? "text-zinc-700" : "")}>Describe the feeling. We find the soundtrack.</p>
                 </button>
               </div>
             </motion.div>
@@ -1246,9 +1201,8 @@ export default function Home() {
                             key={idx}
                             value={band}
                             accentColor="cyan"
-                            isLightMode={(isLightMode && !isLiquidTheme && !isGrainTheme) || isAuraTheme}
-                            isLiquid={isLiquidTheme && !isAuraTheme && !isGrainTheme}
-                            isGrain={isGrainTheme}
+                            isLightMode={(isLightMode && !isLiquidTheme) || isAuraTheme}
+                            isLiquid={isLiquidTheme && !isAuraTheme}
                             isAura={isAuraTheme}
                             placeholder={`Band #${idx + 1}`}
                             onChange={(val) => { const n = [...exploreBands]; n[idx] = val; setExploreBands(n); }}
@@ -1313,9 +1267,7 @@ export default function Home() {
                           maxLength={1000}
                           className={cn(
                             "w-full rounded-2xl px-5 py-4 text-sm font-light focus:outline-none transition-all resize-none leading-relaxed",
-                             isGrainTheme
-                               ? "bg-white/10 border border-white/20 focus:border-white/50 text-white placeholder:text-white/40 backdrop-blur-sm"
-                               : isAuraTheme
+                             isAuraTheme
                                ? "bg-white/70 border border-fuchsia-200/60 focus:border-fuchsia-400/60 text-zinc-800 placeholder:text-zinc-400 backdrop-blur-sm"
                                : isLiquidTheme
                                ? "liquid-input rounded-2xl"
@@ -1396,9 +1348,8 @@ export default function Home() {
                                   onSelect={setMoodReference}
                                   placeholder="e.g. Radiohead, Nick Cave, Portishead..."
                                   accentColor="rose"
-                                  isLightMode={isLightMode && !isLiquidTheme && !isGrainTheme}
-                                  isLiquid={isLiquidTheme && !isGrainTheme}
-                                  isGrain={isGrainTheme}
+                                  isLightMode={isLightMode && !isLiquidTheme}
+                                  isLiquid={isLiquidTheme}
                                   isAura={isAuraTheme}
                                 />
                                 <p className={cn("text-[10px] font-light", textMuted)}>
