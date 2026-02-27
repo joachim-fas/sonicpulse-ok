@@ -761,8 +761,9 @@ export default function Home() {
   const [loadingMessage, setLoadingMessage] = useState("");
   const [isLightMode, setIsLightMode] = useState(false);
 
-  // Apply theme classes
+  // Apply theme classes (v3.html: data-theme attribute)
   useEffect(() => {
+    document.documentElement.setAttribute('data-theme', isLightMode ? 'light' : 'dark');
     if (isLightMode) {
       document.documentElement.classList.add('light');
       document.documentElement.classList.remove('dark');
@@ -962,36 +963,47 @@ export default function Home() {
   const blobMode = !hasStarted ? "landing" : mode;
 
   return (
-    <div className={cn(
-      "min-h-screen overflow-x-hidden relative transition-colors duration-500",
-      isLightMode ? "bg-[#f8f7f4] text-zinc-900" : "sp-bg text-white"
-    )}>
+    <div
+      className="min-h-screen overflow-x-hidden relative"
+      style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)', transition: 'background 0.7s, color 0.7s' }}
+    >
 
-      {/* ── Animated Blob Background ── */}
+      {/* ── Animated Blob Background (v3.html exakt) ── */}
       <div className="sp-bg-system" aria-hidden="true">
-        <div className={cn("sp-blob sp-blob-1", blobMode === "explore" ? "sp-blob-explore-1" : blobMode === "mood" ? "sp-blob-mood-1" : "sp-blob-landing-1")} />
-        <div className={cn("sp-blob sp-blob-2", blobMode === "explore" ? "sp-blob-explore-2" : blobMode === "mood" ? "sp-blob-mood-2" : "sp-blob-landing-2")} />
-        <div className={cn("sp-blob sp-blob-3", blobMode === "explore" ? "sp-blob-explore-3" : blobMode === "mood" ? "sp-blob-mood-3" : "sp-blob-landing-3")} />
-        <div className={cn("sp-blob sp-blob-4", blobMode === "explore" ? "sp-blob-explore-4" : blobMode === "mood" ? "sp-blob-mood-4" : "sp-blob-landing-4")} />
-        <div className={cn("sp-blob sp-blob-5", blobMode === "explore" ? "sp-blob-explore-5" : blobMode === "mood" ? "sp-blob-mood-5" : "sp-blob-landing-5")} />
-        <div className={cn("sp-blob sp-blob-6", blobMode === "explore" ? "sp-blob-explore-6" : blobMode === "mood" ? "sp-blob-mood-6" : "sp-blob-landing-6")} />
-        <div className={cn("sp-blob sp-blob-7", blobMode === "explore" ? "sp-blob-explore-7" : blobMode === "mood" ? "sp-blob-mood-7" : "sp-blob-landing-7")} />
-        <div className="sp-pulse-ring sp-pulse-ring-1" />
-        <div className="sp-pulse-ring sp-pulse-ring-2" />
-        <div className="sp-wave-line sp-wave-line-1" />
-        <div className="sp-wave-line sp-wave-line-2" />
-        <div className="sp-grain" />
-        {/* Mouse-reactive blob */}
+        <div className={cn("blob blob-1", blobMode === "explore" ? "sp-blob-explore-1" : blobMode === "mood" ? "sp-blob-mood-1" : "")} />
+        <div className={cn("blob blob-2", blobMode === "explore" ? "sp-blob-explore-2" : blobMode === "mood" ? "sp-blob-mood-2" : "")} />
+        <div className={cn("blob blob-3", blobMode === "explore" ? "sp-blob-explore-3" : blobMode === "mood" ? "sp-blob-mood-3" : "")} />
+        <div className={cn("blob blob-4", blobMode === "explore" ? "sp-blob-explore-4" : blobMode === "mood" ? "sp-blob-mood-4" : "")} />
+        <div className={cn("blob blob-5", blobMode === "explore" ? "sp-blob-explore-5" : blobMode === "mood" ? "sp-blob-mood-5" : "")} />
+        <div className={cn("blob blob-6", blobMode === "explore" ? "sp-blob-explore-6" : blobMode === "mood" ? "sp-blob-mood-6" : "")} />
+        <div className={cn("blob blob-7", blobMode === "explore" ? "sp-blob-explore-7" : blobMode === "mood" ? "sp-blob-mood-7" : "")} />
+        <div className="pulse-ring pulse-ring-1" />
+        <div className="pulse-ring pulse-ring-2" />
+        <div className="pulse-ring pulse-ring-3" />
+        <div className="pulse-ring pulse-ring-4" />
+        <div className="wave-line" />
+        <div className="wave-line" />
+        <div className="wave-line" />
+        <div className="wave-line" />
+        <div className="grain" />
+        {/* Mouse-reactive blob (v3.html: cursor follower) */}
         <div
-          className="sp-blob sp-blob-mouse"
           style={{
+            position: 'absolute',
+            width: 500, height: 500,
+            marginLeft: -250, marginTop: -250,
+            borderRadius: '50%',
+            filter: 'blur(100px)',
+            opacity: 0.18,
+            pointerEvents: 'none',
             left: 'var(--mx, 50%)',
             top: 'var(--my, 50%)',
             background: blobMode === "explore"
-              ? 'radial-gradient(circle, rgba(149,74,175,0.18) 0%, transparent 70%)'
+              ? 'radial-gradient(circle, rgba(149,74,175,0.6) 0%, transparent 70%)'
               : blobMode === "mood"
-              ? 'radial-gradient(circle, rgba(235,81,139,0.18) 0%, transparent 70%)'
-              : 'radial-gradient(circle, rgba(13,171,247,0.15) 0%, transparent 70%)',
+              ? 'radial-gradient(circle, rgba(235,81,139,0.6) 0%, transparent 70%)'
+              : 'radial-gradient(circle, rgba(13,171,247,0.5) 0%, transparent 70%)',
+            transition: 'background 0.5s',
           }}
         />
         {/* Touch pulses */}
@@ -1001,92 +1013,72 @@ export default function Home() {
             initial={{ opacity: 0.5, scale: 0.2 }}
             animate={{ opacity: 0, scale: 3.5 }}
             transition={{ duration: 1.1, ease: [0.2, 0.8, 0.4, 1] }}
-            className="absolute rounded-full pointer-events-none"
             style={{
-              left: `${p.x}%`,
-              top: `${p.y}%`,
-              width: 120,
-              height: 120,
-              marginLeft: -60,
-              marginTop: -60,
+              position: 'absolute',
+              left: `${p.x}%`, top: `${p.y}%`,
+              width: 120, height: 120,
+              marginLeft: -60, marginTop: -60,
+              borderRadius: '50%',
+              pointerEvents: 'none',
               background: blobMode === "explore"
-                ? 'radial-gradient(circle, rgba(149,74,175,0.35) 0%, transparent 70%)'
-                : 'radial-gradient(circle, rgba(235,81,139,0.35) 0%, transparent 70%)',
+                ? 'radial-gradient(circle, rgba(149,74,175,0.4) 0%, transparent 70%)'
+                : 'radial-gradient(circle, rgba(235,81,139,0.4) 0%, transparent 70%)',
             }}
           />
         ))}
       </div>
 
-      {/* ── Navbar ── */}
-      <nav className={cn(
-        "relative z-10 flex items-center justify-between px-4 md:px-8 py-5 border-b sticky top-0",
-        isLightMode
-          ? "border-black/10 bg-white/70 backdrop-blur-md"
-          : "sp-nav border-white/8"
-      )}>
+      {/* ── Navbar (v3.html: nav class) ── */}
+      <nav className="sp-nav relative z-10 flex items-center justify-between px-4 md:px-8 py-5 sticky top-0">
         <button
           onClick={() => setHasStarted(false)}
           className="flex items-center gap-3 hover:opacity-80 transition-opacity"
         >
-          <div className={cn(
-            "w-8 h-8 rounded-full flex items-center justify-center",
-            blobMode === "explore" ? "bg-[var(--sp-violet)]/20" : blobMode === "mood" ? "bg-[var(--sp-pink-hot)]/20" : "bg-[var(--sp-blue-sky)]/20"
-          )}>
-            <Disc size={16} className={cn(
-              blobMode === "explore" ? "text-[var(--sp-violet)]" : blobMode === "mood" ? "text-[var(--sp-pink-hot)]" : "text-[var(--sp-blue-sky)]"
-            )} />
-          </div>
-          <span className="sp-display text-lg font-semibold tracking-tight">
+              <div style={{
+                width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: blobMode === "explore" ? 'rgba(149,74,175,0.15)' : blobMode === "mood" ? 'rgba(235,81,139,0.15)' : 'rgba(13,171,247,0.15)'
+              }}>
+                <Disc size={16} style={{ color: blobMode === "explore" ? 'var(--violet)' : blobMode === "mood" ? 'var(--pink-hot)' : 'var(--blue-sky)' }} />
+              </div>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 600, letterSpacing: '-0.03em', color: 'var(--text-primary)' }}>
             SonicPulse
           </span>
         </button>
 
         <div className="flex items-center gap-3">
           {hasStarted && (
-            <div className={cn(
-              "flex items-center gap-1 p-1 rounded-full border",
-              isLightMode ? "bg-white border-zinc-200" : "bg-black/30 border-white/8"
-            )}>
-              {(["explore", "mood"] as const).map((m) => (
-                <button
-                  key={m}
-                  onClick={() => handleModeSelect(m)}
-                  className={cn(
-                    "px-3 md:px-4 py-1.5 rounded-full text-[10px] md:text-xs uppercase tracking-widest transition-all whitespace-nowrap",
-                    mode === m
-                      ? m === "explore"
-                        ? "bg-gradient-to-r from-[var(--sp-violet)] to-[var(--sp-blue-deep)] text-white shadow-sm"
-                        : "bg-gradient-to-r from-[var(--sp-pink-hot)] to-[var(--sp-violet)] text-white shadow-sm"
-                      : isLightMode ? "text-zinc-500 hover:text-zinc-900" : "text-white/40 hover:text-white"
-                  )}
-                >{m}</button>
-              ))}
-            </div>
+              <div style={{ display: 'flex', gap: 4, padding: 4, borderRadius: 9999, background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)' }}>
+                {(["explore", "mood"] as const).map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => handleModeSelect(m)}
+                    style={{
+                      padding: '6px 14px', borderRadius: 9999,
+                      fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.1em',
+                      transition: 'all 0.3s', whiteSpace: 'nowrap', border: 'none', cursor: 'pointer',
+                      background: mode === m
+                        ? m === "explore" ? 'linear-gradient(135deg, var(--violet), var(--blue-deep))' : 'linear-gradient(135deg, var(--pink-hot), var(--violet))'
+                        : 'transparent',
+                      color: mode === m ? 'white' : 'var(--text-secondary)',
+                      fontFamily: 'var(--font-body)', fontWeight: 600,
+                    }}
+                  >{m}</button>
+                ))}
+              </div>
           )}
 
-          {/* Design Customizer Link */}
+          {/* Design Customizer Link (v3.html: btn-icon) */}
           <Link href="/design">
-            <button
-              title="Design Customizer"
-              className={cn(
-                "p-2 rounded-full transition-all",
-                isLightMode ? "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100" : "text-white/30 hover:text-white/60 hover:bg-white/5"
-              )}
-            >
+            <button title="Design Customizer" className="btn-icon">
               <Settings size={14} />
             </button>
           </Link>
 
-          {/* Light/Dark Toggle */}
+          {/* Light/Dark Toggle (v3.html: btn-icon) */}
           <button
             onClick={() => setIsLightMode(!isLightMode)}
             title={isLightMode ? "Switch to Dark Mode" : "Switch to Light Mode"}
-            className={cn(
-              "p-2 rounded-full transition-all",
-              isLightMode
-                ? "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200"
-                : "text-white/30 hover:text-white/60 hover:bg-white/5"
-            )}
+            className="btn-icon"
           >
             {isLightMode ? <Moon size={14} /> : <Sun size={14} />}
           </button>
@@ -1116,46 +1108,73 @@ export default function Home() {
       <main className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-12 pb-28">
         <AnimatePresence mode="wait">
           {!hasStarted ? (
-            /* ── Landing ── */
+            /* ── Landing (v3.html: asymmetrisches Hero-Layout) ── */
             <motion.div
               key="landing"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20, filter: "blur(10px)" }}
               transition={{ duration: 0.5 }}
-              className="flex flex-col items-center justify-center min-h-[70vh] text-center"
+              className="flex items-center min-h-[80vh] gap-8 md:gap-16"
             >
-              <div className="sp-section-tag mb-6">Beta</div>
-              <h1 className="sp-display text-6xl md:text-8xl font-semibold tracking-tight mb-6 leading-none">
-                Your sound,<br />
-                <em className="sp-accent font-normal" style={{ fontStyle: "italic" }}>reimagined.</em>
-              </h1>
-              <p className={cn("max-w-md mb-12 text-lg font-light leading-relaxed", isLightMode ? "text-zinc-500" : "text-white/50")}>
-                No DJ required. Tell us what you love, or how you feel — we'll handle the rest.
-              </p>
-              <div className="flex flex-col md:flex-row gap-6 justify-center w-full max-w-3xl">
-                <button
-                  onClick={() => handleModeSelect("explore")}
-                  className="relative flex-1 group p-6 md:p-8 sp-card sp-card-hover text-left"
+              {/* Left: Text Content */}
+              <div className="flex-1 max-w-xl">
+                <div className="hero-eyebrow">Design System v3 — SonicPulse</div>
+                <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(3rem, 8vw, 6rem)', fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 1.0, marginBottom: '1.5rem', color: 'var(--text-primary)' }}>
+                  Your sound,<br />
+                  <em className="gradient-text" style={{ fontStyle: 'italic', fontFamily: 'var(--font-accent)' }}>reimagined.</em>
+                </h1>
+                <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: '2.5rem', maxWidth: 420 }}>
+                  No DJ required. Tell us what you love, or how you feel — we'll handle the rest.
+                </p>
+                {/* CTA Buttons (v3.html: btn-primary + btn-ghost) */}
+                <div className="flex flex-wrap gap-4 mb-8">
+                  <button onClick={() => handleModeSelect("explore")} className="btn btn-primary">
+                    <Sparkles size={16} /> Explore
+                  </button>
+                  <button onClick={() => handleModeSelect("mood")} className="btn btn-ghost">
+                    <Heart size={16} /> Mood Mode
+                  </button>
+                </div>
+                {/* Feature Tags (v3.html: tag-violet, tag-pink, tag-blue, tag-neutral) */}
+                <div className="flex flex-wrap gap-2">
+                  <span className="tag tag-violet">Organic</span>
+                  <span className="tag tag-pink">Interactive</span>
+                  <span className="tag tag-blue">Music</span>
+                  <span className="tag tag-neutral">Dark / Light</span>
+                </div>
+              </div>
+
+              {/* Right: Large Blob Orb (v3.html: artwork circle) */}
+              <div className="hidden md:flex flex-1 items-center justify-center">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+                  style={{
+                    width: 'clamp(280px, 35vw, 480px)',
+                    height: 'clamp(280px, 35vw, 480px)',
+                    borderRadius: '50%',
+                    background: 'conic-gradient(from 0deg, var(--violet-deep), var(--pink-hot), var(--blue-sky), var(--violet), var(--pink-rose), var(--violet-deep))',
+                    filter: 'blur(2px)',
+                    boxShadow: '0 0 120px rgba(149,74,175,0.4), 0 0 60px rgba(235,81,139,0.3)',
+                    position: 'relative',
+                  }}
                 >
-                  <div className="sp-card-accent-line sp-card-accent-explore" />
-                  <motion.div whileHover={{ rotate: 15, scale: 1.1 }} className="inline-block mb-4">
-                    <Sparkles className="opacity-40 group-hover:opacity-100 transition-all" style={{ color: "var(--sp-violet)" }} size={32} />
-                  </motion.div>
-                  <h3 className="sp-display text-2xl font-semibold mb-2">Explore Mode</h3>
-                  <p className={cn("text-xs opacity-40 group-hover:opacity-60 uppercase tracking-widest", isLightMode ? "text-zinc-600" : "")}>Feed it 3 bands. Get artists you'll actually love.</p>
-                </button>
-                <button
-                  onClick={() => handleModeSelect("mood")}
-                  className="relative flex-1 group p-6 md:p-8 sp-card sp-card-hover text-left"
-                >
-                  <div className="sp-card-accent-line sp-card-accent-mood" />
-                  <motion.div whileHover={{ scale: 1.15 }} className="inline-block mb-4">
-                    <Heart className="opacity-40 group-hover:opacity-100 transition-all" style={{ color: "var(--sp-pink-hot)" }} size={32} />
-                  </motion.div>
-                  <h3 className="sp-display text-2xl font-semibold mb-2">Mood Mode</h3>
-                  <p className={cn("text-xs opacity-40 group-hover:opacity-60 uppercase tracking-widest", isLightMode ? "text-zinc-600" : "")}>Describe the feeling. We find the soundtrack.</p>
-                </button>
+                  {/* Inner glow */}
+                  <div style={{
+                    position: 'absolute', inset: '15%', borderRadius: '50%',
+                    background: 'radial-gradient(circle, rgba(13,171,247,0.6) 0%, rgba(149,74,175,0.4) 50%, transparent 70%)',
+                    filter: 'blur(20px)',
+                  }} />
+                  {/* Artwork label */}
+                  <div style={{
+                    position: 'absolute', top: '50%', left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    fontFamily: 'var(--font-body)', fontSize: '0.7rem',
+                    fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase',
+                    color: 'rgba(255,255,255,0.5)', pointerEvents: 'none',
+                  }}>artwork</div>
+                </motion.div>
               </div>
             </motion.div>
           ) : (
