@@ -1297,18 +1297,22 @@ export default function Home() {
                                     }
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                                     <div className="absolute bottom-0 left-0 p-6 w-full">
-                                      <SpotifyLink url={song.enriched?.url} className="group/name flex items-center gap-2 text-white hover:text-rose-400 transition-colors text-left">
-                                        <div>
-                                          <p className="text-[10px] text-rose-300 uppercase tracking-widest font-medium mb-0.5 drop-shadow">{song.artist}</p>
-                                          <h3 className="text-xl font-light tracking-tight drop-shadow-md">{song.title}</h3>
-                                        </div>
-                                        {song.enriched?.url && (
-                                          <div className="p-1 rounded-full bg-rose-500/10 text-rose-400 opacity-0 group-hover/name:opacity-100 transition-all">
-                                            <ExternalLink size={12} />
+                                      {/* Song-Titel als primäres Element */}
+                                      <div className="mb-2">
+                                        <p className="text-[9px] text-rose-300/80 uppercase tracking-widest font-medium mb-1 drop-shadow">Now Playing</p>
+                                        <SpotifyLink url={song.trackUrl ?? song.enriched?.url} className="group/name flex items-start gap-2 text-white hover:text-rose-300 transition-colors text-left">
+                                          <div>
+                                            <h3 className="text-xl font-semibold tracking-tight drop-shadow-md leading-tight">{song.title}</h3>
+                                            <p className="text-sm text-white/70 font-light mt-0.5 drop-shadow">{song.artist}</p>
                                           </div>
-                                        )}
-                                      </SpotifyLink>
-                                      <span className="px-2 py-0.5 rounded-full bg-black/60 text-white/90 text-[8px] uppercase tracking-widest mt-2 inline-block">{song.genre}</span>
+                                          {(song.trackUrl ?? song.enriched?.url) && (
+                                            <div className="p-1 rounded-full bg-rose-500/10 text-rose-400 opacity-0 group-hover/name:opacity-100 transition-all mt-1 shrink-0">
+                                              <ExternalLink size={11} />
+                                            </div>
+                                          )}
+                                        </SpotifyLink>
+                                      </div>
+                                      <span className="px-2 py-0.5 rounded-full bg-black/60 text-white/90 text-[8px] uppercase tracking-widest inline-block">{song.genre}</span>
                                     </div>
                                   </div>
 
@@ -1345,7 +1349,7 @@ export default function Home() {
                                           </span>
                                         )}
                                       </div>
-                                      {/* Spotify Track-Embed */}
+                                      {/* Spotify Track-Embed (primär) */}
                                       {song.trackId && (
                                         <iframe
                                           src={`https://open.spotify.com/embed/track/${song.trackId}?utm_source=generator&theme=0`}
@@ -1357,8 +1361,20 @@ export default function Home() {
                                           style={{ minHeight: "80px" }}
                                         />
                                       )}
+                                      {/* Spotify Track-Link wenn kein Embed aber trackUrl vorhanden */}
+                                      {!song.trackId && song.trackUrl && (
+                                        <a
+                                          href={song.trackUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className={cn("flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium transition-all w-full justify-center", isLightMode ? "bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200" : "bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 border border-rose-500/20")}
+                                        >
+                                          <Music size={12} />
+                                          Play “{song.title}” on Spotify
+                                        </a>
+                                      )}
                                       {/* Fallback: Artist-Embed */}
-                                      {!song.trackId && (song.enriched?.spotifyId || extractSpotifyArtistId(song.enriched?.url)) && (
+                                      {!song.trackId && !song.trackUrl && (song.enriched?.spotifyId || extractSpotifyArtistId(song.enriched?.url)) && (
                                         <SpotifyEmbedCard
                                           artistId={song.enriched?.spotifyId ?? extractSpotifyArtistId(song.enriched?.url)}
                                           artistName={song.artist}
@@ -1367,7 +1383,7 @@ export default function Home() {
                                         />
                                       )}
                                       {/* YouTube Fallback */}
-                                      {!song.trackId && !song.enriched?.spotifyId && !extractSpotifyArtistId(song.enriched?.url) && song.youtubeId && (
+                                      {!song.trackId && !song.trackUrl && !song.enriched?.spotifyId && !extractSpotifyArtistId(song.enriched?.url) && song.youtubeId && (
                                         <YouTubeEmbedCard
                                           videoId={song.youtubeId}
                                           label={`${song.title} on YouTube`}
@@ -1376,7 +1392,7 @@ export default function Home() {
                                         />
                                       )}
                                       {/* Letzter Fallback */}
-                                      {!song.trackId && !song.enriched?.spotifyId && !extractSpotifyArtistId(song.enriched?.url) && !song.youtubeId && (
+                                      {!song.trackId && !song.trackUrl && !song.enriched?.spotifyId && !extractSpotifyArtistId(song.enriched?.url) && !song.youtubeId && (
                                         <SpotifyEmbedCard artistId={null} artistName={song.artist} accentColor="rose" />
                                       )}
                                     </div>

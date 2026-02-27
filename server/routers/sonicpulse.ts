@@ -314,7 +314,13 @@ ${input.discoveryFilter === "mainstream" ? "Recommend well-known, widely recogni
 Curatorial approach for this search: ${emotionalLens}${excludeClause}
 
 Then recommend exactly ${input.songCount} song${input.songCount === 1 ? "" : "s"} that are emotionally aligned with this state${input.musicReference ? ` and musically inspired by the style of "${input.musicReference}"` : ""}.
-For each song, explain WHY it resonates with this specific emotional moment – not just the genre, but the emotional journey the song takes the listener on.
+
+CRITICAL RULES FOR SONG SELECTION:
+1. Each recommendation must be ONE SPECIFIC SONG by ONE SPECIFIC ARTIST – not just an artist or album.
+2. Choose the single track that MOST PRECISELY captures the emotional state described. Not their most famous song, but the RIGHT song for this exact moment.
+3. The song title must be a real, existing track that can be found on Spotify. Do not invent song titles.
+4. Each artist must be different – no two songs from the same artist.
+5. For each song, explain WHY this specific track (not just the artist) resonates with this emotional moment – describe the emotional arc of the song itself.
 
 Respond with a JSON object with keys: emotionalProfile and songs.`,
           },
@@ -389,13 +395,35 @@ Respond with a JSON object with keys: emotionalProfile and songs.`,
       async function searchTrackId(artist: string, title: string): Promise<string | null> {
         if (!spotifyToken) return null;
         try {
-          const q = encodeURIComponent(`artist:${artist} track:${title}`);
-          const res = await fetch(`https://api.spotify.com/v1/search?q=${q}&type=track&limit=1`, {
+          // Strategie 1: Exakte Suche mit artist: und track: Feldern
+          const q1 = encodeURIComponent(`artist:${artist} track:${title}`);
+          const res1 = await fetch(`https://api.spotify.com/v1/search?q=${q1}&type=track&limit=3`, {
             headers: { Authorization: `Bearer ${spotifyToken}` },
           });
-          if (!res.ok) return null;
-          const data = await res.json() as { tracks: { items: Array<{ id: string }> } };
-          return data.tracks?.items?.[0]?.id ?? null;
+          if (res1.ok) {
+            const data1 = await res1.json() as { tracks: { items: Array<{ id: string; name: string; artists: Array<{ name: string }> }> } };
+            const items1 = data1.tracks?.items ?? [];
+            // Besten Match: Titel und Künstler prüfen
+            const match1 = items1.find(t =>
+              t.name.toLowerCase().includes(title.toLowerCase().slice(0, 8)) &&
+              t.artists.some(a => a.name.toLowerCase().includes(artist.toLowerCase().slice(0, 5)))
+            ) ?? items1[0];
+            if (match1) return match1.id;
+          }
+          // Strategie 2: Freie Suche mit Künstler + Titel als Text
+          const q2 = encodeURIComponent(`${artist} ${title}`);
+          const res2 = await fetch(`https://api.spotify.com/v1/search?q=${q2}&type=track&limit=3`, {
+            headers: { Authorization: `Bearer ${spotifyToken}` },
+          });
+          if (res2.ok) {
+            const data2 = await res2.json() as { tracks: { items: Array<{ id: string; name: string; artists: Array<{ name: string }> }> } };
+            const items2 = data2.tracks?.items ?? [];
+            const match2 = items2.find(t =>
+              t.artists.some(a => a.name.toLowerCase().includes(artist.toLowerCase().slice(0, 5)))
+            ) ?? items2[0];
+            if (match2) return match2.id;
+          }
+          return null;
         } catch { return null; }
       }
 
