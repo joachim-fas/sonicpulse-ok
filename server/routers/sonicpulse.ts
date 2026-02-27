@@ -385,67 +385,26 @@ Respond with a JSON object with keys: emotionalProfile and songs.`,
         return { emotionalProfile: null, songs: [] };
       }
 
-      // Alle Künstler mit echten Spotify-IDs anreichern
+      // Alle Künstler mit echten Spotify-IDs anreichern (für Bilder)
       const profiles = await resolveMultipleArtists(rawSongs.map((s) => s.artist));
 
-      // Spotify Track-IDs via Client Credentials (kein User-Login nötig)
-      let spotifyToken: string | null = null;
-      try { spotifyToken = await getSpotifyToken(); } catch { /* ignore */ }
-
-      async function searchTrackId(artist: string, title: string): Promise<string | null> {
-        if (!spotifyToken) return null;
-        try {
-          // Strategie 1: Exakte Suche mit artist: und track: Feldern
-          const q1 = encodeURIComponent(`artist:${artist} track:${title}`);
-          const res1 = await fetch(`https://api.spotify.com/v1/search?q=${q1}&type=track&limit=3`, {
-            headers: { Authorization: `Bearer ${spotifyToken}` },
-          });
-          if (res1.ok) {
-            const data1 = await res1.json() as { tracks: { items: Array<{ id: string; name: string; artists: Array<{ name: string }> }> } };
-            const items1 = data1.tracks?.items ?? [];
-            // Besten Match: Titel und Künstler prüfen
-            const match1 = items1.find(t =>
-              t.name.toLowerCase().includes(title.toLowerCase().slice(0, 8)) &&
-              t.artists.some(a => a.name.toLowerCase().includes(artist.toLowerCase().slice(0, 5)))
-            ) ?? items1[0];
-            if (match1) return match1.id;
-          }
-          // Strategie 2: Freie Suche mit Künstler + Titel als Text
-          const q2 = encodeURIComponent(`${artist} ${title}`);
-          const res2 = await fetch(`https://api.spotify.com/v1/search?q=${q2}&type=track&limit=3`, {
-            headers: { Authorization: `Bearer ${spotifyToken}` },
-          });
-          if (res2.ok) {
-            const data2 = await res2.json() as { tracks: { items: Array<{ id: string; name: string; artists: Array<{ name: string }> }> } };
-            const items2 = data2.tracks?.items ?? [];
-            const match2 = items2.find(t =>
-              t.artists.some(a => a.name.toLowerCase().includes(artist.toLowerCase().slice(0, 5)))
-            ) ?? items2[0];
-            if (match2) return match2.id;
-          }
-          return null;
-        } catch { return null; }
-      }
-
-      // Track-IDs parallel suchen
-      const trackIds = await Promise.all(
-        rawSongs.map((s) => searchTrackId(s.artist, s.title))
-      );
-
-      // YouTube-Fallback: für Songs ohne Spotify Track-ID und ohne Spotify-Artist-ID
+      // YouTube: IMMER den exakten Song suchen (primärer Player im Mood Mode)
+      // Suchquery: "Künstler Titel official" für präzise Treffer
       const youtubeIds = await Promise.all(
-        rawSongs.map(async (song, i) => {
-          const hasSpotifyTrack = !!trackIds[i];
-          const profile = profiles[i];
-          const hasSpotifyArtist = profile?.spotify_id && profile.spotify_id !== "";
-          if (hasSpotifyTrack || hasSpotifyArtist) return null; // Spotify vorhanden
-          return searchYouTubeVideoId(song.artist, song.title).catch(() => null);
-        })
+        rawSongs.map((song) =>
+          searchYouTubeVideoId(song.artist, song.title).catch(() => null)
+        )
       );
+
+      // Spotify Track-URL als optionaler Deep-Link (kein Embed, nur Link)
+      // Baut eine Spotify-Suche-URL die direkt zum Track führt
+      function buildSpotifyTrackUrl(artist: string, title: string): string {
+        const query = encodeURIComponent(`${artist} ${title}`);
+        return `https://open.spotify.com/search/${query}/tracks`;
+      }
 
       const songs = rawSongs.map((song, i) => {
         const profile = profiles[i];
-        const trackId = trackIds[i];
         const youtubeId = youtubeIds[i];
         return {
           title:           song.title,
@@ -453,8 +412,8 @@ Respond with a JSON object with keys: emotionalProfile and songs.`,
           emotionalBridge: song.emotionalBridge,
           genre:           song.genre,
           lyricMoment:     song.lyricMoment,
-          trackId:         trackId ?? null,
-          trackUrl:        trackId ? `https://open.spotify.com/track/${trackId}` : null,
+          trackId:         null, // kein Spotify-Track-Embed mehr
+          trackUrl:        buildSpotifyTrackUrl(song.artist, song.title), // Spotify-Suche-Link
           youtubeId:       youtubeId ?? null,
           listeners:       profile?.lastfm_listeners ?? null,
           lastfmUrl:       profile?.lastfm_url ?? null,
