@@ -256,3 +256,22 @@
 - [ ] Light Mode: SpotifyEmbedCard / YouTubeEmbedCard für hellen Hintergrund
 - [ ] Dark Mode: zu niedrige Kontrastverhältnisse (white/10, white/20) auf mindestens white/50 erhöhen
 - [ ] Dark Mode: Genre-Badges, Footer-Links, Discovery-Labels besser lesbar machen
+
+## Grain Gradient Theme (viertes visuelles Konzept)
+- [x] GrainBackground-Komponente: Canvas-Mesh-Gradient + animierte Halftone-Shapes + Grain-Overlay
+- [x] Explore Mode: Violett/Blau Mesh + Cyan-Halftone-Shapes
+- [x] Mood Mode: Pink/Magenta/Rot Mesh + Rose-Halftone-Shapes
+- [x] Landing: Grün/Blau/Lavendel Soft-Glow Mesh-Gradient
+- [x] Mouse/Touch: Mesh-Gradient verschiebt sich mit dem Cursor (Parallax)
+- [x] Grain-Overlay: Canvas-Noise-Pattern über dem gesamten Hintergrund
+- [x] Halftone-Shapes: Organische Formen mit Dot-Textur (wie Referenzbilder)
+- [x] Typografie: Weiß auf farbigem Hintergrund, thin/light, weites Tracking
+- [x] Ghost-Karten: Transparente Karten mit weißem Rand (kein weißes Glas)
+- [x] Ghost-Inputs: bg-white/10, border-white/20 für alle Textfelder
+- [x] Ghost-Textarea im Mood-Modus
+- [x] Nav: Semi-transparent mit Blur, weiße Schrift
+- [x] Toggle-Button: Grain-Icon (Halftone-Punkte) in der Navbar
+- [x] Theme-Persistenz in localStorage
+- [x] Themes gegenseitig exklusiv (Toggle-Bug gefixt)
+- [x] bg-black auf Haupt-Container damit Canvas sichtbar ist
+- [x] Alle 85 Tests bestehen

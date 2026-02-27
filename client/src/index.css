@@ -384,6 +384,81 @@
       0 0 40px rgba(217, 70, 239, 0.25);
   }
 
+  /* ─── Grain Gradient Theme ──────────────────────────────────────────────
+     Konzept: vollflächige Mesh-Gradienten als Hintergrund (die Farbe IST der
+     Hintergrund), organische Halftone-Shapes, Grain/Spray-Textur, weiße
+     Typografie direkt auf dem Gradient, Ghost-Karten ohne weißes Glas.
+     Inspiriert von 13 Referenzbildern: Bilder 1–13.
+     ─────────────────────────────────────────────────────────────────────── */
+
+  /* Ghost-Karten: transparent, weißer Rand, kein weißes Glas */
+  .grain-card {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 32px;
+    overflow: hidden;
+    transition: all 0.5s ease;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .grain-card:hover {
+    background: rgba(255, 255, 255, 0.11);
+    border-color: rgba(255, 255, 255, 0.22);
+  }
+
+  /* Navigation: sehr subtil, fast unsichtbar */
+  .grain-nav {
+    background: rgba(0, 0, 0, 0.18);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  /* Inputs: Ghost-Style */
+  .grain-input {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 12px;
+    color: white;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .grain-input::placeholder {
+    color: rgba(255, 255, 255, 0.35);
+  }
+
+  .grain-input:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  /* Pills / Filter-Buttons */
+  .grain-pill {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  /* Typografie: Glow-Effekte (stärker als Liquid, da Hintergrund gesättigter) */
+  .grain-glow-cyan {
+    text-shadow:
+      0 0 20px rgba(0, 229, 204, 0.9),
+      0 0 40px rgba(0, 229, 204, 0.5),
+      0 0 80px rgba(0, 229, 204, 0.25);
+  }
+
+  .grain-glow-rose {
+    text-shadow:
+      0 0 20px rgba(255, 45, 120, 0.9),
+      0 0 40px rgba(255, 45, 120, 0.5),
+      0 0 80px rgba(255, 45, 120, 0.25);
+  }
+
   /* Shimmer Skeleton */
   @keyframes shimmer {
     0% { background-position: -200% 0; }
