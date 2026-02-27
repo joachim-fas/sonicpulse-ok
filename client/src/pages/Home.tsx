@@ -18,11 +18,13 @@ import {
   Quote,
   Guitar,
   ChevronDown,
+  CircleSlash,
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { trpc } from "@/lib/trpc";
 import { SpotifyEmbedCard } from "@/components/SpotifyEmbedCard";
+import { YouTubeEmbedCard } from "@/components/YouTubeEmbedCard";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -33,6 +35,7 @@ interface Recommendation {
   reason: string;
   genre: string;
   similarTo: string;
+  youtubeId?: string | null;
   enriched?: { image?: string | null; url?: string | null; spotifyId?: string | null; previewUrl?: string | null };
 }
 
@@ -51,8 +54,9 @@ interface MoodSong {
   emotionalBridge: string;
   genre: string;
   lyricMoment: string;
-  trackId?: string | null;    // Spotify Track-ID für Track-Embed
-  trackUrl?: string | null;   // https://open.spotify.com/track/{id}
+  trackId?: string | null;
+  trackUrl?: string | null;
+  youtubeId?: string | null;
   enriched?: { image?: string | null; url?: string | null; spotifyId?: string | null };
 }
 
@@ -1285,7 +1289,7 @@ export default function Home() {
                                       />
                                     </div>
                                   )}
-                                  {/* Fallback: Artist-Embed wenn kein Track gefunden */}
+                                  {/* Fallback: Artist-Embed wenn kein Track gefunden aber Spotify-Artist-ID vorhanden */}
                                   {!song.trackId && (song.enriched?.spotifyId || extractSpotifyArtistId(song.enriched?.url)) && (
                                     <div className="mt-2">
                                       <SpotifyEmbedCard
@@ -1294,6 +1298,33 @@ export default function Home() {
                                         accentColor="rose"
                                         defaultOpen={true}
                                       />
+                                    </div>
+                                  )}
+                                  {/* YouTube Fallback – wenn weder Track noch Spotify-Artist-ID vorhanden */}
+                                  {!song.trackId && !song.enriched?.spotifyId && !extractSpotifyArtistId(song.enriched?.url) && song.youtubeId && (
+                                    <div className="mt-2">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/5 border border-white/8 text-[8px] uppercase tracking-widest text-white/30">
+                                          <CircleSlash size={8} />
+                                          Not on Spotify
+                                        </span>
+                                      </div>
+                                      <YouTubeEmbedCard
+                                        videoId={song.youtubeId}
+                                        label={`${song.title} on YouTube`}
+                                        accentColor="rose"
+                                        defaultOpen={true}
+                                      />
+                                    </div>
+                                  )}
+                                  {/* Letzter Fallback: Spotify-Suche wenn gar nichts gefunden */}
+                                  {!song.trackId && !song.enriched?.spotifyId && !extractSpotifyArtistId(song.enriched?.url) && !song.youtubeId && (
+                                    <div className="mt-2">
+                                      <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/5 border border-white/8 text-[8px] uppercase tracking-widest text-white/30 mb-2 inline-flex">
+                                        <CircleSlash size={8} />
+                                        Not on Spotify
+                                      </span>
+                                      <SpotifyEmbedCard artistId={null} artistName={song.artist} accentColor="rose" />
                                     </div>
                                   )}
                                 </div>
@@ -1396,12 +1427,38 @@ export default function Home() {
                                 <span className="text-[8px] uppercase tracking-widest text-white/20">
                                   Similar to <span className="text-white/40">{rec.similarTo}</span>
                                 </span>
+                                {/* Not on Spotify badge */}
+                                {!rec.enriched?.spotifyId && !extractSpotifyArtistId(rec.enriched?.url) && (
+                                  <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/5 border border-white/8 text-[8px] uppercase tracking-widest text-white/30">
+                                    <CircleSlash size={8} />
+                                    Not on Spotify
+                                  </span>
+                                )}
                               </div>
-                              <SpotifyEmbedCard
-                                artistId={rec.enriched?.spotifyId ?? extractSpotifyArtistId(rec.enriched?.url)}
-                                artistName={rec.artist}
-                                accentColor="cyan"
-                              />
+                              {/* Spotify Player – wenn Spotify-ID vorhanden */}
+                              {(rec.enriched?.spotifyId || extractSpotifyArtistId(rec.enriched?.url)) && (
+                                <SpotifyEmbedCard
+                                  artistId={rec.enriched?.spotifyId ?? extractSpotifyArtistId(rec.enriched?.url)}
+                                  artistName={rec.artist}
+                                  accentColor="cyan"
+                                />
+                              )}
+                              {/* YouTube Fallback – wenn keine Spotify-ID aber YouTube-Video gefunden */}
+                              {!rec.enriched?.spotifyId && !extractSpotifyArtistId(rec.enriched?.url) && rec.youtubeId && (
+                                <YouTubeEmbedCard
+                                  videoId={rec.youtubeId}
+                                  label="Watch on YouTube"
+                                  accentColor="cyan"
+                                />
+                              )}
+                              {/* Letzter Fallback: Spotify-Suche */}
+                              {!rec.enriched?.spotifyId && !extractSpotifyArtistId(rec.enriched?.url) && !rec.youtubeId && (
+                                <SpotifyEmbedCard
+                                  artistId={null}
+                                  artistName={rec.artist}
+                                  accentColor="cyan"
+                                />
+                              )}
                             </div>
                           </div>
                         </motion.div>

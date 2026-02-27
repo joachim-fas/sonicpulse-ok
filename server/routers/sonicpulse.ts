@@ -3,6 +3,7 @@ import { publicProcedure, router } from "../_core/trpc";
 import { invokeLLM } from "../_core/llm";
 import { resolveArtist, resolveMultipleArtists } from "../artistService";
 import { getSpotifyToken } from "../spotify";
+import { searchYouTubeVideoId } from "../youtube";
 
 /**
  * SonicPulse Router
@@ -152,18 +153,30 @@ export const sonicpulseRouter = router({
       // Alle Künstler gegen echte Spotify-IDs validieren
       const profiles = await resolveMultipleArtists(rawRecs.map((r) => r.artist));
 
+      // YouTube-Fallback: für Künstler ohne Spotify-ID parallel suchen
+      const youtubeIds = await Promise.all(
+        rawRecs.map(async (rec, i) => {
+          const profile = profiles[i];
+          const hasSpotify = profile?.spotify_id && profile.spotify_id !== "";
+          if (hasSpotify) return null; // Spotify vorhanden – kein YouTube nötig
+          return searchYouTubeVideoId(rec.artist).catch(() => null);
+        })
+      );
+
       const recommendations = rawRecs.map((rec, i) => {
         const profile = profiles[i];
+        const youtubeId = youtubeIds[i];
         return {
           artist:    rec.artist,
           reason:    rec.reason,
           genre:     rec.genre,
           similarTo: rec.similarTo,
+          youtubeId: youtubeId ?? null,
           enriched: profile
             ? {
                 image:     profile.image_url,
-                url:       profile.direct_link || null,   // null wenn keine echte Spotify-ID
-                spotifyId: profile.spotify_id || null,    // null wenn keine echte Spotify-ID
+                url:       profile.direct_link || null,
+                spotifyId: profile.spotify_id || null,
                 previewUrl: null,
               }
             : undefined,
@@ -325,22 +338,35 @@ Respond with a JSON object with keys: emotionalProfile and songs.`,
         rawSongs.map((s) => searchTrackId(s.artist, s.title))
       );
 
+      // YouTube-Fallback: für Songs ohne Spotify Track-ID und ohne Spotify-Artist-ID
+      const youtubeIds = await Promise.all(
+        rawSongs.map(async (song, i) => {
+          const hasSpotifyTrack = !!trackIds[i];
+          const profile = profiles[i];
+          const hasSpotifyArtist = profile?.spotify_id && profile.spotify_id !== "";
+          if (hasSpotifyTrack || hasSpotifyArtist) return null; // Spotify vorhanden
+          return searchYouTubeVideoId(song.artist, song.title).catch(() => null);
+        })
+      );
+
       const songs = rawSongs.map((song, i) => {
         const profile = profiles[i];
         const trackId = trackIds[i];
+        const youtubeId = youtubeIds[i];
         return {
           title:           song.title,
           artist:          song.artist,
           emotionalBridge: song.emotionalBridge,
           genre:           song.genre,
           lyricMoment:     song.lyricMoment,
-          trackId:         trackId ?? null,          // Spotify Track-ID für Track-Embed
+          trackId:         trackId ?? null,
           trackUrl:        trackId ? `https://open.spotify.com/track/${trackId}` : null,
+          youtubeId:       youtubeId ?? null,
           enriched: profile
             ? {
                 image:     profile.image_url,
-                url:       profile.direct_link,
-                spotifyId: profile.spotify_id,
+                url:       profile.direct_link || null,
+                spotifyId: profile.spotify_id || null,
               }
             : undefined,
         };
