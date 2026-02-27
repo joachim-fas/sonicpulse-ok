@@ -29,7 +29,9 @@ import { SpotifyEmbedCard } from "@/components/SpotifyEmbedCard";
 import { YouTubeEmbedCard } from "@/components/YouTubeEmbedCard";
 import { AnimatedArtistFallback } from "@/components/AnimatedArtistFallback";
 import { OrganicBackground } from "@/components/OrganicBackground";
+import { AuraBackground } from "@/components/AuraBackground";
 import { LiquidWaveIcon } from "@/components/LiquidWaveIcon";
+import { AuraIcon } from "@/components/AuraIcon";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -657,21 +659,27 @@ export default function Home() {
   const [isLiquidTheme, setIsLiquidTheme] = useState(() => {
     try { return localStorage.getItem("sonicpulse_liquid_theme") === "true"; } catch { return false; }
   });
+  const [isAuraTheme, setIsAuraTheme] = useState(() => {
+    try { return localStorage.getItem("sonicpulse_aura_theme") === "true"; } catch { return false; }
+  });
 
   // Apply theme classes to document root
   useEffect(() => {
-    if (isLightMode && !isLiquidTheme) {
+    if (isLightMode && !isLiquidTheme && !isAuraTheme) {
       document.documentElement.classList.add('light');
       document.documentElement.classList.remove('dark');
     } else {
       document.documentElement.classList.remove('light');
     }
-  }, [isLightMode, isLiquidTheme]);
+  }, [isLightMode, isLiquidTheme, isAuraTheme]);
 
-  // Persist liquid theme preference
+  // Persist theme preferences
   useEffect(() => {
     try { localStorage.setItem("sonicpulse_liquid_theme", String(isLiquidTheme)); } catch { /* ignore */ }
   }, [isLiquidTheme]);
+  useEffect(() => {
+    try { localStorage.setItem("sonicpulse_aura_theme", String(isAuraTheme)); } catch { /* ignore */ }
+  }, [isAuraTheme]);
 
   const [playlistSuccess, setPlaylistSuccess] = useState<{
     url: string; tracksAdded: number; tracksNotFound: string[];
@@ -809,7 +817,7 @@ export default function Home() {
   const pulseIdRef = useRef(0);
 
   useEffect(() => {
-    if (isLiquidTheme) return; // OrganicBackground handles its own tracking
+    if (isLiquidTheme || isAuraTheme) return; // OrganicBackground / AuraBackground handle their own tracking
 
     const handleMouseMove = (e: MouseEvent) => {
       mousePos.current = {
@@ -872,30 +880,36 @@ export default function Home() {
   const [moodPlaceholder] = useState(() => moodExamples[Math.floor(Math.random() * moodExamples.length)]);
 
   // ─── Derived theme helpers ────────────────────────────────────────────────
-  // In Liquid mode: always dark text-white, glass cards; in standard: respect isLightMode
-  const cardClass = isLiquidTheme
+  // Priority: Aura > Liquid > Light/Dark Standard
+  const cardClass = isAuraTheme
+    ? "aura-card transition-all duration-500"
+    : isLiquidTheme
     ? "liquid-card transition-all duration-500"
     : cn(
         "group rounded-[32px] overflow-hidden transition-all duration-500 flex flex-col border",
         isLightMode ? "bg-white border-zinc-200 hover:border-zinc-300 hover:shadow-lg" : "bg-zinc-900/30 border-white/5 hover:bg-zinc-900/50"
       );
 
-  const filterPillContainerClass = isLiquidTheme
+  const filterPillContainerClass = isAuraTheme
+    ? "flex items-center gap-1 p-1 rounded-full aura-pill"
+    : isLiquidTheme
     ? "flex items-center gap-1 p-1 rounded-full liquid-pill"
     : cn("flex items-center gap-1 p-1 rounded-full border", isLightMode ? "bg-white border-zinc-200" : "bg-black/40 border-white/5");
 
-  const controlCardClass = isLiquidTheme
+  const controlCardClass = isAuraTheme
+    ? "flex flex-col sm:flex-row items-center justify-between gap-4 p-5 md:p-6 rounded-[28px] aura-card max-w-4xl mx-auto"
+    : isLiquidTheme
     ? "flex flex-col sm:flex-row items-center justify-between gap-4 p-5 md:p-6 rounded-[28px] liquid-card max-w-4xl mx-auto"
     : cn(
         "flex flex-col sm:flex-row items-center justify-between gap-4 p-5 md:p-6 rounded-[28px] border max-w-4xl mx-auto",
         isLightMode ? "bg-zinc-100 border-zinc-200" : "bg-zinc-900/30 border-white/5"
       );
 
-  const textMuted = isLiquidTheme ? "text-white/50" : isLightMode ? "text-zinc-500" : "text-white/40";
-  const textDim = isLiquidTheme ? "text-white/30" : isLightMode ? "text-zinc-400" : "text-white/20";
-  const textBody = isLiquidTheme ? "text-white/70" : isLightMode ? "text-zinc-600" : "text-white/60";
-  const headingClass = isLiquidTheme ? "text-white" : isLightMode ? "text-zinc-900" : "text-white";
-  const dividerClass = isLiquidTheme ? "border-white/8" : isLightMode ? "border-zinc-100" : "border-white/5";
+  const textMuted = isAuraTheme ? "text-zinc-500" : isLiquidTheme ? "text-white/50" : isLightMode ? "text-zinc-500" : "text-white/40";
+  const textDim   = isAuraTheme ? "text-zinc-400" : isLiquidTheme ? "text-white/30" : isLightMode ? "text-zinc-400" : "text-white/20";
+  const textBody  = isAuraTheme ? "text-zinc-600" : isLiquidTheme ? "text-white/70" : isLightMode ? "text-zinc-600" : "text-white/60";
+  const headingClass = isAuraTheme ? "text-zinc-900" : isLiquidTheme ? "text-white" : isLightMode ? "text-zinc-900" : "text-white";
+  const dividerClass = isAuraTheme ? "border-zinc-200/80" : isLiquidTheme ? "border-white/8" : isLightMode ? "border-zinc-100" : "border-white/5";
 
   // Determine organic background mode
   const organicMode: "explore" | "mood" | "landing" = !hasStarted ? "landing" : mode;
@@ -903,11 +917,13 @@ export default function Home() {
   return (
     <div className={cn(
       "min-h-screen font-sans overflow-x-hidden relative transition-colors duration-500",
-      isLiquidTheme ? "text-white" : isLightMode ? "bg-background text-foreground" : "bg-black text-white"
+      isAuraTheme ? "text-zinc-900" : isLiquidTheme ? "text-white" : isLightMode ? "bg-background text-foreground" : "bg-black text-white"
     )}>
 
       {/* ── Animated Background ── */}
-      {isLiquidTheme ? (
+      {isAuraTheme ? (
+        <AuraBackground mode={organicMode} blobCount={5} />
+      ) : isLiquidTheme ? (
         <OrganicBackground mode={organicMode} shapeCount={6} />
       ) : (
         <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
@@ -970,7 +986,7 @@ export default function Home() {
       {/* ── Navbar ── */}
       <nav className={cn(
         "relative z-10 flex items-center justify-between px-4 md:px-8 py-6 border-b sticky top-0",
-        isLiquidTheme ? "liquid-nav" : isLightMode ? "border-black/10 bg-white/70 backdrop-blur-md" : "border-white/5 backdrop-blur-md"
+        isAuraTheme ? "aura-nav" : isLiquidTheme ? "liquid-nav" : isLightMode ? "border-black/10 bg-white/70 backdrop-blur-md" : "border-white/5 backdrop-blur-md"
       )}>
         <button
           onClick={() => setHasStarted(false)}
@@ -979,7 +995,9 @@ export default function Home() {
           <Disc className={cn(isLiquidTheme || !isLightMode ? "text-white" : "text-zinc-800", "transition-colors duration-300")} size={24} />
           <span className={cn(
             "text-xl font-light tracking-widest uppercase",
-            isLiquidTheme
+            isAuraTheme
+              ? cn("text-zinc-900", hasStarted && mode === "explore" ? "aura-glow-blue" : hasStarted && mode === "mood" ? "aura-glow-pink" : "")
+              : isLiquidTheme
               ? cn("text-white", hasStarted && mode === "explore" ? "liquid-glow-cyan" : hasStarted && mode === "mood" ? "liquid-glow-rose" : "")
               : isLightMode ? "text-zinc-900" : "text-white"
           )}>SonicPulse</span>
@@ -1007,14 +1025,34 @@ export default function Home() {
             </div>
           )}
 
+          {/* Aura Theme Toggle */}
+          <button
+            onClick={() => { setIsAuraTheme(!isAuraTheme); if (!isAuraTheme) setIsLiquidTheme(false); }}
+            title={isAuraTheme ? "Switch to Standard Theme" : "Switch to Aura Theme"}
+            className={cn(
+              "p-2 rounded-full transition-all",
+              isAuraTheme
+                ? mode === "explore"
+                  ? "text-blue-600 hover:text-blue-500 hover:bg-blue-100 ring-1 ring-blue-400/40"
+                  : "text-fuchsia-600 hover:text-fuchsia-500 hover:bg-fuchsia-100 ring-1 ring-fuchsia-400/40"
+                : isLiquidTheme || !isLightMode
+                ? "text-white/30 hover:text-white/60 hover:bg-white/5"
+                : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100"
+            )}
+          >
+            <AuraIcon size={14} />
+          </button>
+
           {/* Liquid Orb Toggle */}
           <button
-            onClick={() => setIsLiquidTheme(!isLiquidTheme)}
+            onClick={() => { setIsLiquidTheme(!isLiquidTheme); if (!isLiquidTheme) setIsAuraTheme(false); }}
             title={isLiquidTheme ? "Switch to Standard Theme" : "Switch to Liquid Orb Theme"}
             className={cn(
               "p-2 rounded-full transition-all",
               isLiquidTheme
                 ? "text-cyan-400 hover:text-cyan-300 hover:bg-white/10 ring-1 ring-cyan-500/40"
+                : isAuraTheme
+                ? "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100"
                 : isLightMode
                 ? "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200"
                 : "text-white/30 hover:text-white/60 hover:bg-white/5"
@@ -1023,8 +1061,8 @@ export default function Home() {
             <LiquidWaveIcon size={14} />
           </button>
 
-          {/* Light/Dark Toggle (hidden in Liquid mode since it's always dark) */}
-          {!isLiquidTheme && (
+          {/* Light/Dark Toggle (hidden in Liquid/Aura mode) */}
+          {!isLiquidTheme && !isAuraTheme && (
             <button
               onClick={() => setIsLightMode(!isLightMode)}
               title={isLightMode ? "Switch to Dark Mode" : "Switch to Light Mode"}
@@ -1050,7 +1088,7 @@ export default function Home() {
                 title="Disconnect Spotify"
                 className={cn(
                   "p-2 rounded-full transition-all",
-                  isLiquidTheme || !isLightMode ? "text-white/30 hover:text-white/60 hover:bg-white/5" : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100"
+                  isAuraTheme ? "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100" : isLiquidTheme || !isLightMode ? "text-white/30 hover:text-white/60 hover:bg-white/5" : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100"
                 )}
               >
                 <LogOut size={14} />
@@ -1075,7 +1113,7 @@ export default function Home() {
             >
               <h1 className={cn(
                 "text-6xl md:text-8xl font-light tracking-tighter mb-8 leading-none",
-                isLiquidTheme ? "text-white" : isLightMode ? "text-zinc-900" : "text-white"
+                isAuraTheme ? "text-zinc-900" : isLiquidTheme ? "text-white" : isLightMode ? "text-zinc-900" : "text-white"
               )}>
                 Your sound,<br />
                 <span className="italic" style={{ fontFamily: "Georgia, serif" }}>reimagined.</span>
@@ -1088,7 +1126,9 @@ export default function Home() {
                   onClick={() => handleModeSelect("explore")}
                   className={cn(
                     "relative flex-1 group p-6 md:p-8 rounded-[32px] transition-all duration-500 text-left border",
-                    isLiquidTheme
+                    isAuraTheme
+                      ? "aura-card hover:shadow-blue-200/60"
+                      : isLiquidTheme
                       ? "liquid-card hover:bg-white/10"
                       : isLightMode ? "bg-zinc-100 border-zinc-200 hover:bg-zinc-900 hover:text-white hover:border-zinc-900" : "bg-zinc-900/30 border-white/5 hover:bg-white hover:text-black"
                   )}
@@ -1096,14 +1136,16 @@ export default function Home() {
                   <motion.div whileHover={{ rotate: 15, scale: 1.1 }} className="inline-block mb-4">
                     <Sparkles className="opacity-40 group-hover:opacity-100 text-cyan-500 transition-colors" size={32} />
                   </motion.div>
-                  <h3 className="text-2xl font-light mb-2">Explore Mode</h3>
-                  <p className="text-xs opacity-40 group-hover:opacity-60 uppercase tracking-widest">Feed it 3 bands. Get artists you'll actually love.</p>
+                  <h3 className={cn("text-2xl font-light mb-2", isAuraTheme ? "text-zinc-900" : "")}>Explore Mode</h3>
+                  <p className={cn("text-xs opacity-40 group-hover:opacity-60 uppercase tracking-widest", isAuraTheme ? "text-zinc-700" : "")}>Feed it 3 bands. Get artists you'll actually love.</p>
                 </button>
                 <button
                   onClick={() => handleModeSelect("mood")}
                   className={cn(
                     "relative flex-1 group p-6 md:p-8 rounded-[32px] transition-all duration-500 text-left border",
-                    isLiquidTheme
+                    isAuraTheme
+                      ? "aura-card hover:shadow-fuchsia-200/60"
+                      : isLiquidTheme
                       ? "liquid-card hover:bg-white/10"
                       : isLightMode ? "bg-zinc-100 border-zinc-200 hover:bg-zinc-900 hover:text-white hover:border-zinc-900" : "bg-zinc-900/30 border-white/5 hover:bg-white hover:text-black"
                   )}
@@ -1111,8 +1153,8 @@ export default function Home() {
                   <motion.div whileHover={{ scale: 1.15 }} className="inline-block mb-4">
                     <Heart className="opacity-40 group-hover:opacity-100 text-rose-400 transition-colors" size={32} />
                   </motion.div>
-                  <h3 className="text-2xl font-light mb-2">Mood Mode</h3>
-                  <p className="text-xs opacity-40 group-hover:opacity-60 uppercase tracking-widest">Describe the feeling. We find the soundtrack.</p>
+                  <h3 className={cn("text-2xl font-light mb-2", isAuraTheme ? "text-zinc-900" : "")}>Mood Mode</h3>
+                  <p className={cn("text-xs opacity-40 group-hover:opacity-60 uppercase tracking-widest", isAuraTheme ? "text-zinc-700" : "")}>Describe the feeling. We find the soundtrack.</p>
                 </button>
               </div>
             </motion.div>
@@ -1134,15 +1176,15 @@ export default function Home() {
                   transition={{ duration: 0.4 }}
                 >
                   <div className="mb-12">
-                    <span className={cn(
-                      "text-xs uppercase tracking-[0.3em] mb-4 block",
-                      mode === "explore"
-                        ? isLiquidTheme ? "text-cyan-400 liquid-glow-cyan" : "text-cyan-400/70"
-                        : isLiquidTheme ? "text-rose-400 liquid-glow-rose" : "text-rose-400/70"
-                    )}>
+                  <span className={cn(
+                    "text-xs uppercase tracking-[0.3em] mb-4 block",
+                    mode === "explore"
+                      ? isAuraTheme ? "text-blue-600 font-medium" : isLiquidTheme ? "text-cyan-400 liquid-glow-cyan" : "text-cyan-400/70"
+                      : isAuraTheme ? "text-fuchsia-600 font-medium" : isLiquidTheme ? "text-rose-400 liquid-glow-rose" : "text-rose-400/70"
+                  )}>
                       {mode === "explore" ? "Manual Input" : "Emotional Intelligence"}
                     </span>
-                    <h2 className={cn("text-5xl font-light tracking-tight", headingClass)}>
+                    <h2 className={cn("text-5xl font-light tracking-tight", headingClass, isAuraTheme ? "text-zinc-900" : "")}>
                       {mode === "explore" ? "Explore New Sounds" : "Mood Mode"}
                     </h2>
                   </div>
@@ -1156,8 +1198,8 @@ export default function Home() {
                             key={idx}
                             value={band}
                             accentColor="cyan"
-                            isLightMode={isLightMode && !isLiquidTheme}
-                            isLiquid={isLiquidTheme}
+                            isLightMode={(isLightMode && !isLiquidTheme) || isAuraTheme}
+                            isLiquid={isLiquidTheme && !isAuraTheme}
                             placeholder={`Band #${idx + 1}`}
                             onChange={(val) => { const n = [...exploreBands]; n[idx] = val; setExploreBands(n); }}
                             onSelect={(name) => { const n = [...exploreBands]; n[idx] = name; setExploreBands(n); }}
@@ -1191,7 +1233,9 @@ export default function Home() {
                           disabled={isGenerating || exploreBands.every((b) => !b.trim())}
                           className={cn(
                             "flex items-center justify-center gap-2 px-8 py-3 rounded-full font-medium transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-xs uppercase tracking-widest shrink-0",
-                            isLiquidTheme
+                            isAuraTheme
+                              ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:from-blue-400 hover:to-cyan-400 shadow-lg shadow-blue-200"
+                              : isLiquidTheme
                               ? "bg-gradient-to-r from-cyan-500 to-teal-500 text-white hover:from-cyan-400 hover:to-teal-400 shadow-lg shadow-cyan-900/40"
                               : isLightMode ? "bg-cyan-600 text-white hover:bg-cyan-500" : "bg-cyan-500 text-white hover:bg-cyan-400",
                             isGenerating && "animate-pulse"
@@ -1219,7 +1263,9 @@ export default function Home() {
                           maxLength={1000}
                           className={cn(
                             "w-full rounded-2xl px-5 py-4 text-sm font-light focus:outline-none transition-all resize-none leading-relaxed",
-                            isLiquidTheme
+                            isAuraTheme
+                              ? "bg-white/70 border border-fuchsia-200/60 focus:border-fuchsia-400/60 text-zinc-800 placeholder:text-zinc-400 backdrop-blur-sm"
+                              : isLiquidTheme
                               ? "liquid-input rounded-2xl"
                               : isLightMode
                               ? "bg-white border border-zinc-200 focus:border-rose-300 text-zinc-800 placeholder:text-zinc-400"
@@ -1258,7 +1304,9 @@ export default function Home() {
                           disabled={isGenerating || !moodPrompt.trim()}
                           className={cn(
                             "flex items-center justify-center gap-2 px-8 py-3 rounded-full font-medium transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-xs uppercase tracking-widest shrink-0",
-                            isLiquidTheme
+                            isAuraTheme
+                              ? "bg-gradient-to-r from-fuchsia-500 to-pink-500 text-white hover:from-fuchsia-400 hover:to-pink-400 shadow-lg shadow-fuchsia-200"
+                              : isLiquidTheme
                               ? "bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:from-rose-400 hover:to-pink-400 shadow-lg shadow-rose-900/40"
                               : "bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:from-rose-400 hover:to-pink-400",
                             isGenerating && "animate-pulse"
@@ -1322,12 +1370,14 @@ export default function Home() {
                             ) : emotionalProfile && (
                               <div className={cn(
                                 "p-5 rounded-2xl border",
-                                isLiquidTheme
+                                isAuraTheme
+                                  ? "aura-card"
+                                  : isLiquidTheme
                                   ? "liquid-card"
                                   : isLightMode ? "bg-rose-50 border-rose-200" : "bg-gradient-to-br from-rose-950/30 to-zinc-900/50 border-rose-500/15"
                               )}>
                                 <div className="flex items-center justify-between gap-3 mb-3">
-                                  <h3 className={cn("text-lg font-light tracking-tight", isLiquidTheme ? "text-rose-200" : isLightMode ? "text-rose-800" : "text-rose-100")}>{emotionalProfile.coreEmotion}</h3>
+                                  <h3 className={cn("text-lg font-light tracking-tight", isAuraTheme ? "text-fuchsia-700" : isLiquidTheme ? "text-rose-200" : isLightMode ? "text-rose-800" : "text-rose-100")}>{emotionalProfile.coreEmotion}</h3>
                                   <IntensityBadge intensity={emotionalProfile.intensity} />
                                 </div>
                                 <div className="flex gap-2">
@@ -1352,26 +1402,28 @@ export default function Home() {
                             {moodMutation.isPending && moodSongs.length === 0
                               ? null
                               : moodSongs.map((song, idx) => (
-                                <motion.div
-                                  key={idx}
-                                  ref={idx === 0 ? resultsRef : undefined}
-                                  initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                                  transition={{ delay: idx * 0.1 }}
-                                  className={cn(
-                                    isLiquidTheme
-                                      ? "liquid-card overflow-hidden flex flex-col group"
-                                      : cn("group rounded-[32px] overflow-hidden transition-all duration-500 flex flex-col border", isLightMode ? "bg-white border-zinc-200 hover:border-zinc-300 hover:shadow-lg" : "bg-zinc-900/30 border-white/5 hover:bg-zinc-900/50")
-                                  )}
-                                >
-                                  <div className="relative aspect-[16/10] overflow-hidden rounded-t-[32px]">
-                                    {song.enriched?.image
-                                      ? <img src={song.enriched.image} alt={song.artist} className={cn("w-full h-full object-cover transition-all duration-700 group-hover:scale-110", isLiquidTheme ? "opacity-60 group-hover:opacity-80 saturate-150" : isLightMode ? "opacity-75 group-hover:opacity-95" : "opacity-55 group-hover:opacity-75")} />
+                          <motion.div
+                            key={idx}
+                            ref={idx === 0 ? resultsRef : undefined}
+                            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.1 }}
+                            className={cn(
+                              isAuraTheme
+                                ? "aura-card overflow-hidden flex flex-col group"
+                                : isLiquidTheme
+                                ? "liquid-card overflow-hidden flex flex-col group"
+                                : cn("group rounded-[32px] overflow-hidden transition-all duration-500 flex flex-col border", isLightMode ? "bg-white border-zinc-200 hover:border-zinc-300 hover:shadow-lg" : "bg-zinc-900/30 border-white/5 hover:bg-zinc-900/50")
+                            )}
+                          >
+                            <div className="relative aspect-[16/10] overflow-hidden rounded-t-[32px]">
+                              {song.enriched?.image
+                                ? <img src={song.enriched.image} alt={song.artist} className={cn("w-full h-full object-cover transition-all duration-700 group-hover:scale-110", isAuraTheme ? "opacity-80 group-hover:opacity-100 saturate-125" : isLiquidTheme ? "opacity-60 group-hover:opacity-80 saturate-150" : isLightMode ? "opacity-75 group-hover:opacity-95" : "opacity-55 group-hover:opacity-75")} />
                                       : <AnimatedArtistFallback artistName={song.artist} accentColor="rose" className="w-full h-full" />
                                     }
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                                     <div className="absolute bottom-0 left-0 p-6 w-full">
                                       <div className="mb-2">
-                                        <p className={cn("text-[9px] uppercase tracking-widest font-medium mb-1 drop-shadow", isLiquidTheme ? "text-rose-300 liquid-glow-rose" : "text-rose-300/80")}>Now Playing</p>
+                                        <p className={cn("text-[9px] uppercase tracking-widest font-medium mb-1 drop-shadow", isAuraTheme ? "text-fuchsia-300" : isLiquidTheme ? "text-rose-300 liquid-glow-rose" : "text-rose-300/80")}>Now Playing</p>
                                         <SpotifyLink url={song.trackUrl ?? song.enriched?.url} className="group/name flex items-start gap-2 text-white hover:text-rose-300 transition-colors text-left">
                                           <div>
                                             <h3 className="text-xl font-semibold tracking-tight drop-shadow-md leading-tight">{song.title}</h3>
@@ -1393,7 +1445,7 @@ export default function Home() {
                                       <motion.div
                                         animate={{ y: [0, -4, 0], rotate: [0, 10, -10, 0] }}
                                         transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                                        className="text-rose-400 mt-0.5 shrink-0"
+                                        className={cn("mt-0.5 shrink-0", isAuraTheme ? "text-fuchsia-500" : "text-rose-400")}
                                       >
                                         <Music size={14} />
                                       </motion.div>
@@ -1401,8 +1453,8 @@ export default function Home() {
                                     </div>
                                     {song.lyricMoment && (
                                       <div className="flex gap-1.5 mb-4">
-                                        <Quote size={9} className="text-rose-400/30 shrink-0 mt-0.5" />
-                                        <p className={cn("text-[10px] italic font-light leading-relaxed line-clamp-2", isLiquidTheme ? "text-white/45" : isLightMode ? "text-zinc-500" : "text-white/45")}>{song.lyricMoment}</p>
+                                        <Quote size={9} className={cn("shrink-0 mt-0.5", isAuraTheme ? "text-fuchsia-400/40" : "text-rose-400/30")} />
+                                        <p className={cn("text-[10px] italic font-light leading-relaxed line-clamp-2", isAuraTheme ? "text-zinc-500" : isLiquidTheme ? "text-white/45" : isLightMode ? "text-zinc-500" : "text-white/45")}>{song.lyricMoment}</p>
                                       </div>
                                     )}
                                     <div className={cn("mt-auto pt-4 border-t space-y-3", dividerClass)}>
@@ -1467,11 +1519,11 @@ export default function Home() {
               </AnimatePresence>
 
               {/* ── Explore Recommendations ── */}
-              {(recommendations.length > 0 || exploreMutation.isPending) && mode === "explore" && (
+                  {(recommendations.length > 0 || exploreMutation.isPending) && mode === "explore" && (
                 <section className="pb-20">
                   <div className="mb-12">
-                    <span className={cn("text-xs uppercase tracking-[0.3em] mb-4 block", isLiquidTheme ? "text-cyan-400 liquid-glow-cyan" : "text-cyan-400/70")}>The Future</span>
-                    <h2 className={cn("text-5xl font-light tracking-tight italic", headingClass)} style={{ fontFamily: "Georgia, serif" }}>
+                    <span className={cn("text-xs uppercase tracking-[0.3em] mb-4 block", isAuraTheme ? "text-blue-600 font-medium" : isLiquidTheme ? "text-cyan-400 liquid-glow-cyan" : "text-cyan-400/70")}>The Future</span>
+                    <h2 className={cn("text-5xl font-light tracking-tight italic", isAuraTheme ? "text-zinc-900" : headingClass)} style={{ fontFamily: "Georgia, serif" }}>
                       Curated for you
                     </h2>
                   </div>
@@ -1495,7 +1547,7 @@ export default function Home() {
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
                     {exploreMutation.isPending && recommendations.length === 0
                       ? <div ref={loadingRef} className="col-span-full"><AnimatePresence><MusicLoadingBar mode="explore" isLiquid={isLiquidTheme} /></AnimatePresence></div>
                       : recommendations.map((rec, idx) => (
@@ -1505,19 +1557,21 @@ export default function Home() {
                           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: idx * 0.1 }}
                           className={cn(
-                            isLiquidTheme
+                            isAuraTheme
+                              ? "aura-card overflow-hidden flex flex-col group"
+                              : isLiquidTheme
                               ? "liquid-card overflow-hidden flex flex-col group"
                               : cn("group rounded-[32px] overflow-hidden transition-all duration-500 flex flex-col border", isLightMode ? "bg-white border-zinc-200 hover:border-zinc-300 hover:shadow-lg" : "bg-zinc-900/30 border-white/5 hover:bg-zinc-900/50")
                           )}
                         >
                           <div className="relative aspect-[16/10] overflow-hidden rounded-t-[32px]">
                             {rec.enriched?.image
-                              ? <img src={rec.enriched.image} alt={rec.artist} className={cn("w-full h-full object-cover transition-all duration-700 group-hover:scale-110", isLiquidTheme ? "opacity-60 group-hover:opacity-80 saturate-150" : isLightMode ? "opacity-75 group-hover:opacity-95" : "opacity-55 group-hover:opacity-75")} />
+                              ? <img src={rec.enriched.image} alt={rec.artist} className={cn("w-full h-full object-cover transition-all duration-700 group-hover:scale-110", isAuraTheme ? "opacity-80 group-hover:opacity-100 saturate-125" : isLiquidTheme ? "opacity-60 group-hover:opacity-80 saturate-150" : isLightMode ? "opacity-75 group-hover:opacity-95" : "opacity-55 group-hover:opacity-75")} />
                               : <AnimatedArtistFallback artistName={rec.artist} accentColor="cyan" className="w-full h-full" />
                             }
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                             <div className="absolute bottom-0 left-0 p-6 w-full">
-                              <SpotifyLink url={rec.enriched?.url} className="group/name flex items-center gap-2 text-white hover:text-cyan-400 transition-colors text-left">
+                              <SpotifyLink url={rec.enriched?.url} className={cn("group/name flex items-center gap-2 transition-colors text-left", isAuraTheme ? "text-white hover:text-cyan-200" : "text-white hover:text-cyan-400")}>
                                 <h3 className="text-2xl font-light tracking-tight drop-shadow-md">{rec.artist}</h3>
                                 {rec.enriched?.url && (
                                   <div className="p-1 rounded-full bg-cyan-500/10 text-cyan-400 opacity-0 group-hover/name:opacity-100 transition-all">
@@ -1533,7 +1587,7 @@ export default function Home() {
                               <motion.div
                                 animate={{ y: [0, -4, 0], rotate: [0, 10, -10, 0] }}
                                 transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                                className="text-cyan-400 mt-0.5 shrink-0"
+                                className={cn("mt-0.5 shrink-0", isAuraTheme ? "text-blue-500" : "text-cyan-400")}
                               >
                                 <Music size={14} />
                               </motion.div>
@@ -1542,11 +1596,11 @@ export default function Home() {
                             <div className={cn("mt-auto pt-4 border-t space-y-3", dividerClass)}>
                               <div className="flex items-center justify-between gap-2">
                                 <div className="flex flex-col gap-0.5 min-w-0">
-                                  <span className={cn("text-[8px] uppercase tracking-widest", isLiquidTheme ? "text-white/50" : isLightMode ? "text-zinc-500" : "text-white/50")}>
-                                    Similar to <span className={isLiquidTheme ? "text-white/80" : isLightMode ? "text-zinc-800" : "text-white/70"}>{rec.similarTo}</span>
+                                  <span className={cn("text-[8px] uppercase tracking-widest", isAuraTheme ? "text-zinc-500" : isLiquidTheme ? "text-white/50" : isLightMode ? "text-zinc-500" : "text-white/50")}>
+                                    Similar to <span className={isAuraTheme ? "text-zinc-800" : isLiquidTheme ? "text-white/80" : isLightMode ? "text-zinc-800" : "text-white/70"}>{rec.similarTo}</span>
                                   </span>
                                   {rec.listeners != null && rec.listeners > 0 && (
-                                    <span className={cn("text-[8px] uppercase tracking-widest", isLiquidTheme ? "text-white/35" : isLightMode ? "text-zinc-400" : "text-white/35")}>
+                                    <span className={cn("text-[8px] uppercase tracking-widest", isAuraTheme ? "text-zinc-400" : isLiquidTheme ? "text-white/35" : isLightMode ? "text-zinc-400" : "text-white/35")}>
                                       {rec.listeners.toLocaleString()} listeners
                                     </span>
                                   )}
@@ -1558,7 +1612,7 @@ export default function Home() {
                                     </span>
                                   )}
                                   {!rec.enriched?.spotifyId && !extractSpotifyArtistId(rec.enriched?.url) && (
-                                    <span className={cn("flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] uppercase tracking-widest border", isLiquidTheme ? "bg-white/5 border-white/8 text-white/30" : isLightMode ? "bg-zinc-100 border-zinc-200 text-zinc-500" : "bg-white/5 border-white/8 text-white/30")}>
+                                    <span className={cn("flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] uppercase tracking-widest border", isAuraTheme ? "bg-zinc-100 border-zinc-200 text-zinc-500" : isLiquidTheme ? "bg-white/5 border-white/8 text-white/30" : isLightMode ? "bg-zinc-100 border-zinc-200 text-zinc-500" : "bg-white/5 border-white/8 text-white/30")}>
                                       <CircleSlash size={8} />
                                       Not on Spotify
                                     </span>
@@ -1602,17 +1656,17 @@ export default function Home() {
       {/* ── Footer ── */}
       <footer className={cn(
         "relative z-10 border-t px-8 py-12 mt-20",
-        isLiquidTheme ? "border-white/5" : isLightMode ? "border-zinc-200" : "border-white/5"
+        isAuraTheme ? "border-zinc-200" : isLiquidTheme ? "border-white/5" : isLightMode ? "border-zinc-200" : "border-white/5"
       )}>
-        <div className={cn("max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8", isLiquidTheme ? "text-white/40" : isLightMode ? "text-zinc-400" : "text-white/40")}>
+        <div className={cn("max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8", isAuraTheme ? "text-zinc-400" : isLiquidTheme ? "text-white/40" : isLightMode ? "text-zinc-400" : "text-white/40")}>
           <div className="flex items-center gap-2">
             <Disc size={16} />
             <span className="text-xs uppercase tracking-widest">SONICPULSE © 2026</span>
           </div>
           <div className="flex gap-8 text-[10px] uppercase tracking-[0.2em]">
-            <button onClick={() => setInfoModal("privacy")} className={cn("transition-colors", isLiquidTheme || !isLightMode ? "hover:text-white" : "hover:text-zinc-800")}>Privacy</button>
-            <button onClick={() => setInfoModal("terms")} className={cn("transition-colors", isLiquidTheme || !isLightMode ? "hover:text-white" : "hover:text-zinc-800")}>Terms</button>
-            <button onClick={() => setInfoModal("spotify")} className={cn("transition-colors", isLiquidTheme || !isLightMode ? "hover:text-white" : "hover:text-zinc-800")}>Spotify API</button>
+            <button onClick={() => setInfoModal("privacy")} className={cn("transition-colors", isAuraTheme ? "hover:text-zinc-900" : isLiquidTheme || !isLightMode ? "hover:text-white" : "hover:text-zinc-800")}>Privacy</button>
+            <button onClick={() => setInfoModal("terms")} className={cn("transition-colors", isAuraTheme ? "hover:text-zinc-900" : isLiquidTheme || !isLightMode ? "hover:text-white" : "hover:text-zinc-800")}>Terms</button>
+            <button onClick={() => setInfoModal("spotify")} className={cn("transition-colors", isAuraTheme ? "hover:text-zinc-900" : isLiquidTheme || !isLightMode ? "hover:text-white" : "hover:text-zinc-800")}>Spotify API</button>
           </div>
         </div>
       </footer>

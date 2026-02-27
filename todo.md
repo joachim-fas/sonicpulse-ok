@@ -236,6 +236,20 @@
 - [x] Alle UI-Elemente (Karten, Inputs, Nav, Filter, Buttons) im Liquid-Modus angepasst
 - [x] Explore und Mood bleiben bewusst unterschiedlich (Farbe, Shapes, Rhythmus)
 
+## Aura Theme (drittes visuelles Konzept)
+- [x] AuraBackground-Komponente: Canvas-Metaballs, heller Hintergrund, Neon-Blobs
+- [x] Explore Mode Aura: Acid-Palette (Violett, Cyan, Neon-Blau, Grün, Lavendel)
+- [x] Mood Mode Aura: Heat-Palette (Magenta, Hot Pink, Orange, Koralle, Rot)
+- [x] Landing: Mixed Palette (beide Modi kombiniert)
+- [x] Mouse/Touch: Blobs folgen dem Cursor mit Federdynamik (Spring Physics)
+- [x] SVG Goo-Filter: Metaball-Verschmelzung via feTurbulence + feColorMatrix
+- [x] Puls-Animation: Blobs atmen (sinusförmige Radius-Änderung)
+- [x] Noise-Overlay: Papier-Textur für organisches Gefühl
+- [x] Aura-Karten: weißer Glasmorphismus, dunkle Typografie, farbige Akzente
+- [x] Toggle-Button: Metaball-Icon (zwei verschmelzende Kreise) in der Navbar
+- [x] Theme-Persistenz in localStorage
+- [x] Themes gegenseitig exklusiv (Aura deaktiviert Liquid und umgekehrt)
+
 ## Kontrast & Lesbarkeit Fix
 - [ ] Light Mode: weißer Text auf weißem Hintergrund eliminieren (Karten-Overlay, Genre-Badges, Buttons)
 - [ ] Light Mode: ArtistInput-Felder auf hellen Hintergrund umstellen
