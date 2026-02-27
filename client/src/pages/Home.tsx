@@ -28,8 +28,6 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 interface Recommendation {
   artist: string;
   reason: string;
@@ -167,7 +165,7 @@ const InfoModal = ({ type, onClose }: { type: "privacy" | "terms" | "spotify"; o
 
 // ─── Music Loading Bar ──────────────────────────────────────────────────────────
 const EXPLORE_MESSAGES = [
-  "Bribing the AI with concert tickets...",
+  "Bribing the AI with backstage passes...",
   "Asking Keith Richards what he thinks...",
   "Cross-referencing 47 obscure Pitchfork reviews...",
   "Consulting the ghost of John Peel...",
@@ -176,9 +174,21 @@ const EXPLORE_MESSAGES = [
   "Translating your taste into 12 musical dimensions...",
   "Arguing with the algorithm about shoegaze...",
   "Checking if this band is still underground enough...",
-  "Asking Spotify's recommendation engine nicely...",
-  "Dusting off the B-sides...",
+  "Dusting off the B-sides nobody asked for...",
   "Running a vibe check on 3,000 artists...",
+  "Asking Thom Yorke if this is too mainstream...",
+  "Consulting the Allmusic database circa 2003...",
+  "Checking if this genre even has a name yet...",
+  "Verifying the band hasn't sold out since Tuesday...",
+  "Matching your energy to a Bandcamp rabbit hole...",
+  "Scanning liner notes from albums you'll never own...",
+  "Asking the AI to be honest about its music taste...",
+  "Filtering out everything that's been in a car commercial...",
+  "Checking if this artist has a Wikipedia page yet...",
+  "Consulting a vinyl collector in a basement somewhere...",
+  "Asking the algorithm to think outside the algorithm...",
+  "Sorting through 14 years of Last.fm scrobbles...",
+  "Checking if this band broke up before you heard of them...",
 ];
 
 const MOOD_MESSAGES = [
@@ -191,9 +201,21 @@ const MOOD_MESSAGES = [
   "Checking if Sufjan Stevens has a song for this...",
   "Decoding your emotional frequency...",
   "Matching your vibe to the perfect key signature...",
-  "Consulting the Spotify Sad Hours playlist...",
   "Asking the universe what song this moment deserves...",
   "Mapping your feelings to a Pitchfork 10.0...",
+  "Consulting the Kübler-Ross model of music therapy...",
+  "Finding the song that knows what you mean...",
+  "Asking Phoebe Bridgers if she's been through this too...",
+  "Cross-referencing your mood with 200 breakup albums...",
+  "Checking if Elliott Smith wrote something for this...",
+  "Translating silence into a tracklist...",
+  "Asking what Joni Mitchell would say about this...",
+  "Calibrating the bittersweet-to-hopeful dial...",
+  "Finding the song that sounds like this exact feeling...",
+  "Consulting the emotional index of 10,000 lyrics...",
+  "Asking the AI to feel something for a moment...",
+  "Matching your inner weather to a sonic landscape...",
+  "Checking if this feeling has a genre yet...",
 ];
 
 const MusicLoadingBar = ({ mode }: { mode: "explore" | "mood" }) => {
@@ -706,16 +728,30 @@ export default function Home() {
 
   // ─── Mutations ────────────────────────────────────────────────────────────
   const exploreMutation = trpc.sonicpulse.explore.useMutation({
-    onSuccess: (data) => setRecommendations(data.recommendations as Recommendation[]),
+    onSuccess: (data) => {
+      setRecommendations(data.recommendations as Recommendation[]);
+      // Scroll to first result after loading
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 300);
+    },
   });
   const moodMutation = trpc.sonicpulse.mood.useMutation({
     onSuccess: (data) => {
       setMoodSongs(data.songs as MoodSong[]);
       setEmotionalProfile(data.emotionalProfile as EmotionalProfile | null);
+      // Scroll to first result after loading
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 300);
     },
   });
 
   const isGenerating = exploreMutation.isPending || moodMutation.isPending;
+
+  // ─── Scroll Refs ──────────────────────────────────────────────────
+  const loadingRef = useRef<HTMLDivElement>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   const handleModeSelect = (newMode: "explore" | "mood") => {
     setMode(newMode);
@@ -727,14 +763,22 @@ export default function Home() {
     if (!artists.length) return;
     setRecommendations([]);
     setLoadingMessage("Consulting the AI oracle...");
+    // Scroll to loading area on mobile
+    setTimeout(() => {
+      loadingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
     exploreMutation.mutate({ artists, discoveryLevel });
-  }, [exploreBands, discoveryLevel, exploreMutation]);
+  }, [exploreBands, discoveryLevel, exploreMutation, loadingRef]);
 
   const generateMoodPlaylist = useCallback(() => {
     if (!moodPrompt.trim()) return;
     setMoodSongs([]);
     setEmotionalProfile(null);
     setLoadingMessage("Reading your emotional landscape...");
+    // Scroll to loading area on mobile
+    setTimeout(() => {
+      loadingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
     moodMutation.mutate({
       prompt: moodPrompt.trim(),
       songCount: 3,
@@ -745,13 +789,13 @@ export default function Home() {
 
   // ─── Background Gradient ──────────────────────────────────────────────────
   const bgGradient = !hasStarted
-    ? "radial-gradient(circle at 50% 0%, rgba(234,179,8,0.15) 0%, transparent 70%)"
+    ? "radial-gradient(ellipse at 40% 10%, rgba(234,179,8,0.12) 0%, transparent 60%), radial-gradient(ellipse at 70% 80%, rgba(180,83,9,0.08) 0%, transparent 50%)"
     : mode === "explore"
-    ? "radial-gradient(circle at 50% 0%, rgba(6,182,212,0.15) 0%, transparent 70%)"
-    : "radial-gradient(circle at 50% 0%, rgba(244,114,182,0.18) 0%, transparent 70%)";
+    ? "radial-gradient(ellipse at 30% 0%, rgba(6,182,212,0.13) 0%, transparent 60%), radial-gradient(ellipse at 80% 90%, rgba(59,130,246,0.08) 0%, transparent 50%)"
+    : "radial-gradient(ellipse at 60% 0%, rgba(244,114,182,0.14) 0%, transparent 60%), radial-gradient(ellipse at 20% 80%, rgba(168,85,247,0.07) 0%, transparent 50%)";
 
-  const blob1 = !hasStarted ? "bg-yellow-900/40" : mode === "explore" ? "bg-cyan-900/40" : "bg-rose-900/40";
-  const blob2 = !hasStarted ? "bg-amber-900/40" : mode === "explore" ? "bg-blue-900/40" : "bg-pink-900/30";
+  const blob1 = !hasStarted ? "bg-yellow-900/30" : mode === "explore" ? "bg-cyan-900/30" : "bg-rose-900/30";
+  const blob2 = !hasStarted ? "bg-amber-900/25" : mode === "explore" ? "bg-blue-900/25" : "bg-pink-900/20";
 
   // ─── Mood Placeholder Examples ────────────────────────────────────────────
   const moodExamples = [
@@ -771,18 +815,42 @@ export default function Home() {
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         <motion.div
           animate={{ background: bgGradient }}
-          transition={{ duration: 2, ease: "easeInOut" }}
+          transition={{ duration: 3.5, ease: [0.4, 0, 0.2, 1] }}
           className="absolute inset-0"
         />
+        {/* Blob 1 – slow organic drift, top-left */}
         <motion.div
-          animate={{ x: [0,80,0,-80,0], y: [0,40,0,-40,0], scale: [1,1.15,1,1.15,1], opacity: 0.3 }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className={cn("absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] rounded-full blur-[120px] mix-blend-screen transition-colors duration-1000", blob1)}
+          animate={{
+            x: [0, 60, 20, -40, 0],
+            y: [0, 30, -20, 50, 0],
+            scale: [1, 1.08, 1.04, 1.1, 1],
+            opacity: [0.25, 0.3, 0.22, 0.28, 0.25],
+          }}
+          transition={{ duration: 35, repeat: Infinity, ease: "easeInOut", times: [0, 0.25, 0.5, 0.75, 1] }}
+          className={cn("absolute top-[-15%] left-[-5%] w-[65vw] h-[65vw] rounded-full blur-[140px] mix-blend-screen transition-colors duration-[3000ms]", blob1)}
         />
+        {/* Blob 2 – slower, bottom-right */}
         <motion.div
-          animate={{ x: [0,-80,0,80,0], y: [0,-40,0,40,0], scale: [1,1.2,1,1.2,1], opacity: 0.2 }}
-          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-          className={cn("absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] rounded-full blur-[120px] mix-blend-screen transition-colors duration-1000", blob2)}
+          animate={{
+            x: [0, -50, -20, 40, 0],
+            y: [0, -30, 20, -50, 0],
+            scale: [1, 1.06, 1.1, 1.03, 1],
+            opacity: [0.18, 0.22, 0.16, 0.20, 0.18],
+          }}
+          transition={{ duration: 42, repeat: Infinity, ease: "easeInOut", times: [0, 0.25, 0.5, 0.75, 1] }}
+          className={cn("absolute bottom-[-15%] right-[-5%] w-[55vw] h-[55vw] rounded-full blur-[140px] mix-blend-screen transition-colors duration-[3000ms]", blob2)}
+        />
+        {/* Blob 3 – subtle center accent */}
+        <motion.div
+          animate={{
+            x: [0, 30, -30, 0],
+            y: [0, -20, 20, 0],
+            opacity: [0.08, 0.12, 0.06, 0.08],
+          }}
+          transition={{ duration: 28, repeat: Infinity, ease: "easeInOut" }}
+          className={cn("absolute top-[30%] left-[30%] w-[40vw] h-[40vw] rounded-full blur-[160px] mix-blend-screen transition-colors duration-[3000ms]",
+            !hasStarted ? "bg-orange-900/20" : mode === "explore" ? "bg-teal-900/20" : "bg-fuchsia-900/20"
+          )}
         />
       </div>
 
@@ -914,35 +982,35 @@ export default function Home() {
                           />
                         ))}
                       </div>
-                      <div className="flex flex-col md:flex-row items-center justify-center gap-8 p-4 md:p-8 bg-zinc-900/30 rounded-[32px] border border-white/5 max-w-4xl mx-auto">
-                        <div className="flex flex-wrap items-center justify-center gap-8 w-full">
-                          <div className="flex flex-col gap-2">
-                            <span className="text-[8px] uppercase tracking-widest text-white/20 text-center">Discovery</span>
-                            <div className="flex items-center justify-center gap-2 bg-black/40 p-1 rounded-full border border-white/5">
-                              {(["mainstream", "underground", "exotics"] as const).map((level) => (
-                                <button
-                                  key={level}
-                                  onClick={() => setDiscoveryLevel(level)}
-                                  className={cn(
-                                    "px-4 py-1.5 rounded-full text-[9px] uppercase tracking-widest transition-all",
-                                    discoveryLevel === level ? "bg-white text-black" : "text-white/40 hover:text-white"
-                                  )}
-                                >{level}</button>
-                              ))}
-                            </div>
+                      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 md:p-6 bg-zinc-900/30 rounded-[28px] border border-white/5 max-w-4xl mx-auto">
+                        {/* Discovery Filter */}
+                        <div className="flex flex-col gap-1.5 items-center sm:items-start">
+                          <span className="text-[8px] uppercase tracking-widest text-white/20">Discovery</span>
+                          <div className="flex items-center gap-1 bg-black/40 p-1 rounded-full border border-white/5">
+                            {(["mainstream", "underground", "exotics"] as const).map((level) => (
+                              <button
+                                key={level}
+                                onClick={() => setDiscoveryLevel(level)}
+                                className={cn(
+                                  "px-4 py-1.5 rounded-full text-[9px] uppercase tracking-widest transition-all whitespace-nowrap",
+                                  discoveryLevel === level ? "bg-white text-black" : "text-white/40 hover:text-white"
+                                )}
+                              >{level}</button>
+                            ))}
                           </div>
-                          <button
-                            onClick={generateRecommendations}
-                            disabled={isGenerating || exploreBands.every((b) => !b.trim())}
-                            className={cn(
-                              "flex items-center justify-center gap-2 px-8 py-2.5 rounded-full font-medium transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-xs uppercase tracking-widest bg-white text-black hover:bg-white/90",
-                              isGenerating && "animate-pulse"
-                            )}
-                          >
-                            {isGenerating ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
-                            {isGenerating ? loadingMessage : "Get Suggestions"}
-                          </button>
                         </div>
+                        {/* Submit Button */}
+                        <button
+                          onClick={generateRecommendations}
+                          disabled={isGenerating || exploreBands.every((b) => !b.trim())}
+                          className={cn(
+                            "flex items-center justify-center gap-2 px-8 py-3 rounded-full font-medium transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-xs uppercase tracking-widest bg-white text-black hover:bg-white/90 shrink-0",
+                            isGenerating && "animate-pulse"
+                          )}
+                        >
+                          {isGenerating ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+                          {isGenerating ? "Thinking..." : "Get Suggestions"}
+                        </button>
                       </div>
                     </div>
                   )}
@@ -1054,7 +1122,7 @@ export default function Home() {
                             transition={{ duration: 0.5 }}
                           >
                             {moodMutation.isPending && !emotionalProfile ? (
-                              <AnimatePresence><MusicLoadingBar mode="mood" /></AnimatePresence>
+                              <div ref={loadingRef}><AnimatePresence><MusicLoadingBar mode="mood" /></AnimatePresence></div>
                             ) : emotionalProfile && (
                               <div className="p-5 bg-gradient-to-br from-rose-950/30 to-zinc-900/50 border border-rose-500/15 rounded-2xl">
                                 <div className="flex items-center justify-between gap-3 mb-3">
@@ -1083,7 +1151,7 @@ export default function Home() {
                             {moodMutation.isPending && moodSongs.length === 0
                               ? null
                               : moodSongs.map((song, idx) => (
-                                <div key={idx}>
+                                <div key={idx} ref={idx === 0 ? resultsRef : undefined}>
                                   <motion.div
                                     initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: idx * 0.1 }}
@@ -1201,10 +1269,11 @@ export default function Home() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
                     {exploreMutation.isPending && recommendations.length === 0
-                      ? <div className="col-span-full"><AnimatePresence><MusicLoadingBar mode="explore" /></AnimatePresence></div>
+                      ? <div ref={loadingRef} className="col-span-full"><AnimatePresence><MusicLoadingBar mode="explore" /></AnimatePresence></div>
                       : recommendations.map((rec, idx) => (
                         <motion.div
                           key={idx}
+                          ref={idx === 0 ? resultsRef : undefined}
                           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: idx * 0.1 }}
                           className="group bg-zinc-900/30 border border-white/5 rounded-[32px] overflow-hidden hover:bg-zinc-900/50 transition-all duration-500 flex flex-col"
