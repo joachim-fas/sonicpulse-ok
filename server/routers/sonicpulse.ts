@@ -4,7 +4,7 @@ import { invokeLLM } from "../_core/llm";
 import { resolveArtist, resolveMultipleArtists } from "../artistService";
 import { getSpotifyToken } from "../spotify";
 import { searchYouTubeVideoId } from "../youtube";
-import { getSimilarArtists, getTopTracks } from "../lastfm";
+import { getSimilarArtists, getTopTracks, getArtistInfo } from "../lastfm";
 
 /**
  * SonicPulse Router
@@ -164,21 +164,46 @@ export const sonicpulseRouter = router({
         })
       );
 
-      // Last.fm: Similarity Scores für alle empfohlenen Künstler parallel abrufen
-      // Wir nutzen den ersten Input-Künstler als Referenz für getSimilar
-      const referenceArtist = input.artists[0];
-      const similarFromLastfm = await getSimilarArtists(referenceArtist, 50).catch(() => []);
+      // Last.fm: Similarity Scores – alle Input-Künstler als Referenz nutzen, bester Score gewinnt
+      // Fuzzy name normalizer: lowercase, remove leading "the ", strip special chars
+      function normalizeName(name: string): string {
+        return name.toLowerCase().replace(/^the\s+/, "").replace(/[^a-z0-9]/g, "");
+      }
+
+      // Fetch similar lists for ALL input artists in parallel (limit 100 each)
+      const allSimilarLists = await Promise.all(
+        input.artists.map((a) => getSimilarArtists(a, 100).catch(() => []))
+      );
+      // Flatten and keep best score per artist name (normalized)
+      const bestScoreMap = new Map<string, number>();
+      for (const list of allSimilarLists) {
+        for (const s of list) {
+          const key = normalizeName(s.name);
+          const prev = bestScoreMap.get(key) ?? 0;
+          if (s.match > prev) bestScoreMap.set(key, s.match);
+        }
+      }
+
+      // For each recommendation: look up score from map, fallback to direct artist.getInfo listeners
+      const lastfmInfoFallbacks = await Promise.all(
+        rawRecs.map(async (rec) => {
+          const key = normalizeName(rec.artist);
+          if (bestScoreMap.has(key)) return null; // already have score, no extra lookup needed
+          // No match found – fetch direct info for listener count at least
+          return getArtistInfo(rec.artist).catch(() => null);
+        })
+      );
 
       const recommendations = rawRecs.map((rec, i) => {
         const profile = profiles[i];
         const youtubeId = youtubeIds[i];
-        // Similarity Score: Last.fm Match-Score für diesen Künstler suchen
-        const lfmMatch = similarFromLastfm.find(
-          (s) => s.name.toLowerCase() === rec.artist.toLowerCase()
-        );
-        const similarityScore = lfmMatch ? Math.round(lfmMatch.match * 100) : null;
-        // Listeners aus Last.fm-Profil (falls vorhanden)
-        const listeners = profile?.lastfm_listeners ?? null;
+        // Similarity Score: fuzzy lookup across all input artists' similar lists
+        const key = normalizeName(rec.artist);
+        const rawScore = bestScoreMap.get(key) ?? null;
+        const similarityScore = rawScore !== null ? Math.round(rawScore * 100) : null;
+        // Listeners: from enriched profile or Last.fm direct fallback
+        const fallbackInfo = lastfmInfoFallbacks[i];
+        const listeners = profile?.lastfm_listeners ?? fallbackInfo?.listeners ?? null;
         return {
           artist:    rec.artist,
           reason:    rec.reason,
