@@ -395,3 +395,11 @@
 - [ ] Variante 4: Cassette-Tape (Kassetten-Spulen drehen sich, Band laeuft durch)
 - [ ] Variante 5: Neural-Network (Nodes verbinden sich pulsierend)
 - [ ] Random-Selection: Zufaellige Variante bei jedem Laden
+
+## Result Card Redesign (Feb 28)
+- [x] Foto-Overlay: stärkerer Gradient unten (from-black/90), Bandname immer lesbar
+- [x] Beschreibungstext: line-clamp-4 + eleganter Fade-out statt abruptem ...
+- [x] Metadaten-Hierarchie: "Similar to" größer, Listeners prominenter
+- [x] Artist Preview Button: klarer CTA mit Spotify-Grün-Akzent
+- [x] Karten-Schatten im Light Mode: tiefere Schatten für mehr Tiefe
+- [x] Genre-Badge: auf Foto besser lesbar (dunklerer Hintergrund)

@@ -1750,71 +1750,69 @@ export default function Home() {
                         <motion.div
                           key={idx}
                           ref={idx === 0 ? resultsRef : undefined}
-                          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: idx * 0.1 }}
-                          className="feature-card overflow-hidden flex flex-col group"
+                          initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: idx * 0.1, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                          className={cn(
+                            "overflow-hidden flex flex-col group rounded-[28px] transition-all duration-500",
+                            isLightMode
+                              ? "bg-white border border-zinc-200/80 shadow-[0_4px_24px_rgba(0,0,0,0.08)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.14)] hover:-translate-y-1"
+                              : "bg-white/[0.04] border border-white/8 shadow-[0_4px_24px_rgba(0,0,0,0.3)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.5)] hover:border-white/14 hover:-translate-y-1"
+                          )}
                         >
-                          <div className="relative aspect-[16/10] overflow-hidden rounded-t-[28px]">
+                          {/* ── Photo Header ── */}
+                          <div className="relative aspect-[16/9] overflow-hidden rounded-t-[28px]">
                             {rec.enriched?.image
-                              ? <img src={rec.enriched.image} alt={rec.artist} className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110 opacity-70 group-hover:opacity-90" />
+                              ? <img src={rec.enriched.image} alt={rec.artist} className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105 brightness-90 group-hover:brightness-100" />
                               : <AnimatedArtistFallback artistName={rec.artist} accentColor="cyan" className="w-full h-full" />
                             }
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                            <div className="absolute bottom-0 left-0 p-6 w-full">
-                              <SpotifyLink url={rec.enriched?.url} className="group/name flex items-center gap-2 transition-colors text-left text-white hover:text-[var(--violet)]">
-                                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 600, letterSpacing: '-0.02em' }} className="drop-shadow-md">{rec.artist}</h3>
+                            {/* Strong gradient for text readability */}
+                            <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.5) 40%, rgba(0,0,0,0.1) 70%, transparent 100%)' }} />
+                            {/* Top-right: match badge */}
+                            {rec.similarityScore != null && (
+                              <div className="absolute top-3 right-3">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide" style={{ background: 'rgba(149,74,175,0.85)', backdropFilter: 'blur(8px)', color: 'white', border: '1px solid rgba(149,74,175,0.5)' }}>
+                                  {rec.similarityScore}%
+                                </span>
+                              </div>
+                            )}
+                            {/* Bottom: artist name + genre */}
+                            <div className="absolute bottom-0 left-0 p-5 w-full">
+                              <SpotifyLink url={rec.enriched?.url} className="group/name inline-flex items-center gap-2 transition-colors text-left">
+                                <h3 className="text-white drop-shadow-lg" style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', fontWeight: 700, letterSpacing: '-0.02em', textShadow: '0 2px 12px rgba(0,0,0,0.8)' }}>{rec.artist}</h3>
                                 {rec.enriched?.url && (
-                                  <div className="p-1 rounded-full opacity-0 group-hover/name:opacity-100 transition-all" style={{ background: 'rgba(149,74,175,0.1)', color: 'var(--violet)' }}>
-                                    <ExternalLink size={12} />
-                                  </div>
+                                  <ExternalLink size={13} className="text-white/60 group-hover/name:text-white transition-colors shrink-0 mb-0.5" />
                                 )}
                               </SpotifyLink>
-                              <span className="tag tag-violet">{rec.genre}</span>
+                              <div className="mt-1.5">
+                                <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide" style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', color: 'rgba(255,255,255,0.9)', border: '1px solid rgba(255,255,255,0.15)' }}>{rec.genre}</span>
+                              </div>
                             </div>
                           </div>
-                          <div className="p-6 flex-1 flex flex-col">
-                            <div className="flex items-start gap-2 mb-4">
-                              <motion.div
-                                animate={{ y: [0, -4, 0], rotate: [0, 10, -10, 0] }}
-                                transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                                  className="mt-0.5 shrink-0" style={{ color: 'var(--violet)' }}
-                              >
-                                <Music size={14} />
-                              </motion.div>
-                              <p className={cn("font-light leading-relaxed text-xs line-clamp-3", isLightMode ? "text-zinc-600" : "text-white/60")}>{rec.reason}</p>
+
+                          {/* ── Card Body ── */}
+                          <div className="p-5 flex-1 flex flex-col gap-4">
+                            {/* Description with fade */}
+                            <div className="relative">
+                              <p className={cn("text-[13px] leading-relaxed line-clamp-3", isLightMode ? "text-zinc-600" : "text-white/65")}>{rec.reason}</p>
                             </div>
-                            <div className={cn("mt-auto pt-4 border-t space-y-3", isLightMode ? "border-zinc-100" : "border-white/5")}>
-                              <div className="flex items-center justify-between gap-2">
-                                <div className="flex flex-col gap-0.5 min-w-0">
-                                  <span className={cn("text-[8px] uppercase tracking-widest", isLightMode ? "text-zinc-500" : "text-white/50")}>
-                                    Similar to <span className={isLightMode ? "text-zinc-800" : "text-white/70"}>{rec.similarTo}</span>
+
+                            {/* Metadata row */}
+                            <div className={cn("flex items-center justify-between gap-3 pt-3 border-t", isLightMode ? "border-zinc-100" : "border-white/6")}>
+                              <div className="flex flex-col gap-1 min-w-0">
+                                <span className={cn("text-[10px] font-medium leading-tight", isLightMode ? "text-zinc-400" : "text-white/40")}>Similar to</span>
+                                <span className={cn("text-[12px] font-semibold truncate", isLightMode ? "text-zinc-700" : "text-white/80")}>{rec.similarTo}</span>
+                                {rec.listeners != null && rec.listeners > 0 && (
+                                  <span className={cn("text-[10px]", isLightMode ? "text-zinc-400" : "text-white/35")}>
+                                    {rec.listeners >= 1_000_000
+                                      ? `${(rec.listeners / 1_000_000).toFixed(1)}M listeners`
+                                      : `${rec.listeners.toLocaleString()} listeners`}
                                   </span>
-                                  {rec.listeners != null && rec.listeners > 0 && (
-                                    <span className={cn("text-[8px] uppercase tracking-widest", isLightMode ? "text-zinc-400" : "text-white/35")}>
-                                      {rec.listeners.toLocaleString()} listeners
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-1 shrink-0">
-                                  {rec.similarityScore != null && (
-                                    <span className="tag tag-violet">
-                                      {rec.similarityScore}% match
-                                    </span>
-                                  )}
-                                  {!rec.enriched?.spotifyId && !extractSpotifyArtistId(rec.enriched?.url) && !rec.enriched?.url && (
-                                    <a
-                                      href={`https://open.spotify.com/search/${encodeURIComponent(rec.artist)}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className={cn("flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] uppercase tracking-widest border transition-colors", isLightMode ? "bg-zinc-50 border-zinc-200 text-zinc-400 hover:bg-[#1DB954]/10 hover:border-[#1DB954]/30 hover:text-[#1DB954]" : "bg-white/5 border-white/8 text-white/30 hover:bg-[#1DB954]/10 hover:border-[#1DB954]/30 hover:text-[#1DB954]")}
-                                      title={`Search for ${rec.artist} on Spotify`}
-                                    >
-                                      <SpotifyLogo size={8} />
-                                      Search on Spotify
-                                    </a>
-                                  )}
-                                </div>
+                                )}
                               </div>
+                            </div>
+
+                            {/* Spotify / YouTube embed */}
+                            <div className="mt-auto">
                               {(rec.enriched?.spotifyId || extractSpotifyArtistId(rec.enriched?.url) || rec.enriched?.url) && (
                                 <SpotifyEmbedCard
                                   artistId={rec.enriched?.spotifyId ?? extractSpotifyArtistId(rec.enriched?.url)}
