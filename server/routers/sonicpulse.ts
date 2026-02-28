@@ -141,7 +141,9 @@ export const sonicpulseRouter = router({
         const content = llmResponse.choices[0]?.message?.content;
         if (typeof content === "string") {
           const parsed = JSON.parse(content) as { items: typeof rawRecs };
-          rawRecs = parsed.items?.slice(0, 5) ?? [];
+          rawRecs = (parsed.items ?? []).filter(
+            (r) => r.artist && r.artist !== "[Max Depth]" && !r.artist.startsWith("[")
+          ).slice(0, 5);
         }
       } catch {
         return { recommendations: [] };
@@ -219,7 +221,9 @@ export const sonicpulseRouter = router({
           const retryContent = retryResponse.choices[0]?.message?.content;
           if (typeof retryContent === "string") {
             const retryParsed = JSON.parse(retryContent) as { items: RawRec[] };
-            const retryRecs = retryParsed.items?.slice(0, needed) ?? [];
+            const retryRecs = (retryParsed.items ?? []).filter(
+              (r) => r.artist && r.artist !== "[Max Depth]" && !r.artist.startsWith("[")
+            ).slice(0, needed);
             const retryProfiles = await resolveMultipleArtists(retryRecs.map((r) => r.artist));
             for (let i = 0; i < retryRecs.length; i++) {
               const p = retryProfiles[i];

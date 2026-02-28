@@ -382,3 +382,16 @@
 - [ ] Spektakulaere Reasoning-Animation mit Waveform/Equalizer-Visualisierung
 - [ ] Texte klar lesbar (weisser Text mit Hintergrund-Kontrast)
 - [ ] Animierte Vinyl/Disc Visualisierung mit Orbit-Partikeln
+
+## Autocomplete Reliability Fix (Feb 28)
+- [ ] Last.fm Timeout von 5s auf 10s erhoehen (Requests dauern 5.1-5.4s)
+- [ ] Debounce im Frontend von 300ms auf 500ms erhoehen (weniger parallele Requests)
+- [ ] [Max Depth] im LLM-Response-Parser abfangen (Explore-Ergebnis)
+
+## Multiple Loading Animation Variants (Feb 28)
+- [ ] Variante 1: Vinyl + Orbit + Equalizer (bereits vorhanden)
+- [ ] Variante 2: Waveform-Scan (horizontale Scan-Linie ueber Frequenzspektrum)
+- [ ] Variante 3: Constellation (Sterne verbinden sich zu Musik-Noten-Muster)
+- [ ] Variante 4: Cassette-Tape (Kassetten-Spulen drehen sich, Band laeuft durch)
+- [ ] Variante 5: Neural-Network (Nodes verbinden sich pulsierend)
+- [ ] Random-Selection: Zufaellige Variante bei jedem Laden

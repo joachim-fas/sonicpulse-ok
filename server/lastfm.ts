@@ -20,7 +20,7 @@ async function lastfmFetch(params: Record<string, string>): Promise<unknown> {
   }
   const res = await fetch(url.toString(), {
     headers: { "User-Agent": "SonicPulse/1.0" },
-    signal: AbortSignal.timeout(5000),
+    signal: AbortSignal.timeout(10000),
   });
   if (!res.ok) throw new Error(`Last.fm HTTP ${res.status}`);
   return res.json();

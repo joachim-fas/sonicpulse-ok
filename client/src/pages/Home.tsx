@@ -22,6 +22,10 @@ import {
   Moon,
   Sun,
   AlertCircle,
+  Radio,
+  Waves,
+  Network,
+  Zap,
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -355,6 +359,272 @@ const MOOD_EXOTIC_MESSAGES = [
   "Translating your inner weather into a sonic landscape with no borders...",
 ];
 
+// ── Shared loading sub-components ──────────────────────────────────────────
+const LoadingMessageCard = ({ messages, accentHex }: { messages: string[]; accentHex: string }) => {
+  const [msgIdx, setMsgIdx] = useState(() => Math.floor(Math.random() * messages.length));
+  const seenRef = useRef<Set<number>>(new Set([msgIdx]));
+  useEffect(() => {
+    const id = setInterval(() => {
+      setMsgIdx((prev) => {
+        const unseen = messages.map((_: string, i: number) => i).filter((i: number) => !seenRef.current.has(i));
+        if (unseen.length === 0) { seenRef.current.clear(); }
+        const pool = unseen.length > 0 ? unseen : messages.map((_: string, i: number) => i);
+        const next = pool[Math.floor(Math.random() * pool.length)];
+        seenRef.current.add(next);
+        return next;
+      });
+    }, 2800);
+    return () => clearInterval(id);
+  }, [messages.length]);
+  return (
+    <div className="w-full max-w-lg rounded-2xl px-6 py-4 text-center" style={{ background: 'rgba(10,10,20,0.88)', backdropFilter: 'blur(20px)', border: `1px solid ${accentHex}30`, boxShadow: `0 4px 30px rgba(0,0,0,0.5), inset 0 1px 0 ${accentHex}20` }}>
+      <motion.p key={msgIdx} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.4 }} className="text-sm font-medium tracking-wide leading-relaxed" style={{ color: '#f0f0ff' }}>{messages[msgIdx]}</motion.p>
+    </div>
+  );
+};
+
+const LoadingProgressBar = ({ accentHex, accentHex2, glowColor }: { accentHex: string; accentHex2: string; glowColor: string }) => {
+  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setProgress((p) => p >= 92 ? p + 0.05 : p + (92 - p) * 0.04), 200);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <div className="w-full max-w-sm">
+      <div className="h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
+        <motion.div className="h-full rounded-full" style={{ width: `${progress}%`, background: `linear-gradient(90deg, ${accentHex2}, ${accentHex})`, boxShadow: `0 0 12px ${glowColor}` }} transition={{ duration: 0.3 }} />
+      </div>
+      <div className="flex justify-between mt-2">
+        <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: accentHex + 'cc' }}>Analysing</span>
+        <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: accentHex + 'cc' }}>{Math.round(progress)}%</span>
+      </div>
+    </div>
+  );
+};
+
+// ── Variant 1: Vinyl + Orbit + Equalizer ────────────────────────────────────
+const AnimVariantVinyl = ({ accentHex, accentHex2, glowColor }: { accentHex: string; accentHex2: string; glowColor: string }) => {
+  const BAR_COUNT = 14;
+  const barDelays = Array.from({ length: BAR_COUNT }, (_, i) => i * 0.08);
+  const ORBIT_COUNT = 6;
+  const orbitAngles = Array.from({ length: ORBIT_COUNT }, (_, i) => (i / ORBIT_COUNT) * 360);
+  return (
+    <>
+      <div className="relative flex items-center justify-center" style={{ width: 160, height: 160 }}>
+        <motion.div animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.1, 0.3] }} transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut' }} className="absolute inset-0 rounded-full" style={{ background: `radial-gradient(circle, ${glowColor}, transparent 70%)` }} />
+        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 8, ease: 'linear' }} className="absolute inset-0">
+          {orbitAngles.map((angle, i) => (
+            <motion.div key={i} animate={{ opacity: [0.4, 1, 0.4], scale: [0.8, 1.2, 0.8] }} transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.25, ease: 'easeInOut' }} className="absolute w-2 h-2 rounded-full" style={{ background: i % 2 === 0 ? accentHex : accentHex2, top: `${50 - 45 * Math.cos((angle * Math.PI) / 180)}%`, left: `${50 + 45 * Math.sin((angle * Math.PI) / 180)}%`, transform: 'translate(-50%,-50%)', boxShadow: `0 0 6px ${i % 2 === 0 ? accentHex : accentHex2}` }} />
+          ))}
+        </motion.div>
+        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 4, ease: 'linear' }} className="relative z-10 w-20 h-20 rounded-full flex items-center justify-center" style={{ background: 'conic-gradient(from 0deg,#111,#222,#111,#1a1a1a,#111)', boxShadow: `0 0 30px ${glowColor},0 0 60px ${glowColor}40`, border: `2px solid ${accentHex}60` }}>
+          <div className="absolute inset-2 rounded-full" style={{ border: `1px solid ${accentHex}20` }} />
+          <div className="absolute inset-4 rounded-full" style={{ border: `1px solid ${accentHex}15` }} />
+          <div className="absolute inset-6 rounded-full" style={{ border: `1px solid ${accentHex}10` }} />
+          <div className="w-6 h-6 rounded-full z-10 flex items-center justify-center" style={{ background: `linear-gradient(135deg,${accentHex},${accentHex2})` }}><Disc size={10} className="text-white" /></div>
+        </motion.div>
+      </div>
+      <div className="flex items-end gap-1" style={{ height: 48 }}>
+        {barDelays.map((delay, i) => (
+          <motion.div key={i} animate={{ scaleY: [0.2, 1, 0.4, 0.8, 0.2] }} transition={{ repeat: Infinity, duration: 1.2, delay, ease: 'easeInOut' }} className="w-2 rounded-t-full origin-bottom" style={{ height: 40, background: `linear-gradient(to top,${accentHex},${accentHex2}80)`, boxShadow: `0 0 4px ${accentHex}60` }} />
+        ))}
+      </div>
+    </>
+  );
+};
+
+// ── Variant 2: Waveform Scan ─────────────────────────────────────────────────
+const AnimVariantWaveform = ({ accentHex, accentHex2, glowColor }: { accentHex: string; accentHex2: string; glowColor: string }) => {
+  const WAVE_BARS = 32;
+  const waveDelays = Array.from({ length: WAVE_BARS }, (_, i) => i * 0.04);
+  return (
+    <>
+      <div className="relative flex flex-col items-center gap-4">
+        {/* Scan label */}
+        <div className="flex items-center gap-2">
+          <motion.div animate={{ opacity: [1, 0.3, 1] }} transition={{ repeat: Infinity, duration: 1, ease: 'easeInOut' }} className="w-2 h-2 rounded-full" style={{ background: accentHex, boxShadow: `0 0 8px ${accentHex}` }} />
+          <span className="text-xs font-bold uppercase tracking-widest" style={{ color: accentHex }}>Scanning Frequencies</span>
+        </div>
+        {/* Waveform */}
+        <div className="flex items-center gap-0.5" style={{ height: 80 }}>
+          {waveDelays.map((delay, i) => {
+            const isMid = i > 8 && i < 24;
+            return (
+              <motion.div key={i}
+                animate={{ scaleY: isMid ? [0.1, 1, 0.3, 0.8, 0.1] : [0.05, 0.3, 0.1, 0.2, 0.05] }}
+                transition={{ repeat: Infinity, duration: isMid ? 0.9 : 1.4, delay, ease: 'easeInOut' }}
+                className="rounded-full origin-center"
+                style={{ width: 5, height: 60, background: `linear-gradient(to top, ${accentHex2}40, ${accentHex})`, boxShadow: isMid ? `0 0 6px ${accentHex}80` : 'none' }}
+              />
+            );
+          })}
+        </div>
+        {/* Horizontal scan line */}
+        <div className="relative w-full" style={{ height: 2 }}>
+          <motion.div animate={{ x: ['-100%', '200%'] }} transition={{ repeat: Infinity, duration: 2.5, ease: 'linear' }} className="absolute inset-y-0 w-16 rounded-full" style={{ background: `linear-gradient(90deg, transparent, ${accentHex}, transparent)`, boxShadow: `0 0 12px ${glowColor}` }} />
+        </div>
+        {/* Radio icon */}
+        <Radio size={28} style={{ color: accentHex + '80' }} />
+      </div>
+    </>
+  );
+};
+
+// ── Variant 3: Constellation ─────────────────────────────────────────────────
+const AnimVariantConstellation = ({ accentHex, accentHex2, glowColor }: { accentHex: string; accentHex2: string; glowColor: string }) => {
+  // 8 stars in a circle pattern
+  const STARS = 8;
+  const starAngles = Array.from({ length: STARS }, (_, i) => (i / STARS) * 360);
+  const r = 70;
+  const cx = 90, cy = 90;
+  const starPoints = starAngles.map((a) => ({
+    x: cx + r * Math.cos((a - 90) * Math.PI / 180),
+    y: cy + r * Math.sin((a - 90) * Math.PI / 180),
+  }));
+  return (
+    <>
+      <div className="relative" style={{ width: 180, height: 180 }}>
+        <svg width="180" height="180" className="absolute inset-0">
+          {/* Connection lines */}
+          {starPoints.map((p, i) => {
+            const next = starPoints[(i + 2) % STARS];
+            return (
+              <motion.line key={i} x1={p.x} y1={p.y} x2={next.x} y2={next.y}
+                stroke={accentHex} strokeWidth="1"
+                animate={{ opacity: [0, 0.6, 0] }}
+                transition={{ repeat: Infinity, duration: 2, delay: i * 0.25, ease: 'easeInOut' }}
+              />
+            );
+          })}
+          {/* Stars */}
+          {starPoints.map((p, i) => (
+            <motion.circle key={i} cx={p.x} cy={p.y} r={4}
+              fill={i % 2 === 0 ? accentHex : accentHex2}
+              animate={{ r: [3, 6, 3], opacity: [0.5, 1, 0.5] }}
+              transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.2, ease: 'easeInOut' }}
+              style={{ filter: `drop-shadow(0 0 4px ${accentHex})` }}
+            />
+          ))}
+          {/* Center */}
+          <motion.circle cx={cx} cy={cy} r={8} fill={accentHex}
+            animate={{ r: [6, 10, 6], opacity: [0.7, 1, 0.7] }}
+            transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
+            style={{ filter: `drop-shadow(0 0 8px ${glowColor})` }}
+          />
+          <Sparkles size={10} style={{ color: 'white' }} />
+        </svg>
+        {/* Center icon overlay */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <motion.div animate={{ rotate: [0, 360] }} transition={{ repeat: Infinity, duration: 20, ease: 'linear' }}>
+            <Music size={16} style={{ color: accentHex }} />
+          </motion.div>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <motion.div animate={{ opacity: [1, 0.3, 1] }} transition={{ repeat: Infinity, duration: 1.2, ease: 'easeInOut' }} className="w-1.5 h-1.5 rounded-full" style={{ background: accentHex2 }} />
+        <span className="text-xs uppercase tracking-widest font-semibold" style={{ color: accentHex2 + 'cc' }}>Mapping Sound Universe</span>
+        <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.2, delay: 0.6, ease: 'easeInOut' }} className="w-1.5 h-1.5 rounded-full" style={{ background: accentHex }} />
+      </div>
+    </>
+  );
+};
+
+// ── Variant 4: Cassette Tape ─────────────────────────────────────────────────
+const AnimVariantCassette = ({ accentHex, accentHex2, glowColor }: { accentHex: string; accentHex2: string; glowColor: string }) => {
+  return (
+    <>
+      {/* Cassette body */}
+      <div className="relative" style={{ width: 200, height: 120 }}>
+        {/* Body */}
+        <div className="absolute inset-0 rounded-xl" style={{ background: 'linear-gradient(135deg,#1a1a2e,#16213e)', border: `2px solid ${accentHex}40`, boxShadow: `0 0 20px ${glowColor}` }} />
+        {/* Label */}
+        <div className="absolute inset-x-4 top-3 bottom-8 rounded-lg flex items-center justify-center" style={{ background: `linear-gradient(135deg,${accentHex}15,${accentHex2}15)`, border: `1px solid ${accentHex}30` }}>
+          <span className="text-[8px] font-bold uppercase tracking-widest" style={{ color: accentHex }}>SonicPulse</span>
+        </div>
+        {/* Left reel */}
+        <div className="absolute bottom-2 left-8 w-10 h-10 rounded-full flex items-center justify-center" style={{ border: `2px solid ${accentHex}60`, background: '#0a0a14' }}>
+          <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }} className="w-6 h-6 rounded-full" style={{ background: `conic-gradient(${accentHex},${accentHex2},${accentHex})` }}>
+            <div className="w-full h-full rounded-full flex items-center justify-center" style={{ background: '#0a0a14', margin: '3px', width: 'calc(100% - 6px)', height: 'calc(100% - 6px)' }} />
+          </motion.div>
+        </div>
+        {/* Right reel */}
+        <div className="absolute bottom-2 right-8 w-10 h-10 rounded-full flex items-center justify-center" style={{ border: `2px solid ${accentHex2}60`, background: '#0a0a14' }}>
+          <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }} className="w-6 h-6 rounded-full" style={{ background: `conic-gradient(${accentHex2},${accentHex},${accentHex2})` }}>
+            <div className="w-full h-full rounded-full flex items-center justify-center" style={{ background: '#0a0a14', margin: '3px', width: 'calc(100% - 6px)', height: 'calc(100% - 6px)' }} />
+          </motion.div>
+        </div>
+        {/* Tape window */}
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-8 h-5 rounded" style={{ background: '#0a0a14', border: `1px solid ${accentHex}30` }}>
+          <motion.div animate={{ scaleX: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut' }} className="h-0.5 mx-1 mt-2 rounded-full" style={{ background: accentHex }} />
+        </div>
+      </div>
+      {/* Tape running indicator */}
+      <div className="flex items-center gap-3">
+        <motion.div animate={{ opacity: [1, 0.2, 1] }} transition={{ repeat: Infinity, duration: 0.8 }} className="w-2 h-2 rounded-full" style={{ background: accentHex, boxShadow: `0 0 6px ${accentHex}` }} />
+        <span className="text-xs font-bold uppercase tracking-widest" style={{ color: accentHex }}>Playing</span>
+        <Zap size={12} style={{ color: accentHex2 }} />
+      </div>
+    </>
+  );
+};
+
+// ── Variant 5: Neural Network ────────────────────────────────────────────────
+const AnimVariantNeural = ({ accentHex, accentHex2, glowColor }: { accentHex: string; accentHex2: string; glowColor: string }) => {
+  // 3 layers: 3 + 4 + 3 nodes
+  const layers = [[0, 1, 2], [0, 1, 2, 3], [0, 1, 2]];
+  const layerX = [30, 90, 150];
+  const nodeY = (layer: number[], idx: number) => {
+    const total = layer.length;
+    const spacing = 120 / (total + 1);
+    return 20 + spacing * (idx + 1);
+  };
+  return (
+    <>
+      <div className="relative" style={{ width: 180, height: 140 }}>
+        <svg width="180" height="140" className="absolute inset-0">
+          {/* Connections */}
+          {layers.slice(0, -1).map((layer, li) =>
+            layer.map((_, ni) =>
+              layers[li + 1].map((_, nj) => (
+                <motion.line key={`${li}-${ni}-${nj}`}
+                  x1={layerX[li]} y1={nodeY(layer, ni)}
+                  x2={layerX[li + 1]} y2={nodeY(layers[li + 1], nj)}
+                  stroke={accentHex}
+                  strokeWidth="1"
+                  animate={{ opacity: [0.1, 0.6, 0.1], strokeWidth: [0.5, 1.5, 0.5] }}
+                  transition={{ repeat: Infinity, duration: 1.5, delay: (ni + nj + li) * 0.15, ease: 'easeInOut' }}
+                />
+              ))
+            )
+          )}
+          {/* Nodes */}
+          {layers.map((layer, li) =>
+            layer.map((_, ni) => (
+              <motion.circle key={`n-${li}-${ni}`}
+                cx={layerX[li]} cy={nodeY(layer, ni)} r={7}
+                fill={li === 1 ? accentHex : accentHex2}
+                animate={{ r: [5, 9, 5], opacity: [0.6, 1, 0.6] }}
+                transition={{ repeat: Infinity, duration: 1.2, delay: (ni + li) * 0.2, ease: 'easeInOut' }}
+                style={{ filter: `drop-shadow(0 0 4px ${li === 1 ? accentHex : accentHex2})` }}
+              />
+            ))
+          )}
+        </svg>
+      </div>
+      <div className="flex items-center gap-2">
+        <Network size={14} style={{ color: accentHex }} />
+        <span className="text-xs font-bold uppercase tracking-widest" style={{ color: accentHex + 'cc' }}>Neural Analysis</span>
+        <motion.div animate={{ opacity: [0, 1, 0] }} transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut' }}>
+          <Zap size={12} style={{ color: accentHex2 }} />
+        </motion.div>
+      </div>
+    </>
+  );
+};
+
+// ── MusicLoadingBar: Random Variant Selector ─────────────────────────────────
+const ANIM_VARIANTS = [AnimVariantVinyl, AnimVariantWaveform, AnimVariantConstellation, AnimVariantCassette, AnimVariantNeural] as const;
+
 const MusicLoadingBar = ({
   mode,
   discoveryLevel = "underground",
@@ -370,55 +640,13 @@ const MusicLoadingBar = ({
       : discoveryLevel === "exotic" || discoveryLevel === "exotics" ? MOOD_EXOTIC_MESSAGES
       : MOOD_UNDERGROUND_MESSAGES;
 
-  const [msgIdx, setMsgIdx] = useState(() => Math.floor(Math.random() * messages.length));
-  const seenRef = useRef<Set<number>>(new Set([Math.floor(Math.random() * messages.length)]));
-  const [progress, setProgress] = useState(0);
-  const [fade, setFade] = useState(true);
-
-  useEffect(() => {
-    const progressInterval = setInterval(() => {
-      setProgress((p) => {
-        if (p >= 92) return p + 0.1;
-        return p + (92 - p) * 0.04;
-      });
-    }, 200);
-
-    const msgInterval = setInterval(() => {
-      setFade(false);
-      setTimeout(() => {
-        setMsgIdx((prev) => {
-          const unseen = messages.map((_: string, i: number) => i).filter((i: number) => !seenRef.current.has(i));
-          if (unseen.length === 0) {
-            seenRef.current.clear();
-            const next = (prev + 1) % messages.length;
-            seenRef.current.add(next);
-            return next;
-          }
-          const next = unseen[Math.floor(Math.random() * unseen.length)];
-          seenRef.current.add(next);
-          return next;
-        });
-        setFade(true);
-      }, 300);
-    }, 2500);
-
-    return () => {
-      clearInterval(progressInterval);
-      clearInterval(msgInterval);
-    };
-  }, [messages.length]);
+  // Random variant selected once per mount
+  const [variantIdx] = useState(() => Math.floor(Math.random() * ANIM_VARIANTS.length));
+  const ChosenVariant = ANIM_VARIANTS[variantIdx];
 
   const accentHex = mode === "explore" ? "#a855f7" : "#ec4899";
   const accentHex2 = mode === "explore" ? "#6366f1" : "#f43f5e";
   const glowColor = mode === "explore" ? "rgba(168,85,247,0.5)" : "rgba(236,72,153,0.5)";
-
-  // Equalizer bar heights (14 bars)
-  const BAR_COUNT = 14;
-  const barDelays = Array.from({ length: BAR_COUNT }, (_, i) => i * 0.08);
-
-  // Orbit particles
-  const ORBIT_COUNT = 6;
-  const orbitAngles = Array.from({ length: ORBIT_COUNT }, (_, i) => (i / ORBIT_COUNT) * 360);
 
   return (
     <motion.div
@@ -428,122 +656,9 @@ const MusicLoadingBar = ({
       transition={{ duration: 0.4 }}
       className="flex flex-col items-center gap-10 py-16 px-4 w-full"
     >
-      {/* Central visual: Vinyl + Orbit + Glow */}
-      <div className="relative flex items-center justify-center" style={{ width: 160, height: 160 }}>
-        {/* Outer glow pulse */}
-        <motion.div
-          animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.1, 0.3] }}
-          transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
-          className="absolute inset-0 rounded-full"
-          style={{ background: `radial-gradient(circle, ${glowColor}, transparent 70%)` }}
-        />
-
-        {/* Orbit ring */}
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
-          className="absolute inset-0"
-        >
-          {orbitAngles.map((angle, i) => (
-            <motion.div
-              key={i}
-              animate={{ opacity: [0.4, 1, 0.4], scale: [0.8, 1.2, 0.8] }}
-              transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.25, ease: "easeInOut" }}
-              className="absolute w-2 h-2 rounded-full"
-              style={{
-                background: i % 2 === 0 ? accentHex : accentHex2,
-                top: `${50 - 45 * Math.cos((angle * Math.PI) / 180)}%`,
-                left: `${50 + 45 * Math.sin((angle * Math.PI) / 180)}%`,
-                transform: 'translate(-50%, -50%)',
-                boxShadow: `0 0 6px ${i % 2 === 0 ? accentHex : accentHex2}`,
-              }}
-            />
-          ))}
-        </motion.div>
-
-        {/* Spinning vinyl disc */}
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
-          className="relative z-10 w-20 h-20 rounded-full flex items-center justify-center"
-          style={{
-            background: `conic-gradient(from 0deg, #111, #222, #111, #1a1a1a, #111)`,
-            boxShadow: `0 0 30px ${glowColor}, 0 0 60px ${glowColor}40`,
-            border: `2px solid ${accentHex}60`,
-          }}
-        >
-          {/* Vinyl grooves */}
-          <div className="absolute inset-2 rounded-full" style={{ border: `1px solid ${accentHex}20` }} />
-          <div className="absolute inset-4 rounded-full" style={{ border: `1px solid ${accentHex}15` }} />
-          <div className="absolute inset-6 rounded-full" style={{ border: `1px solid ${accentHex}10` }} />
-          {/* Center label */}
-          <div
-            className="w-6 h-6 rounded-full z-10 flex items-center justify-center"
-            style={{ background: `linear-gradient(135deg, ${accentHex}, ${accentHex2})` }}
-          >
-            <Disc size={10} className="text-white" />
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Equalizer bars */}
-      <div className="flex items-end gap-1" style={{ height: 48 }}>
-        {barDelays.map((delay, i) => (
-          <motion.div
-            key={i}
-            animate={{ scaleY: [0.2, 1, 0.4, 0.8, 0.2] }}
-            transition={{ repeat: Infinity, duration: 1.2, delay, ease: "easeInOut" }}
-            className="w-2 rounded-t-full origin-bottom"
-            style={{
-              height: 40,
-              background: `linear-gradient(to top, ${accentHex}, ${accentHex2}80)`,
-              boxShadow: `0 0 4px ${accentHex}60`,
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Message card */}
-      <div
-        className="w-full max-w-lg rounded-2xl px-6 py-4 text-center"
-        style={{
-          background: 'rgba(10, 10, 20, 0.85)',
-          backdropFilter: 'blur(20px)',
-          border: `1px solid ${accentHex}30`,
-          boxShadow: `0 4px 30px rgba(0,0,0,0.5), inset 0 1px 0 ${accentHex}20`,
-        }}
-      >
-        <motion.p
-          key={msgIdx}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.4 }}
-          className="text-sm font-medium tracking-wide leading-relaxed"
-          style={{ color: '#f0f0ff' }}
-        >
-          {messages[msgIdx]}
-        </motion.p>
-      </div>
-
-      {/* Progress bar */}
-      <div className="w-full max-w-sm">
-        <div className="h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
-          <motion.div
-            className="h-full rounded-full"
-            style={{
-              width: `${progress}%`,
-              background: `linear-gradient(90deg, ${accentHex2}, ${accentHex})`,
-              boxShadow: `0 0 12px ${glowColor}`,
-            }}
-            transition={{ duration: 0.3 }}
-          />
-        </div>
-        <div className="flex justify-between mt-2">
-          <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: accentHex + 'cc' }}>Analysing</span>
-          <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: accentHex + 'cc' }}>{Math.round(progress)}%</span>
-        </div>
-      </div>
+      <ChosenVariant accentHex={accentHex} accentHex2={accentHex2} glowColor={glowColor} />
+      <LoadingMessageCard messages={messages} accentHex={accentHex} />
+      <LoadingProgressBar accentHex={accentHex} accentHex2={accentHex2} glowColor={glowColor} />
     </motion.div>
   );
 };
