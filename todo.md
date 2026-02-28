@@ -437,6 +437,7 @@
 ## Animations Redesign v2 – Feb 28
 - [x] Alle 10 alten AnimVarianten entfernt (Vinyl, Waveform, Constellation, Neural, Turntable, Walkman, Gramophone, TapeMachine, iPod)
 - [x] Neue Kassetten-Animation: 280×180 SVG, TYPE II Chrome Label, 5-Speichen-Spulen (links CCW, rechts CW, unterschiedliche Geschwindigkeiten), Tape-Pfad mit Playhead, Pinch-Rollers, Schrauben, PLAYING-Statusanzeige
-- [x] Neue Equalizer-Animation: 300×200 SVG, 16 Bänder mit realistischer EQ-Kurve (Bass-Boost, Mid-Scoop), Rack-Mount-Ohren mit Schrauben, dB-Skala, Peak-Hold-Dots, VU-Meter-Streifen, Frequenz-Labels (32Hz–16kHz), Power-LED
+- [x] Animations komplett neu gebaut (5 saubere Varianten): Waveform, Equalizer, Kassette, Reel-to-Reel, Vinyl
+- [x] Neue Equalizer-Animation (alt, ersetzt): 300×200 SVG, 16 Bänder mit realistischer EQ-Kurve (Bass-Boost, Mid-Scoop), Rack-Mount-Ohren mit Schrauben, dB-Skala, Peak-Hold-Dots, VU-Meter-Streifen, Frequenz-Labels (32Hz–16kHz), Power-LED
 - [x] ANIM_VARIANTS auf [AnimVariantCassette, AnimVariantEqualizer] reduziert
 - [x] Ungenutzte Imports (Radio, Waves, Network, Zap) entfernt
