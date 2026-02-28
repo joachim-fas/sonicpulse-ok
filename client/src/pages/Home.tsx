@@ -22,10 +22,6 @@ import {
   Moon,
   Sun,
   AlertCircle,
-  Radio,
-  Waves,
-  Network,
-  Zap,
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -402,618 +398,308 @@ const LoadingProgressBar = ({ accentHex, accentHex2, glowColor }: { accentHex: s
   );
 };
 
-// ── Variant 1: Vinyl + Orbit + Equalizer ────────────────────────────────────
-const AnimVariantVinyl = ({ accentHex, accentHex2, glowColor }: { accentHex: string; accentHex2: string; glowColor: string }) => {
-  const BAR_COUNT = 14;
-  const barDelays = Array.from({ length: BAR_COUNT }, (_, i) => i * 0.08);
-  const ORBIT_COUNT = 6;
-  const orbitAngles = Array.from({ length: ORBIT_COUNT }, (_, i) => (i / ORBIT_COUNT) * 360);
-  return (
-    <>
-      <div className="relative flex items-center justify-center" style={{ width: 160, height: 160 }}>
-        <motion.div animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.1, 0.3] }} transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut' }} className="absolute inset-0 rounded-full" style={{ background: `radial-gradient(circle, ${glowColor}, transparent 70%)` }} />
-        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 8, ease: 'linear' }} className="absolute inset-0">
-          {orbitAngles.map((angle, i) => (
-            <motion.div key={i} animate={{ opacity: [0.4, 1, 0.4], scale: [0.8, 1.2, 0.8] }} transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.25, ease: 'easeInOut' }} className="absolute w-2 h-2 rounded-full" style={{ background: i % 2 === 0 ? accentHex : accentHex2, top: `${50 - 45 * Math.cos((angle * Math.PI) / 180)}%`, left: `${50 + 45 * Math.sin((angle * Math.PI) / 180)}%`, transform: 'translate(-50%,-50%)', boxShadow: `0 0 6px ${i % 2 === 0 ? accentHex : accentHex2}` }} />
-          ))}
-        </motion.div>
-        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 4, ease: 'linear' }} className="relative z-10 w-20 h-20 rounded-full flex items-center justify-center" style={{ background: 'conic-gradient(from 0deg,#111,#222,#111,#1a1a1a,#111)', boxShadow: `0 0 30px ${glowColor},0 0 60px ${glowColor}40`, border: `2px solid ${accentHex}60` }}>
-          <div className="absolute inset-2 rounded-full" style={{ border: `1px solid ${accentHex}20` }} />
-          <div className="absolute inset-4 rounded-full" style={{ border: `1px solid ${accentHex}15` }} />
-          <div className="absolute inset-6 rounded-full" style={{ border: `1px solid ${accentHex}10` }} />
-          <div className="w-6 h-6 rounded-full z-10 flex items-center justify-center" style={{ background: `linear-gradient(135deg,${accentHex},${accentHex2})` }}><Disc size={10} className="text-white" /></div>
-        </motion.div>
-      </div>
-      <div className="flex items-end gap-1" style={{ height: 48 }}>
-        {barDelays.map((delay, i) => (
-          <motion.div key={i} animate={{ scaleY: [0.2, 1, 0.4, 0.8, 0.2] }} transition={{ repeat: Infinity, duration: 1.2, delay, ease: 'easeInOut' }} className="w-2 rounded-t-full origin-bottom" style={{ height: 40, background: `linear-gradient(to top,${accentHex},${accentHex2}80)`, boxShadow: `0 0 4px ${accentHex}60` }} />
-        ))}
-      </div>
-    </>
-  );
-};
 
-// ── Variant 2: Waveform Scan ─────────────────────────────────────────────────
-const AnimVariantWaveform = ({ accentHex, accentHex2, glowColor }: { accentHex: string; accentHex2: string; glowColor: string }) => {
-  const WAVE_BARS = 32;
-  const waveDelays = Array.from({ length: WAVE_BARS }, (_, i) => i * 0.04);
-  return (
-    <>
-      <div className="relative flex flex-col items-center gap-4">
-        {/* Scan label */}
-        <div className="flex items-center gap-2">
-          <motion.div animate={{ opacity: [1, 0.3, 1] }} transition={{ repeat: Infinity, duration: 1, ease: 'easeInOut' }} className="w-2 h-2 rounded-full" style={{ background: accentHex, boxShadow: `0 0 8px ${accentHex}` }} />
-          <span className="text-xs font-bold uppercase tracking-widest" style={{ color: accentHex }}>Scanning Frequencies</span>
-        </div>
-        {/* Waveform */}
-        <div className="flex items-center gap-0.5" style={{ height: 80 }}>
-          {waveDelays.map((delay, i) => {
-            const isMid = i > 8 && i < 24;
-            return (
-              <motion.div key={i}
-                animate={{ scaleY: isMid ? [0.1, 1, 0.3, 0.8, 0.1] : [0.05, 0.3, 0.1, 0.2, 0.05] }}
-                transition={{ repeat: Infinity, duration: isMid ? 0.9 : 1.4, delay, ease: 'easeInOut' }}
-                className="rounded-full origin-center"
-                style={{ width: 5, height: 60, background: `linear-gradient(to top, ${accentHex2}40, ${accentHex})`, boxShadow: isMid ? `0 0 6px ${accentHex}80` : 'none' }}
-              />
-            );
-          })}
-        </div>
-        {/* Horizontal scan line */}
-        <div className="relative w-full" style={{ height: 2 }}>
-          <motion.div animate={{ x: ['-100%', '200%'] }} transition={{ repeat: Infinity, duration: 2.5, ease: 'linear' }} className="absolute inset-y-0 w-16 rounded-full" style={{ background: `linear-gradient(90deg, transparent, ${accentHex}, transparent)`, boxShadow: `0 0 12px ${glowColor}` }} />
-        </div>
-        {/* Radio icon */}
-        <Radio size={28} style={{ color: accentHex + '80' }} />
-      </div>
-    </>
-  );
-};
-
-// ── Variant 3: Constellation ─────────────────────────────────────────────────
-const AnimVariantConstellation = ({ accentHex, accentHex2, glowColor }: { accentHex: string; accentHex2: string; glowColor: string }) => {
-  // 8 stars in a circle pattern
-  const STARS = 8;
-  const starAngles = Array.from({ length: STARS }, (_, i) => (i / STARS) * 360);
-  const r = 70;
-  const cx = 90, cy = 90;
-  const starPoints = starAngles.map((a) => ({
-    x: cx + r * Math.cos((a - 90) * Math.PI / 180),
-    y: cy + r * Math.sin((a - 90) * Math.PI / 180),
-  }));
-  return (
-    <>
-      <div className="relative" style={{ width: 180, height: 180 }}>
-        <svg width="180" height="180" className="absolute inset-0">
-          {/* Connection lines */}
-          {starPoints.map((p, i) => {
-            const next = starPoints[(i + 2) % STARS];
-            return (
-              <motion.line key={i} x1={p.x} y1={p.y} x2={next.x} y2={next.y}
-                stroke={accentHex} strokeWidth="1"
-                animate={{ opacity: [0, 0.6, 0] }}
-                transition={{ repeat: Infinity, duration: 2, delay: i * 0.25, ease: 'easeInOut' }}
-              />
-            );
-          })}
-          {/* Stars */}
-          {starPoints.map((p, i) => (
-            <motion.circle key={i} cx={p.x} cy={p.y} r={4}
-              fill={i % 2 === 0 ? accentHex : accentHex2}
-              animate={{ r: [3, 6, 3], opacity: [0.5, 1, 0.5] }}
-              transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.2, ease: 'easeInOut' }}
-              style={{ filter: `drop-shadow(0 0 4px ${accentHex})` }}
-            />
-          ))}
-          {/* Center */}
-          <motion.circle cx={cx} cy={cy} r={8} fill={accentHex}
-            animate={{ r: [6, 10, 6], opacity: [0.7, 1, 0.7] }}
-            transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
-            style={{ filter: `drop-shadow(0 0 8px ${glowColor})` }}
-          />
-          <Sparkles size={10} style={{ color: 'white' }} />
-        </svg>
-        {/* Center icon overlay */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <motion.div animate={{ rotate: [0, 360] }} transition={{ repeat: Infinity, duration: 20, ease: 'linear' }}>
-            <Music size={16} style={{ color: accentHex }} />
-          </motion.div>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <motion.div animate={{ opacity: [1, 0.3, 1] }} transition={{ repeat: Infinity, duration: 1.2, ease: 'easeInOut' }} className="w-1.5 h-1.5 rounded-full" style={{ background: accentHex2 }} />
-        <span className="text-xs uppercase tracking-widest font-semibold" style={{ color: accentHex2 + 'cc' }}>Mapping Sound Universe</span>
-        <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.2, delay: 0.6, ease: 'easeInOut' }} className="w-1.5 h-1.5 rounded-full" style={{ background: accentHex }} />
-      </div>
-    </>
-  );
-};
-
-// ── Variant 4: Cassette Tape ─────────────────────────────────────────────────
+// ── Variant 1: Kassette (Hochwertig) ─────────────────────────────────────────
 const AnimVariantCassette = ({ accentHex, accentHex2, glowColor }: { accentHex: string; accentHex2: string; glowColor: string }) => {
+  const SPOKE_ANGLES_L = [0, 72, 144, 216, 288];
+  const SPOKE_ANGLES_R = [36, 108, 180, 252, 324];
   return (
     <>
-      {/* Cassette body */}
-      <div className="relative" style={{ width: 200, height: 120 }}>
-        {/* Body */}
-        <div className="absolute inset-0 rounded-xl" style={{ background: 'linear-gradient(135deg,#1a1a2e,#16213e)', border: `2px solid ${accentHex}40`, boxShadow: `0 0 20px ${glowColor}` }} />
-        {/* Label */}
-        <div className="absolute inset-x-4 top-3 bottom-8 rounded-lg flex items-center justify-center" style={{ background: `linear-gradient(135deg,${accentHex}15,${accentHex2}15)`, border: `1px solid ${accentHex}30` }}>
-          <span className="text-[8px] font-bold uppercase tracking-widest" style={{ color: accentHex }}>SonicPulse</span>
-        </div>
-        {/* Left reel */}
-        <div className="absolute bottom-2 left-8 w-10 h-10 rounded-full flex items-center justify-center" style={{ border: `2px solid ${accentHex}60`, background: '#0a0a14' }}>
-          <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }} className="w-6 h-6 rounded-full" style={{ background: `conic-gradient(${accentHex},${accentHex2},${accentHex})` }}>
-            <div className="w-full h-full rounded-full flex items-center justify-center" style={{ background: '#0a0a14', margin: '3px', width: 'calc(100% - 6px)', height: 'calc(100% - 6px)' }} />
-          </motion.div>
-        </div>
-        {/* Right reel */}
-        <div className="absolute bottom-2 right-8 w-10 h-10 rounded-full flex items-center justify-center" style={{ border: `2px solid ${accentHex2}60`, background: '#0a0a14' }}>
-          <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }} className="w-6 h-6 rounded-full" style={{ background: `conic-gradient(${accentHex2},${accentHex},${accentHex2})` }}>
-            <div className="w-full h-full rounded-full flex items-center justify-center" style={{ background: '#0a0a14', margin: '3px', width: 'calc(100% - 6px)', height: 'calc(100% - 6px)' }} />
-          </motion.div>
-        </div>
-        {/* Tape window */}
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-8 h-5 rounded" style={{ background: '#0a0a14', border: `1px solid ${accentHex}30` }}>
-          <motion.div animate={{ scaleX: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut' }} className="h-0.5 mx-1 mt-2 rounded-full" style={{ background: accentHex }} />
-        </div>
-      </div>
-      {/* Tape running indicator */}
-      <div className="flex items-center gap-3">
-        <motion.div animate={{ opacity: [1, 0.2, 1] }} transition={{ repeat: Infinity, duration: 0.8 }} className="w-2 h-2 rounded-full" style={{ background: accentHex, boxShadow: `0 0 6px ${accentHex}` }} />
-        <span className="text-xs font-bold uppercase tracking-widest" style={{ color: accentHex }}>Playing</span>
-        <Zap size={12} style={{ color: accentHex2 }} />
-      </div>
-    </>
-  );
-};
-
-// ── Variant 5: Neural Network ────────────────────────────────────────────────
-const AnimVariantNeural = ({ accentHex, accentHex2, glowColor }: { accentHex: string; accentHex2: string; glowColor: string }) => {
-  // 3 layers: 3 + 4 + 3 nodes
-  const layers = [[0, 1, 2], [0, 1, 2, 3], [0, 1, 2]];
-  const layerX = [30, 90, 150];
-  const nodeY = (layer: number[], idx: number) => {
-    const total = layer.length;
-    const spacing = 120 / (total + 1);
-    return 20 + spacing * (idx + 1);
-  };
-  return (
-    <>
-      <div className="relative" style={{ width: 180, height: 140 }}>
-        <svg width="180" height="140" className="absolute inset-0">
-          {/* Connections */}
-          {layers.slice(0, -1).map((layer, li) =>
-            layer.map((_, ni) =>
-              layers[li + 1].map((_, nj) => (
-                <motion.line key={`${li}-${ni}-${nj}`}
-                  x1={layerX[li]} y1={nodeY(layer, ni)}
-                  x2={layerX[li + 1]} y2={nodeY(layers[li + 1], nj)}
-                  stroke={accentHex}
-                  strokeWidth="1"
-                  animate={{ opacity: [0.1, 0.6, 0.1], strokeWidth: [0.5, 1.5, 0.5] }}
-                  transition={{ repeat: Infinity, duration: 1.5, delay: (ni + nj + li) * 0.15, ease: 'easeInOut' }}
-                />
-              ))
-            )
-          )}
-          {/* Nodes */}
-          {layers.map((layer, li) =>
-            layer.map((_, ni) => (
-              <motion.circle key={`n-${li}-${ni}`}
-                cx={layerX[li]} cy={nodeY(layer, ni)} r={7}
-                fill={li === 1 ? accentHex : accentHex2}
-                animate={{ r: [5, 9, 5], opacity: [0.6, 1, 0.6] }}
-                transition={{ repeat: Infinity, duration: 1.2, delay: (ni + li) * 0.2, ease: 'easeInOut' }}
-                style={{ filter: `drop-shadow(0 0 4px ${li === 1 ? accentHex : accentHex2})` }}
-              />
-            ))
-          )}
-        </svg>
-      </div>
-      <div className="flex items-center gap-2">
-        <Network size={14} style={{ color: accentHex }} />
-        <span className="text-xs font-bold uppercase tracking-widest" style={{ color: accentHex + 'cc' }}>Neural Analysis</span>
-        <motion.div animate={{ opacity: [0, 1, 0] }} transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut' }}>
-          <Zap size={12} style={{ color: accentHex2 }} />
-        </motion.div>
-      </div>
-    </>
-  );
-};
-
-// ── Variant 6: Turntable ────────────────────────────────────────────────────
-const AnimVariantTurntable = ({ accentHex, accentHex2, glowColor }: { accentHex: string; accentHex2: string; glowColor: string }) => {
-  return (
-    <>
-      <div className="relative" style={{ width: 240, height: 240 }}>
-        <svg width="240" height="240" viewBox="0 0 240 240">
+      <div className="relative" style={{ width: 280, height: 180 }}>
+        <svg width="280" height="180" viewBox="0 0 280 180">
           <defs>
-            <radialGradient id="tt-lbl" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor={accentHex} />
-              <stop offset="100%" stopColor={accentHex2} />
-            </radialGradient>
-            <radialGradient id="tt-platter" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#1a1a2e" />
-              <stop offset="100%" stopColor="#0a0a14" />
-            </radialGradient>
-          </defs>
-          {/* Plinth / base – full width wooden cabinet */}
-          <rect x="20" y="185" width="200" height="40" rx="8" fill="#2a1f14" stroke={accentHex + '50'} strokeWidth="1.5" />
-          <rect x="20" y="185" width="200" height="8" rx="4" fill="#3a2a1a" />
-          {/* Platter mat */}
-          <circle cx="110" cy="140" r="88" fill="#111118" stroke={accentHex + '20'} strokeWidth="1" />
-          {/* Spinning vinyl record */}
-          <motion.g animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 3.5, ease: 'linear' }} style={{ originX: '110px', originY: '140px' }}>
-            <circle cx="110" cy="140" r="82" fill="url(#tt-platter)" />
-            {/* Grooves */}
-            {[70, 62, 54, 46, 38, 30].map((r, i) => (
-              <circle key={i} cx="110" cy="140" r={r} fill="none" stroke={accentHex + '18'} strokeWidth="0.8" />
-            ))}
-            {/* Label */}
-            <circle cx="110" cy="140" r="22" fill={`url(#tt-lbl)`} opacity="0.9" />
-            <circle cx="110" cy="140" r="4" fill="#0a0a14" />
-          </motion.g>
-          {/* Glow */}
-          <ellipse cx="110" cy="185" rx="75" ry="6" fill={glowColor} opacity="0.3" />
-          {/* Tonearm pivot */}
-          <circle cx="185" cy="75" r="9" fill="#2a2040" stroke={accentHex + '70'} strokeWidth="2" />
-          <circle cx="185" cy="75" r="4" fill={accentHex} opacity="0.8" />
-          {/* Tonearm – pivots from top-right, stylus lands on record */}
-          <motion.g
-            animate={{ rotate: [-22, -12, -22] }}
-            transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
-            style={{ originX: '185px', originY: '75px' }}
-          >
-            {/* Arm tube */}
-            <line x1="185" y1="75" x2="148" y2="118" stroke={accentHex} strokeWidth="3" strokeLinecap="round" />
-            {/* Head shell */}
-            <rect x="141" y="114" width="14" height="8" rx="3" fill={accentHex2} opacity="0.9" />
-            {/* Stylus */}
-            <line x1="148" y1="122" x2="148" y2="130" stroke="#e0e0e0" strokeWidth="1.5" strokeLinecap="round" />
-          </motion.g>
-          {/* Speed badge */}
-          <rect x="22" y="190" width="50" height="14" rx="3" fill="#1a1020" />
-          <motion.circle cx="30" cy="197" r="3" fill={accentHex} animate={{ opacity: [1, 0.2, 1] }} transition={{ repeat: Infinity, duration: 0.8 }} />
-          <text x="36" y="201" fill={accentHex + 'cc'} fontSize="7" fontFamily="monospace" fontWeight="bold">33 RPM</text>
-        </svg>
-      </div>
-      <div className="flex items-center gap-2">
-        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 3.5, ease: 'linear' }}>
-          <Disc size={14} style={{ color: accentHex }} />
-        </motion.div>
-        <span className="text-xs font-bold uppercase tracking-widest" style={{ color: accentHex }}>Spinning Up</span>
-      </div>
-    </>
-  );
-};
-
-// ── Variant 7: Walkman / Cassette Player ─────────────────────────────────────
-const AnimVariantWalkman = ({ accentHex, accentHex2, glowColor }: { accentHex: string; accentHex2: string; glowColor: string }) => {
-  return (
-    <>
-      <div className="relative" style={{ width: 180, height: 240 }}>
-        <svg width="180" height="240" viewBox="0 0 180 240">
-          <defs>
-            <linearGradient id="wm-body" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#2a2040" />
-              <stop offset="100%" stopColor="#1a1028" />
+            <linearGradient id="cs-body" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e1428" />
+              <stop offset="100%" stopColor="#120c1c" />
+            </linearGradient>
+            <linearGradient id="cs-label" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor={accentHex + '22'} />
+              <stop offset="100%" stopColor={accentHex2 + '18'} />
+            </linearGradient>
+            <linearGradient id="cs-tape" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={accentHex2 + '80'} />
+              <stop offset="50%" stopColor={accentHex + 'cc'} />
+              <stop offset="100%" stopColor={accentHex2 + '80'} />
             </linearGradient>
           </defs>
-          {/* Body */}
-          <rect x="10" y="8" width="160" height="220" rx="16" fill="url(#wm-body)" stroke={accentHex + '60'} strokeWidth="2" />
-          {/* Highlight edge */}
-          <rect x="10" y="8" width="160" height="220" rx="16" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="4" />
-          {/* Cassette window */}
-          <rect x="22" y="20" width="136" height="90" rx="10" fill="#0a0814" stroke={accentHex + '50'} strokeWidth="1.5" />
-          {/* Window glare */}
-          <rect x="24" y="22" width="40" height="6" rx="3" fill="rgba(255,255,255,0.06)" />
-          {/* Left reel */}
-          <motion.g animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.4, ease: 'linear' }} style={{ originX: '55px', originY: '65px' }}>
-            <circle cx="55" cy="65" r="26" fill="#12101e" stroke={accentHex + '50'} strokeWidth="1.5" />
-            <circle cx="55" cy="65" r="18" fill="none" stroke={accentHex + '30'} strokeWidth="1" />
-            {/* 4 spokes */}
-            {[0, 90, 180, 270].map((a, i) => (
-              <line key={i}
-                x1={55 + 10 * Math.cos(a * Math.PI / 180)}
-                y1={65 + 10 * Math.sin(a * Math.PI / 180)}
-                x2={55 + 22 * Math.cos(a * Math.PI / 180)}
-                y2={65 + 22 * Math.sin(a * Math.PI / 180)}
-                stroke={accentHex + '70'} strokeWidth="2" strokeLinecap="round"
-              />
-            ))}
-            <circle cx="55" cy="65" r="7" fill={accentHex} opacity="0.8" />
-            <circle cx="55" cy="65" r="3" fill="#0a0814" />
-          </motion.g>
-          {/* Right reel */}
-          <motion.g animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.4, ease: 'linear' }} style={{ originX: '125px', originY: '65px' }}>
-            <circle cx="125" cy="65" r="26" fill="#12101e" stroke={accentHex2 + '50'} strokeWidth="1.5" />
-            <circle cx="125" cy="65" r="18" fill="none" stroke={accentHex2 + '30'} strokeWidth="1" />
-            {[0, 90, 180, 270].map((a, i) => (
-              <line key={i}
-                x1={125 + 10 * Math.cos(a * Math.PI / 180)}
-                y1={65 + 10 * Math.sin(a * Math.PI / 180)}
-                x2={125 + 22 * Math.cos(a * Math.PI / 180)}
-                y2={65 + 22 * Math.sin(a * Math.PI / 180)}
-                stroke={accentHex2 + '70'} strokeWidth="2" strokeLinecap="round"
-              />
-            ))}
-            <circle cx="125" cy="65" r="7" fill={accentHex2} opacity="0.8" />
-            <circle cx="125" cy="65" r="3" fill="#0a0814" />
-          </motion.g>
+
+          {/* Drop shadow */}
+          <ellipse cx="140" cy="174" rx="110" ry="6" fill={glowColor} opacity="0.3" />
+
+          {/* Cassette body */}
+          <rect x="10" y="12" width="260" height="155" rx="12" fill="url(#cs-body)" stroke={accentHex + '55'} strokeWidth="2" />
+          {/* Top edge highlight */}
+          <rect x="10" y="12" width="260" height="8" rx="6" fill="rgba(255,255,255,0.05)" />
+          {/* Bottom notch cutout */}
+          <rect x="60" y="148" width="160" height="20" rx="4" fill="#0a0812" stroke={accentHex + '30'} strokeWidth="1" />
+
+          {/* Label area */}
+          <rect x="22" y="22" width="236" height="90" rx="8" fill="url(#cs-label)" stroke={accentHex + '35'} strokeWidth="1" />
+          <text x="140" y="44" textAnchor="middle" fill={accentHex} fontSize="11" fontFamily="monospace" fontWeight="bold" letterSpacing="4">SONICPULSE</text>
+          <text x="140" y="58" textAnchor="middle" fill={accentHex + '70'} fontSize="7" fontFamily="monospace" letterSpacing="2">TYPE II · CHROME · 90 MIN</text>
+          <line x1="30" y1="65" x2="110" y2="65" stroke={accentHex + '30'} strokeWidth="0.5" />
+          <line x1="170" y1="65" x2="250" y2="65" stroke={accentHex + '30'} strokeWidth="0.5" />
+          {/* Side notches */}
+          <rect x="10" y="30" width="8" height="20" rx="2" fill="#0a0812" stroke={accentHex + '20'} strokeWidth="1" />
+          <rect x="262" y="30" width="8" height="20" rx="2" fill="#0a0812" stroke={accentHex + '20'} strokeWidth="1" />
+
+          {/* Tape window */}
+          <rect x="75" y="72" width="130" height="52" rx="8" fill="#060410" stroke={accentHex + '40'} strokeWidth="1.5" />
+          <rect x="78" y="74" width="50" height="4" rx="2" fill="rgba(255,255,255,0.04)" />
+
           {/* Tape path */}
-          <path d="M 55 91 Q 90 100 125 91" fill="none" stroke={accentHex + '60'} strokeWidth="1.5" />
-          {/* Playhead */}
-          <rect x="84" y="96" width="12" height="8" rx="2" fill="#2a2040" stroke={accentHex + '80'} strokeWidth="1" />
-          {/* LCD Display */}
-          <rect x="22" y="118" width="136" height="32" rx="5" fill="#050510" stroke={accentHex + '40'} strokeWidth="1" />
-          <motion.text x="90" y="138" textAnchor="middle" fill={accentHex} fontSize="10" fontFamily="monospace" fontWeight="bold"
-            animate={{ opacity: [1, 0.4, 1] }} transition={{ repeat: Infinity, duration: 1.5 }}>
-            ♪ SONICPULSE ♪
-          </motion.text>
-          {/* Transport buttons */}
-          {[22, 50, 78, 106, 134].map((x, i) => (
+          <path d="M 100 98 L 108 108 L 172 108 L 180 98" fill="none" stroke="url(#cs-tape)" strokeWidth="3" strokeLinecap="round" />
+          {/* Playhead housing */}
+          <rect x="132" y="104" width="16" height="12" rx="3" fill="#1a1228" stroke={accentHex + '80'} strokeWidth="1.5" />
+          <rect x="136" y="107" width="8" height="6" rx="1" fill={accentHex} opacity="0.6" />
+          {/* Pinch rollers */}
+          <circle cx="122" cy="110" r="5" fill="#1a1228" stroke={accentHex + '50'} strokeWidth="1" />
+          <circle cx="158" cy="110" r="5" fill="#1a1228" stroke={accentHex + '50'} strokeWidth="1" />
+
+          {/* Left reel – spins counter-clockwise (supply) */}
+          <motion.g
+            animate={{ rotate: -360 }}
+            transition={{ repeat: Infinity, duration: 2.8, ease: 'linear' }}
+            style={{ originX: '100px', originY: '90px' }}
+          >
+            <circle cx="100" cy="90" r="28" fill="#0e0b18" stroke={accentHex + '50'} strokeWidth="1.5" />
+            <circle cx="100" cy="90" r="22" fill="none" stroke={accentHex + '25'} strokeWidth="5" />
+            <circle cx="100" cy="90" r="16" fill="none" stroke={accentHex + '15'} strokeWidth="3" />
+            <circle cx="100" cy="90" r="10" fill="#1a1228" stroke={accentHex + '60'} strokeWidth="1.5" />
+            {SPOKE_ANGLES_L.map((a, i) => (
+              <line key={i}
+                x1={100 + 10 * Math.cos(a * Math.PI / 180)}
+                y1={90 + 10 * Math.sin(a * Math.PI / 180)}
+                x2={100 + 22 * Math.cos(a * Math.PI / 180)}
+                y2={90 + 22 * Math.sin(a * Math.PI / 180)}
+                stroke={accentHex + '80'} strokeWidth="2" strokeLinecap="round"
+              />
+            ))}
+            <circle cx="100" cy="90" r="4" fill="#060410" />
+            <circle cx="100" cy="90" r="6" fill="none" stroke={accentHex} strokeWidth="1" opacity="0.5" />
+          </motion.g>
+
+          {/* Right reel – spins clockwise (take-up, faster) */}
+          <motion.g
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 2.0, ease: 'linear' }}
+            style={{ originX: '180px', originY: '90px' }}
+          >
+            <circle cx="180" cy="90" r="28" fill="#0e0b18" stroke={accentHex2 + '50'} strokeWidth="1.5" />
+            <circle cx="180" cy="90" r="14" fill="none" stroke={accentHex2 + '25'} strokeWidth="3" />
+            <circle cx="180" cy="90" r="10" fill="#1a1228" stroke={accentHex2 + '60'} strokeWidth="1.5" />
+            {SPOKE_ANGLES_R.map((a, i) => (
+              <line key={i}
+                x1={180 + 10 * Math.cos(a * Math.PI / 180)}
+                y1={90 + 10 * Math.sin(a * Math.PI / 180)}
+                x2={180 + 22 * Math.cos(a * Math.PI / 180)}
+                y2={90 + 22 * Math.sin(a * Math.PI / 180)}
+                stroke={accentHex2 + '80'} strokeWidth="2" strokeLinecap="round"
+              />
+            ))}
+            <circle cx="180" cy="90" r="4" fill="#060410" />
+            <circle cx="180" cy="90" r="6" fill="none" stroke={accentHex2} strokeWidth="1" opacity="0.5" />
+          </motion.g>
+
+          {/* Screw holes */}
+          {[28, 252].map((x, i) => (
             <g key={i}>
-              <rect x={x} y="160" width="22" height="16" rx="4" fill="#2a2040" stroke={i === 2 ? accentHex : accentHex + '25'} strokeWidth="1" />
-              {i === 0 && <text x={x + 11} y="172" textAnchor="middle" fill={accentHex + '80'} fontSize="8">⏮</text>}
-              {i === 1 && <text x={x + 11} y="172" textAnchor="middle" fill={accentHex + '80'} fontSize="8">⏪</text>}
-              {i === 2 && <motion.text x={x + 11} y="172" textAnchor="middle" fill={accentHex} fontSize="10" animate={{ opacity: [1, 0.5, 1] }} transition={{ repeat: Infinity, duration: 0.8 }}>▶</motion.text>}
-              {i === 3 && <text x={x + 11} y="172" textAnchor="middle" fill={accentHex + '80'} fontSize="8">⏩</text>}
-              {i === 4 && <text x={x + 11} y="172" textAnchor="middle" fill={accentHex + '80'} fontSize="8">⏭</text>}
+              <circle cx={x} cy="155" r="5" fill="#0a0812" stroke={accentHex + '30'} strokeWidth="1" />
+              <line x1={x - 3} y1="155" x2={x + 3} y2="155" stroke={accentHex + '40'} strokeWidth="1" />
+              <line x1={x} y1="152" x2={x} y2="158" stroke={accentHex + '40'} strokeWidth="1" />
             </g>
           ))}
-          {/* Volume wheel */}
-          <motion.g animate={{ rotate: [0, 25, 0] }} transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut' }} style={{ originX: '145px', originY: '200px' }}>
-            <circle cx="145" cy="200" r="14" fill="#2a2040" stroke={accentHex2 + '60'} strokeWidth="1.5" />
-            <line x1="145" y1="186" x2="145" y2="193" stroke={accentHex2} strokeWidth="2.5" strokeLinecap="round" />
-          </motion.g>
-          <text x="145" y="222" textAnchor="middle" fill={accentHex2 + '60'} fontSize="6" fontFamily="monospace">VOL</text>
-          {/* Headphone jack */}
-          <circle cx="90" cy="220" r="6" fill="#0a0814" stroke={accentHex + '60'} strokeWidth="1.5" />
-          {/* LED indicator */}
-          <motion.circle cx="35" cy="200" r="5" fill={accentHex}
-            animate={{ opacity: [1, 0.1, 1] }}
-            transition={{ repeat: Infinity, duration: 0.6 }}
-            style={{ filter: `drop-shadow(0 0 5px ${accentHex})` }}
+
+          {/* Tape counter */}
+          <rect x="108" y="148" width="64" height="16" rx="3" fill="#060410" stroke={accentHex + '30'} strokeWidth="1" />
+          <motion.text x="140" y="159" textAnchor="middle" fill={accentHex} fontSize="8" fontFamily="monospace" fontWeight="bold"
+            animate={{ opacity: [1, 0.5, 1] }} transition={{ repeat: Infinity, duration: 1.2 }}
+          >▶ PLAYING</motion.text>
+
+          {/* Playhead glow pulse */}
+          <motion.rect x="130" y="103" width="20" height="14" rx="4"
+            fill={accentHex} opacity="0"
+            animate={{ opacity: [0, 0.18, 0] }}
+            transition={{ repeat: Infinity, duration: 0.8, ease: 'easeInOut' }}
+            style={{ filter: 'blur(4px)' }}
           />
-          <text x="44" y="204" fill={accentHex + '80'} fontSize="6" fontFamily="monospace">PLAY</text>
         </svg>
       </div>
-      <div className="flex items-center gap-2">
-        <motion.div animate={{ opacity: [1, 0.2, 1] }} transition={{ repeat: Infinity, duration: 0.6 }} className="w-2 h-2 rounded-full" style={{ background: accentHex, boxShadow: `0 0 6px ${accentHex}` }} />
+      <div className="flex items-center gap-3">
+        <motion.div
+          animate={{ opacity: [1, 0.2, 1] }}
+          transition={{ repeat: Infinity, duration: 0.7 }}
+          className="w-2 h-2 rounded-full"
+          style={{ background: accentHex, boxShadow: `0 0 8px ${accentHex}` }}
+        />
         <span className="text-xs font-bold uppercase tracking-widest" style={{ color: accentHex }}>Tape Running</span>
       </div>
     </>
   );
 };
 
-// ── Variant 8: Gramophone ────────────────────────────────────────────────────
-const AnimVariantGramophone = ({ accentHex, accentHex2, glowColor }: { accentHex: string; accentHex2: string; glowColor: string }) => {
+// ── Variant 2: Graphic Equalizer (Hochwertig) ─────────────────────────────────
+const AnimVariantEqualizer = ({ accentHex, accentHex2, glowColor }: { accentHex: string; accentHex2: string; glowColor: string }) => {
+  const BANDS = 16;
+  const baseHeights = [0.82, 0.88, 0.78, 0.68, 0.52, 0.44, 0.38, 0.48, 0.58, 0.64, 0.70, 0.76, 0.68, 0.58, 0.48, 0.38];
+  const freqLabels = ['32', '63', '125', '250', '500', '1k', '2k', '4k', '8k', '16k'];
+  const bandDelays = Array.from({ length: BANDS }, (_, i) => i * 0.06);
+  const bandDurations = [0.70, 0.90, 0.80, 1.10, 0.75, 0.95, 0.85, 1.00, 0.72, 0.88, 0.78, 1.05, 0.82, 0.92, 0.68, 1.00];
+
+  const barW = 13;
+  const gap = 3;
+  const totalW = BANDS * (barW + gap) - gap;
+  const startX = (290 - totalW) / 2 + 5;
+  const maxH = 110;
+  const minH = 4;
+  const barBaseline = 155;
+
   return (
     <>
-      <div className="relative" style={{ width: 240, height: 240 }}>
-        <svg width="240" height="240" viewBox="0 0 240 240">
+      <div className="relative" style={{ width: 300, height: 200 }}>
+        <svg width="300" height="200" viewBox="0 0 300 200">
           <defs>
-            <linearGradient id="gph-horn" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor={accentHex2} stopOpacity="0.7" />
-              <stop offset="100%" stopColor={accentHex} stopOpacity="0.4" />
+            <linearGradient id="eq-bar" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor={accentHex2} />
+              <stop offset="60%" stopColor={accentHex} />
+              <stop offset="85%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+            <linearGradient id="eq-bg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0a0812" />
+              <stop offset="100%" stopColor="#06040e" />
             </linearGradient>
           </defs>
-          {/* Shadow */}
-          <ellipse cx="95" cy="232" rx="60" ry="7" fill={glowColor} opacity="0.25" />
-          {/* Cabinet base */}
-          <rect x="45" y="200" width="100" height="28" rx="6" fill="#2a1a10" stroke={accentHex + '50'} strokeWidth="1.5" />
-          <rect x="45" y="200" width="100" height="8" rx="4" fill="#3a2a18" />
-          {/* Pedestal column */}
-          <rect x="86" y="155" width="18" height="48" rx="4" fill="#3a2a18" stroke={accentHex + '30'} strokeWidth="1" />
-          {/* Platter */}
-          <motion.g animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 3.5, ease: 'linear' }} style={{ originX: '95px', originY: '138px' }}>
-            <circle cx="95" cy="138" r="42" fill="#0d0d18" stroke={accentHex + '50'} strokeWidth="2" />
-            <circle cx="95" cy="138" r="35" fill="none" stroke={accentHex + '25'} strokeWidth="1" />
-            <circle cx="95" cy="138" r="28" fill="none" stroke={accentHex + '18'} strokeWidth="1" />
-            <circle cx="95" cy="138" r="21" fill="none" stroke={accentHex + '12'} strokeWidth="1" />
-            <circle cx="95" cy="138" r="12" fill={accentHex2} opacity="0.7" />
-            <circle cx="95" cy="138" r="4" fill="#0d0d18" />
-          </motion.g>
-          {/* Tonearm – connects platter to horn */}
-          <line x1="95" y1="138" x2="120" y2="105" stroke={accentHex + '90'} strokeWidth="2.5" strokeLinecap="round" />
-          {/* Horn – large bell pointing upper-right */}
-          <motion.g
-            animate={{ rotate: [-2, 2, -2] }}
-            transition={{ repeat: Infinity, duration: 3.5, ease: 'easeInOut' }}
-            style={{ originX: '120px', originY: '105px' }}
-          >
-            {/* Neck tube */}
-            <path d="M 120 105 C 130 95 138 85 142 78" fill="none" stroke={accentHex} strokeWidth="4" strokeLinecap="round" />
-            {/* Bell – wide flare to the right */}
-            <path d="M 142 78 C 158 58 185 38 210 22 C 220 16 218 28 210 38 C 195 55 172 70 155 82 C 148 87 140 88 136 86 Z"
-              fill="url(#gph-horn)" stroke={accentHex + '70'} strokeWidth="1.5" />
-            {/* Sound waves emanating from bell opening */}
-            {[0, 1, 2, 3].map((i) => (
-              <motion.path key={i}
-                d={`M ${210 + i * 6} ${30 - i * 4} Q ${215 + i * 8} ${40 - i * 2} ${208 + i * 6} ${50 + i * 2}`}
-                fill="none" stroke={accentHex}
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                animate={{ opacity: [0, 0.7, 0] }}
-                transition={{ repeat: Infinity, duration: 1.2, delay: i * 0.3, ease: 'easeOut' }}
-              />
-            ))}
-          </motion.g>
-          {/* Crank on side of cabinet */}
-          <motion.g
-            animate={{ rotate: 360 }}
-            transition={{ repeat: Infinity, duration: 1.8, ease: 'linear' }}
-            style={{ originX: '45px', originY: '175px' }}
-          >
-            <line x1="45" y1="175" x2="32" y2="162" stroke={accentHex2} strokeWidth="2.5" strokeLinecap="round" />
-            <circle cx="32" cy="162" r="5" fill={accentHex2} />
-          </motion.g>
-        </svg>
-      </div>
-      <div className="flex items-center gap-2">
-        <motion.div animate={{ scale: [1, 1.3, 1] }} transition={{ repeat: Infinity, duration: 1, ease: 'easeInOut' }}>
-          <Music size={14} style={{ color: accentHex }} />
-        </motion.div>
-        <span className="text-xs font-bold uppercase tracking-widest" style={{ color: accentHex }}>Winding Up</span>
-      </div>
-    </>
-  );
-};
 
-// ── Variant 9: Tape Machine (Reel-to-Reel) ───────────────────────────────────
-const AnimVariantTapeMachine = ({ accentHex, accentHex2, glowColor }: { accentHex: string; accentHex2: string; glowColor: string }) => {
-  const VU_BARS = 8;
-  return (
-    <>
-      <div className="relative" style={{ width: 240, height: 180 }}>
-        <svg width="240" height="180" viewBox="0 0 240 180">
-          {/* Machine body */}
-          <rect x="5" y="10" width="230" height="160" rx="10" fill="#12100e" stroke={accentHex + '40'} strokeWidth="2" />
-          <rect x="5" y="10" width="230" height="160" rx="10" fill="none" stroke={accentHex + '15'} strokeWidth="6" />
-          {/* Left reel (supply) */}
-          <motion.g animate={{ rotate: -360 }} transition={{ repeat: Infinity, duration: 2.5, ease: 'linear' }} style={{ originX: '60px', originY: '75px' }}>
-            <circle cx="60" cy="75" r="42" fill="#1a1510" stroke={accentHex + '50'} strokeWidth="2" />
-            <circle cx="60" cy="75" r="34" fill="none" stroke={accentHex + '30'} strokeWidth="1" />
-            <circle cx="60" cy="75" r="26" fill="none" stroke={accentHex + '20'} strokeWidth="1" />
-            <circle cx="60" cy="75" r="18" fill="none" stroke={accentHex + '15'} strokeWidth="1" />
-            {/* Spokes */}
-            {[0, 60, 120, 180, 240, 300].map((a, i) => (
-              <line key={i}
-                x1={60 + 18 * Math.cos(a * Math.PI / 180)}
-                y1={75 + 18 * Math.sin(a * Math.PI / 180)}
-                x2={60 + 34 * Math.cos(a * Math.PI / 180)}
-                y2={75 + 34 * Math.sin(a * Math.PI / 180)}
-                stroke={accentHex + '60'} strokeWidth="2" strokeLinecap="round"
-              />
-            ))}
-            <circle cx="60" cy="75" r="8" fill={accentHex2} />
-            <circle cx="60" cy="75" r="4" fill="#12100e" />
-          </motion.g>
-          {/* Right reel (take-up) */}
-          <motion.g animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2.5, ease: 'linear' }} style={{ originX: '180px', originY: '75px' }}>
-            <circle cx="180" cy="75" r="42" fill="#1a1510" stroke={accentHex2 + '50'} strokeWidth="2" />
-            <circle cx="180" cy="75" r="34" fill="none" stroke={accentHex2 + '30'} strokeWidth="1" />
-            <circle cx="180" cy="75" r="26" fill="none" stroke={accentHex2 + '20'} strokeWidth="1" />
-            <circle cx="180" cy="75" r="18" fill="none" stroke={accentHex2 + '15'} strokeWidth="1" />
-            {[0, 60, 120, 180, 240, 300].map((a, i) => (
-              <line key={i}
-                x1={180 + 18 * Math.cos(a * Math.PI / 180)}
-                y1={75 + 18 * Math.sin(a * Math.PI / 180)}
-                x2={180 + 34 * Math.cos(a * Math.PI / 180)}
-                y2={75 + 34 * Math.sin(a * Math.PI / 180)}
-                stroke={accentHex2 + '60'} strokeWidth="2" strokeLinecap="round"
-              />
-            ))}
-            <circle cx="180" cy="75" r="8" fill={accentHex} />
-            <circle cx="180" cy="75" r="4" fill="#12100e" />
-          </motion.g>
-          {/* Tape path */}
-          <path d="M 60 117 L 80 125 L 120 128 L 160 125 L 180 117" fill="none" stroke={accentHex + '70'} strokeWidth="2" />
-          {/* Tape head */}
-          <rect x="112" y="120" width="16" height="12" rx="2" fill="#2a2010" stroke={accentHex + '80'} strokeWidth="1.5" />
-          {/* VU Meters */}
-          <rect x="90" y="138" width="60" height="28" rx="4" fill="#0a0808" stroke={accentHex + '30'} strokeWidth="1" />
-          {Array.from({ length: VU_BARS }, (_, i) => (
-            <motion.rect key={i}
-              x={93 + i * 7} y={148}
-              width={5} height={12}
-              rx={1}
-              fill={i < 5 ? accentHex : i < 7 ? '#f59e0b' : '#ef4444'}
-              animate={{ scaleY: [0.1, Math.random() * 0.8 + 0.2, 0.1] }}
-              transition={{ repeat: Infinity, duration: 0.6 + i * 0.07, delay: i * 0.05, ease: 'easeInOut' }}
-              style={{ transformOrigin: `${93 + i * 7 + 2.5}px 160px` }}
-            />
-          ))}
-          {/* Transport buttons */}
-          {[18, 38, 58, 78, 98].map((x, i) => (
+          {/* EQ unit body */}
+          <rect x="5" y="5" width="290" height="185" rx="10" fill="url(#eq-bg)" stroke={accentHex + '50'} strokeWidth="2" />
+          {/* Rack mount ears */}
+          <rect x="5" y="12" width="16" height="170" rx="3" fill="#1a1228" stroke={accentHex + '30'} strokeWidth="1" />
+          <rect x="279" y="12" width="16" height="170" rx="3" fill="#1a1228" stroke={accentHex + '30'} strokeWidth="1" />
+          {/* Rack screws */}
+          {([22, 168] as number[]).map((y) => [
+            <circle key={`ls-${y}`} cx={13} cy={y} r={4} fill="#0a0812" stroke={accentHex + '40'} strokeWidth={1} />,
+            <line key={`lsl-${y}`} x1={10} y1={y} x2={16} y2={y} stroke={accentHex + '50'} strokeWidth={0.8} />,
+            <circle key={`rs-${y}`} cx={287} cy={y} r={4} fill="#0a0812" stroke={accentHex + '40'} strokeWidth={1} />,
+            <line key={`rsl-${y}`} x1={284} y1={y} x2={290} y2={y} stroke={accentHex + '50'} strokeWidth={0.8} />,
+          ]).flat()}
+
+          {/* Header */}
+          <text x="150" y="22" textAnchor="middle" fill={accentHex} fontSize="8" fontFamily="monospace" fontWeight="bold" letterSpacing="3">GRAPHIC EQUALIZER</text>
+          <line x1="25" y1="27" x2="275" y2="27" stroke={accentHex + '25'} strokeWidth="0.5" />
+
+          {/* dB scale */}
+          {(['+12', '+6', '0', '-6', '-12'] as string[]).map((label, i) => (
             <g key={i}>
-              <rect x={x} y="142" width="16" height="12" rx="2" fill="#2a2010" stroke={i === 2 ? accentHex : accentHex + '30'} strokeWidth="1" />
-              {i === 2 && <motion.rect x={x} y="142" width="16" height="12" rx="2" fill={accentHex} opacity="0.2" animate={{ opacity: [0.1, 0.4, 0.1] }} transition={{ repeat: Infinity, duration: 0.8 }} />}
+              <text x="26" y={44 + i * 28} fill={accentHex + '60'} fontSize="6" fontFamily="monospace" textAnchor="end">{label}</text>
+              <line x1="28" y1={41 + i * 28} x2="275" y2={41 + i * 28}
+                stroke={accentHex + (label === '0' ? '30' : '12')}
+                strokeWidth={label === '0' ? 0.8 : 0.4}
+                strokeDasharray={label === '0' ? undefined : '3,4'}
+              />
             </g>
           ))}
+
+          {/* EQ Bars */}
+          {Array.from({ length: BANDS }, (_, i) => {
+            const x = startX + i * (barW + gap);
+            const targetH = baseHeights[i] * maxH;
+            return (
+              <motion.g key={i}>
+                <motion.rect
+                  x={x} y={barBaseline - targetH}
+                  width={barW} height={targetH}
+                  rx={2}
+                  fill="url(#eq-bar)"
+                  animate={{
+                    height: [
+                      Math.max(minH, targetH * 0.3),
+                      targetH * 1.05,
+                      Math.max(minH, targetH * 0.5),
+                      targetH * 0.85,
+                      Math.max(minH, targetH * 0.3),
+                    ],
+                    y: [
+                      barBaseline - Math.max(minH, targetH * 0.3),
+                      barBaseline - targetH * 1.05,
+                      barBaseline - Math.max(minH, targetH * 0.5),
+                      barBaseline - targetH * 0.85,
+                      barBaseline - Math.max(minH, targetH * 0.3),
+                    ],
+                  }}
+                  transition={{
+                    repeat: Infinity,
+                    duration: bandDurations[i],
+                    delay: bandDelays[i],
+                    ease: 'easeInOut',
+                  }}
+                  style={{ filter: `drop-shadow(0 0 3px ${accentHex}60)` }}
+                />
+                {/* Peak hold dot */}
+                <motion.rect
+                  x={x} y={barBaseline - targetH * 1.1}
+                  width={barW} height={2} rx={1}
+                  fill={accentHex}
+                  animate={{ opacity: [1, 0.2, 1] }}
+                  transition={{ repeat: Infinity, duration: bandDurations[i] * 1.5, delay: bandDelays[i] + 0.2 }}
+                />
+              </motion.g>
+            );
+          })}
+
+          {/* Frequency labels */}
+          {freqLabels.map((label, i) => {
+            const bandIdx = Math.round(i * (BANDS - 1) / (freqLabels.length - 1));
+            const x = startX + bandIdx * (barW + gap) + barW / 2;
+            return (
+              <text key={i} x={x} y="175" textAnchor="middle" fill={accentHex + '70'} fontSize="6" fontFamily="monospace">{label}</text>
+            );
+          })}
+          <text x="150" y="184" textAnchor="middle" fill={accentHex + '40'} fontSize="5.5" fontFamily="monospace" letterSpacing="1">Hz</text>
+
+          {/* VU meter strip */}
+          <rect x="258" y="32" width="18" height="130" rx="3" fill="#06040e" stroke={accentHex + '30'} strokeWidth="1" />
+          {Array.from({ length: 10 }, (_, i) => (
+            <motion.rect key={i}
+              x={260} y={150 - i * 12}
+              width={14} height={10} rx={1}
+              fill={i < 6 ? accentHex : i < 8 ? '#f59e0b' : '#ef4444'}
+              animate={{ opacity: [0.15, i < 3 ? 1 : i < 6 ? 0.7 : 0.4, 0.15] }}
+              transition={{ repeat: Infinity, duration: 0.5 + i * 0.08, delay: i * 0.04, ease: 'easeInOut' }}
+            />
+          ))}
+          <text x="267" y="170" textAnchor="middle" fill={accentHex + '50'} fontSize="5" fontFamily="monospace">VU</text>
+
+          {/* Power LED */}
+          <motion.circle cx="40" cy="175" r="4"
+            fill={accentHex}
+            animate={{ opacity: [1, 0.3, 1] }}
+            transition={{ repeat: Infinity, duration: 1.0 }}
+            style={{ filter: `drop-shadow(0 0 5px ${accentHex})` }}
+          />
+          <text x="48" y="178" fill={accentHex + '80'} fontSize="6" fontFamily="monospace">PWR</text>
         </svg>
       </div>
       <div className="flex items-center gap-3">
-        <motion.div animate={{ opacity: [1, 0.2, 1] }} transition={{ repeat: Infinity, duration: 0.5 }} className="w-2 h-2 rounded-full" style={{ background: '#ef4444', boxShadow: '0 0 6px #ef4444' }} />
-        <span className="text-xs font-bold uppercase tracking-widest" style={{ color: accentHex }}>Recording</span>
-        <Waves size={12} style={{ color: accentHex2 }} />
+        <div className="flex items-end gap-0.5" style={{ height: 16 }}>
+          {[0.4, 0.8, 1.0, 0.7, 0.5].map((h, i) => (
+            <motion.div key={i}
+              className="w-1 rounded-t-sm origin-bottom"
+              style={{ height: 12, background: accentHex, opacity: 0.8 }}
+              animate={{ scaleY: [h * 0.3, h, h * 0.5, h * 0.8, h * 0.3] }}
+              transition={{ repeat: Infinity, duration: 0.8, delay: i * 0.1, ease: 'easeInOut' }}
+            />
+          ))}
+        </div>
+        <span className="text-xs font-bold uppercase tracking-widest" style={{ color: accentHex }}>Analyzing Frequencies</span>
       </div>
     </>
   );
 };
 
-// ── Variant 10: iPod Classic ─────────────────────────────────────────────────
-const AnimVariantIPod = ({ accentHex, accentHex2, glowColor }: { accentHex: string; accentHex2: string; glowColor: string }) => {
-  const menuItems = ['Music', 'Photos', 'Videos', 'Settings'];
-  const [activeItem, setActiveItem] = useState(0);
-  useEffect(() => {
-    const t = setInterval(() => setActiveItem((p) => (p + 1) % menuItems.length), 900);
-    return () => clearInterval(t);
-  }, []);
-  return (
-    <>
-      <div className="relative" style={{ width: 140, height: 240 }}>
-        <svg width="140" height="240" viewBox="0 0 140 240">
-          {/* Body */}
-          <rect x="10" y="5" width="120" height="230" rx="18" fill="#f0ede8" stroke="#ccc" strokeWidth="1.5" />
-          <rect x="10" y="5" width="120" height="230" rx="18" fill="none" stroke="white" strokeWidth="3" opacity="0.6" />
-          {/* Screen */}
-          <rect x="18" y="14" width="104" height="80" rx="8" fill="#0a0a14" />
-          {/* Screen content */}
-          <rect x="18" y="14" width="104" height="14" rx="0" fill={accentHex} opacity="0.9" />
-          <text x="70" y="24" textAnchor="middle" fill="white" fontSize="8" fontFamily="-apple-system,sans-serif" fontWeight="bold">iPod</text>
-          {menuItems.map((item, i) => (
-            <g key={i}>
-              {i === activeItem && <rect x="18" y={30 + i * 15} width="104" height="14" fill={accentHex} opacity="0.85" />}
-              <text x="28" y={41 + i * 15} fill={i === activeItem ? 'white' : '#aaa'} fontSize="8" fontFamily="-apple-system,sans-serif">{item}</text>
-              {i === activeItem && <text x="110" y={41 + i * 15} textAnchor="middle" fill="white" fontSize="8">›</text>}
-            </g>
-          ))}
-          {/* Battery */}
-          <rect x="108" y="16" width="10" height="6" rx="1" fill="none" stroke="#888" strokeWidth="0.8" />
-          <motion.rect x="109" y="17" width={6} height="4" rx="0.5" fill={accentHex}
-            animate={{ width: [2, 6, 2] }} transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
-          />
-          <rect x="118" y="18" width="2" height="2" rx="0.5" fill="#888" />
-          {/* Click wheel */}
-          <circle cx="70" cy="175" r="48" fill="#e8e5e0" stroke="#ccc" strokeWidth="1" />
-          <circle cx="70" cy="175" r="40" fill="#ddd8d0" stroke="#bbb" strokeWidth="0.5" />
-          {/* Wheel labels */}
-          <text x="70" y="140" textAnchor="middle" fill="#888" fontSize="7" fontFamily="-apple-system,sans-serif">MENU</text>
-          <text x="70" y="215" textAnchor="middle" fill="#888" fontSize="7" fontFamily="-apple-system,sans-serif">▶▶</text>
-          <text x="28" y="178" textAnchor="middle" fill="#888" fontSize="7" fontFamily="-apple-system,sans-serif">◀◀</text>
-          <text x="112" y="178" textAnchor="middle" fill="#888" fontSize="7" fontFamily="-apple-system,sans-serif">▶▶</text>
-          {/* Center button */}
-          <circle cx="70" cy="175" r="16" fill="#d0ccc6" stroke="#bbb" strokeWidth="1" />
-          <motion.circle cx="70" cy="175" r="14" fill={accentHex} opacity="0.15"
-            animate={{ opacity: [0.05, 0.3, 0.05] }} transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut' }}
-          />
-          {/* Spinning wheel indicator */}
-          <motion.g animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 3, ease: 'linear' }} style={{ originX: '70px', originY: '175px' }}>
-            <circle cx="70" cy="161" r="2.5" fill={accentHex} opacity="0.7" />
-          </motion.g>
-          {/* Headphone jack */}
-          <circle cx="70" cy="228" r="4" fill="#0a0a14" stroke="#aaa" strokeWidth="1" />
-          {/* Hold switch */}
-          <rect x="55" y="8" width="30" height="5" rx="2.5" fill="#ccc" />
-          <motion.rect x="56" y="8.5" width="12" height="4" rx="2" fill={accentHex}
-            animate={{ x: [56, 72, 56] }} transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
-          />
-        </svg>
-      </div>
-      <div className="flex items-center gap-2">
-        <motion.div animate={{ rotate: [0, -10, 10, 0] }} transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut' }}>
-          <Music size={14} style={{ color: accentHex }} />
-        </motion.div>
-        <span className="text-xs font-bold uppercase tracking-widest" style={{ color: accentHex }}>1000 Songs in Your Pocket</span>
-      </div>
-    </>
-  );
-};
 
 // ── MusicLoadingBar: Random Variant Selector ─────────────────────────────────
-const ANIM_VARIANTS = [AnimVariantVinyl, AnimVariantWaveform, AnimVariantConstellation, AnimVariantCassette, AnimVariantNeural, AnimVariantTurntable, AnimVariantWalkman, AnimVariantGramophone, AnimVariantTapeMachine, AnimVariantIPod] as const;
+const ANIM_VARIANTS = [AnimVariantCassette, AnimVariantEqualizer] as const;
 
 const MusicLoadingBar = ({
   mode,
