@@ -364,3 +364,7 @@
 - [x] Textarea: Rahmen im Light Mode deutlich sichtbarer machen (spezifische Klasse)
 - [x] Discovery Pill: Container-Breite anpassen (nur so breit wie nötig)
 - [x] "Find My Songs" Button: Klarer Button-Stil im Light Mode (Hintergrund + Schatten)
+
+## Typografie + Autocomplete Fixes (Feb 28)
+- [x] Schriftbild: Font-Imports in index.html korrigiert (Clash Display + Satoshi + DM Serif Display statt Inter)
+- [x] Explore Mode: Pflicht-Auswahl aus Dropdown (confirmed-State, Warnung bei freier Eingabe, Submit blockiert)

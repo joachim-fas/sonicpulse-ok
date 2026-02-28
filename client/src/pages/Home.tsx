@@ -21,6 +21,7 @@ import {
   CircleSlash,
   Moon,
   Sun,
+  AlertCircle,
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -469,7 +470,7 @@ const MusicLoadingBar = ({
 
 // ─── Artist Input with MusicBrainz Autocomplete ───────────────────────────────
 const ArtistInput = ({
-  value, onChange, onSelect, placeholder, accentColor = "cyan", onRemove, showRemove = false,
+  value, onChange, onSelect, placeholder, accentColor = "cyan", onRemove, showRemove = false, confirmed = false, onUnconfirm,
 }: {
   value: string;
   onChange: (val: string) => void;
@@ -478,6 +479,8 @@ const ArtistInput = ({
   accentColor?: "cyan" | "fuchsia" | "rose";
   onRemove?: () => void;
   showRemove?: boolean;
+  confirmed?: boolean;
+  onUnconfirm?: () => void;
 }) => {
   const [suggestions, setSuggestions] = useState<MBSuggestion[]>([]);
   const [open, setOpen] = useState(false);
@@ -487,6 +490,8 @@ const ArtistInput = ({
   const utils = trpc.useUtils();
 
   const handleChange = (val: string) => {
+    // Wenn der Nutzer tippt, wird die Bestätigung aufgehoben
+    if (confirmed && onUnconfirm) onUnconfirm();
     onChange(val);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (abortRef.current) abortRef.current.abort();
@@ -514,6 +519,9 @@ const ArtistInput = ({
     }
   };
 
+  // Zeige Warnung wenn Wert vorhanden aber nicht bestätigt
+  const showWarning = value.trim().length > 0 && !confirmed;
+
   return (
     <div className="relative">
       <div className="relative">
@@ -526,7 +534,9 @@ const ArtistInput = ({
           placeholder={placeholder}
           className={cn(
             "form-input w-full",
-            showRemove ? "pr-16" : "pr-10"
+            showRemove ? "pr-16" : "pr-10",
+            confirmed && value ? "border-emerald-500/60" : "",
+            showWarning ? "border-amber-400/60" : ""
           )}
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
@@ -535,9 +545,18 @@ const ArtistInput = ({
               <Trash2 size={14} />
             </button>
           )}
-          <Mic2 size={14} className="text-white/20" />
+          {confirmed && value ? (
+            <CheckCircle2 size={14} className="text-emerald-400" />
+          ) : showWarning ? (
+            <AlertCircle size={14} className="text-amber-400" />
+          ) : (
+            <Mic2 size={14} className="text-white/20" />
+          )}
         </div>
       </div>
+      {showWarning && (
+        <p className="text-[9px] text-amber-400/80 mt-1 px-1">Bitte aus der Liste auswählen</p>
+      )}
       <AnimatePresence>
         {open && suggestions.length > 0 && (
           <motion.div
@@ -736,6 +755,7 @@ const FloatingSaveButton = ({
 export default function Home() {
   const [hasStarted, setHasStarted] = useState(false);
   const [mode, setMode] = useState<"explore" | "mood">("explore");
+  const [confirmedBands, setConfirmedBands] = useState<boolean[]>([false, false, false]);
   const [exploreBands, setExploreBands] = useState<string[]>(["", "", ""]);
   const [discoveryLevel, setDiscoveryLevel] = useState<"mainstream" | "underground" | "exotics">("underground");
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
@@ -873,7 +893,8 @@ export default function Home() {
   };
 
   const generateRecommendations = useCallback(() => {
-    const artists = exploreBands.filter((b) => b.trim());
+    // Nur Bands die explizit aus dem Dropdown ausgewählt wurden
+    const artists = exploreBands.filter((b, i) => b.trim() && confirmedBands[i]);
     if (!artists.length) return;
     setRecommendations([]);
     setLoadingMessage("Consulting the AI oracle...");
@@ -1190,8 +1211,13 @@ export default function Home() {
                             value={band}
                             accentColor="cyan"
                             placeholder={`Band #${idx + 1}`}
+                            confirmed={confirmedBands[idx]}
                             onChange={(val) => { const n = [...exploreBands]; n[idx] = val; setExploreBands(n); }}
-                            onSelect={(name) => { const n = [...exploreBands]; n[idx] = name; setExploreBands(n); }}
+                            onSelect={(name) => {
+                              const nb = [...exploreBands]; nb[idx] = name; setExploreBands(nb);
+                              const nc = [...confirmedBands]; nc[idx] = true; setConfirmedBands(nc);
+                            }}
+                            onUnconfirm={() => { const nc = [...confirmedBands]; nc[idx] = false; setConfirmedBands(nc); }}
                           />
                         ))}
                       </div>
@@ -1227,7 +1253,7 @@ export default function Home() {
                         {/* Submit Button */}
                         <button
                           onClick={generateRecommendations}
-                          disabled={isGenerating || exploreBands.every((b) => !b.trim())}
+                          disabled={isGenerating || !exploreBands.some((b, i) => b.trim() && confirmedBands[i])}
                           className={cn(
                             "btn btn-primary flex items-center justify-center gap-2 shrink-0",
                             isGenerating && "animate-pulse"
