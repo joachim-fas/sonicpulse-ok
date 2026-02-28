@@ -411,3 +411,25 @@
 - [x] Variante 9: Tape Machine (zwei große Spulen, Bandlauf, VU-Meter)
 - [x] Variante 10: iPod (Clickwheel, Display, Menü-Animation)
 - [x] ANIM_VARIANTS Array auf 10 Varianten erweitern
+
+## Mood Mode Card Redesign (Feb 28)
+- [ ] Foto-Gradient: stärkerer Overlay (from-black/90), NOW PLAYING immer lesbar
+- [ ] Karten-Hintergrund: Light Mode mit Tiefe (soft shadow, leicht getönter Hintergrund)
+- [ ] Beschreibungstext: höherer Kontrast (text-foreground statt text-muted)
+- [ ] Kursiver Analyse-Text: deutlich lesbarer, eigene Sektion mit Label
+- [ ] Listener-Zahl: prominenter, mit Icon
+- [ ] YouTube-Embed: nahtlos in Karte integriert (kein schwarzer Kasten)
+- [ ] Discovery-Badge: besser positioniert, größer
+- [ ] Dark Mode: alle Texte klar lesbar auf dunklem Hintergrund
+
+## Animations & Mood Mode Redesign – Feb 28
+- [x] Turntable Animation: Korrekte Proportionen (240×240 Viewbox), Platter r=82, Tonearm pivotiert von oben-rechts, Headshell + Stylus, Holz-Plinth, 33 RPM Badge
+- [x] Gramophone Animation: Korrekte Proportionen (240×240), großer Trichter mit korrekter Verbindung zur Basis, Schallwellen aus dem Bell, Kurbel-Animation
+- [x] Walkman Animation: Größeres Viewbox (180×240), 4-Speichen-Spulen, LCD-Display, Transport-Buttons, Volume-Wheel, LED-Indikator
+- [x] SpotifyEmbedCard: Toggle-Button entfernt – Embed immer direkt sichtbar (kein "Artist Preview" / "Hide Preview" Button mehr)
+- [x] Mood Mode Karten: Dunkles Design (rgba(30,18,40,0.96)) in beiden Themes – immer guter Kontrast
+- [x] Mood Mode: "NOW PLAYING" Badge – pinkfarbener Pill mit pulsierendem weißem Dot, oben-links auf dem Foto
+- [x] Mood Mode: Song-Titel + Artist mit starkem Text-Shadow – immer lesbar
+- [x] Mood Mode: Genre-Tag + Listener-Count direkt unter dem Titel (auf dem Foto)
+- [x] Mood Mode: Lyric-Quote mit linker Border-Akzentlinie statt nur italic-Text
+- [x] Mood Mode: YouTube-Embed mit Border umrahmt, Spotify-Button mit grünem Styling

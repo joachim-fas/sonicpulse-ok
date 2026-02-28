@@ -626,51 +626,60 @@ const AnimVariantNeural = ({ accentHex, accentHex2, glowColor }: { accentHex: st
 const AnimVariantTurntable = ({ accentHex, accentHex2, glowColor }: { accentHex: string; accentHex2: string; glowColor: string }) => {
   return (
     <>
-      <div className="relative" style={{ width: 220, height: 200 }}>
-        <svg width="220" height="200" viewBox="0 0 220 200">
-          {/* Plinth / base */}
-          <rect x="10" y="140" width="200" height="50" rx="6" fill="#1a1020" stroke={accentHex + '40'} strokeWidth="1.5" />
-          {/* Platter */}
-          <motion.g animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 3, ease: 'linear' }} style={{ originX: '110px', originY: '95px' }}>
-            <circle cx="110" cy="95" r="75" fill="#0d0d18" stroke={accentHex + '30'} strokeWidth="1" />
-            <circle cx="110" cy="95" r="65" fill="none" stroke={accentHex + '18'} strokeWidth="1" />
-            <circle cx="110" cy="95" r="55" fill="none" stroke={accentHex + '14'} strokeWidth="1" />
-            <circle cx="110" cy="95" r="45" fill="none" stroke={accentHex + '12'} strokeWidth="1" />
-            <circle cx="110" cy="95" r="35" fill="none" stroke={accentHex + '10'} strokeWidth="1" />
-            <circle cx="110" cy="95" r="25" fill="none" stroke={accentHex + '08'} strokeWidth="1" />
+      <div className="relative" style={{ width: 240, height: 240 }}>
+        <svg width="240" height="240" viewBox="0 0 240 240">
+          <defs>
+            <radialGradient id="tt-lbl" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor={accentHex} />
+              <stop offset="100%" stopColor={accentHex2} />
+            </radialGradient>
+            <radialGradient id="tt-platter" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#1a1a2e" />
+              <stop offset="100%" stopColor="#0a0a14" />
+            </radialGradient>
+          </defs>
+          {/* Plinth / base – full width wooden cabinet */}
+          <rect x="20" y="185" width="200" height="40" rx="8" fill="#2a1f14" stroke={accentHex + '50'} strokeWidth="1.5" />
+          <rect x="20" y="185" width="200" height="8" rx="4" fill="#3a2a1a" />
+          {/* Platter mat */}
+          <circle cx="110" cy="140" r="88" fill="#111118" stroke={accentHex + '20'} strokeWidth="1" />
+          {/* Spinning vinyl record */}
+          <motion.g animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 3.5, ease: 'linear' }} style={{ originX: '110px', originY: '140px' }}>
+            <circle cx="110" cy="140" r="82" fill="url(#tt-platter)" />
+            {/* Grooves */}
+            {[70, 62, 54, 46, 38, 30].map((r, i) => (
+              <circle key={i} cx="110" cy="140" r={r} fill="none" stroke={accentHex + '18'} strokeWidth="0.8" />
+            ))}
             {/* Label */}
-            <circle cx="110" cy="95" r="18" fill={`url(#lbl)`} />
-            <defs>
-              <radialGradient id="lbl" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor={accentHex} />
-                <stop offset="100%" stopColor={accentHex2} />
-              </radialGradient>
-            </defs>
-            <circle cx="110" cy="95" r="4" fill="#0d0d18" />
+            <circle cx="110" cy="140" r="22" fill={`url(#tt-lbl)`} opacity="0.9" />
+            <circle cx="110" cy="140" r="4" fill="#0a0a14" />
           </motion.g>
-          {/* Glow under platter */}
-          <ellipse cx="110" cy="145" rx="70" ry="8" fill={glowColor} opacity="0.25" />
-          {/* Tonearm base */}
-          <circle cx="175" cy="55" r="8" fill="#2a2040" stroke={accentHex + '60'} strokeWidth="1.5" />
-          {/* Tonearm */}
+          {/* Glow */}
+          <ellipse cx="110" cy="185" rx="75" ry="6" fill={glowColor} opacity="0.3" />
+          {/* Tonearm pivot */}
+          <circle cx="185" cy="75" r="9" fill="#2a2040" stroke={accentHex + '70'} strokeWidth="2" />
+          <circle cx="185" cy="75" r="4" fill={accentHex} opacity="0.8" />
+          {/* Tonearm – pivots from top-right, stylus lands on record */}
           <motion.g
-            animate={{ rotate: [-18, -8, -18] }}
+            animate={{ rotate: [-22, -12, -22] }}
             transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
-            style={{ originX: '175px', originY: '55px' }}
+            style={{ originX: '185px', originY: '75px' }}
           >
-            <line x1="175" y1="55" x2="125" y2="105" stroke={accentHex} strokeWidth="2.5" strokeLinecap="round" />
-            {/* Cartridge */}
-            <rect x="118" y="101" width="10" height="6" rx="2" fill={accentHex2} />
+            {/* Arm tube */}
+            <line x1="185" y1="75" x2="148" y2="118" stroke={accentHex} strokeWidth="3" strokeLinecap="round" />
+            {/* Head shell */}
+            <rect x="141" y="114" width="14" height="8" rx="3" fill={accentHex2} opacity="0.9" />
             {/* Stylus */}
-            <line x1="123" y1="107" x2="123" y2="112" stroke={accentHex} strokeWidth="1.5" strokeLinecap="round" />
+            <line x1="148" y1="122" x2="148" y2="130" stroke="#e0e0e0" strokeWidth="1.5" strokeLinecap="round" />
           </motion.g>
-          {/* Speed indicator dots */}
-          <motion.circle cx="30" cy="155" r="4" fill={accentHex} animate={{ opacity: [1, 0.2, 1] }} transition={{ repeat: Infinity, duration: 0.8 }} />
-          <text x="40" y="159" fill={accentHex + 'aa'} fontSize="8" fontFamily="monospace">33 RPM</text>
+          {/* Speed badge */}
+          <rect x="22" y="190" width="50" height="14" rx="3" fill="#1a1020" />
+          <motion.circle cx="30" cy="197" r="3" fill={accentHex} animate={{ opacity: [1, 0.2, 1] }} transition={{ repeat: Infinity, duration: 0.8 }} />
+          <text x="36" y="201" fill={accentHex + 'cc'} fontSize="7" fontFamily="monospace" fontWeight="bold">33 RPM</text>
         </svg>
       </div>
       <div className="flex items-center gap-2">
-        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 3, ease: 'linear' }}>
+        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 3.5, ease: 'linear' }}>
           <Disc size={14} style={{ color: accentHex }} />
         </motion.div>
         <span className="text-xs font-bold uppercase tracking-widest" style={{ color: accentHex }}>Spinning Up</span>
@@ -683,61 +692,91 @@ const AnimVariantTurntable = ({ accentHex, accentHex2, glowColor }: { accentHex:
 const AnimVariantWalkman = ({ accentHex, accentHex2, glowColor }: { accentHex: string; accentHex2: string; glowColor: string }) => {
   return (
     <>
-      <div className="relative" style={{ width: 160, height: 220 }}>
-        <svg width="160" height="220" viewBox="0 0 160 220">
+      <div className="relative" style={{ width: 180, height: 240 }}>
+        <svg width="180" height="240" viewBox="0 0 180 240">
+          <defs>
+            <linearGradient id="wm-body" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#2a2040" />
+              <stop offset="100%" stopColor="#1a1028" />
+            </linearGradient>
+          </defs>
           {/* Body */}
-          <rect x="15" y="10" width="130" height="200" rx="14" fill="#1a1020" stroke={accentHex + '50'} strokeWidth="2" />
-          <rect x="15" y="10" width="130" height="200" rx="14" fill="none" stroke={accentHex + '20'} strokeWidth="6" />
+          <rect x="10" y="8" width="160" height="220" rx="16" fill="url(#wm-body)" stroke={accentHex + '60'} strokeWidth="2" />
+          {/* Highlight edge */}
+          <rect x="10" y="8" width="160" height="220" rx="16" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="4" />
           {/* Cassette window */}
-          <rect x="28" y="22" width="104" height="72" rx="8" fill="#0a0814" stroke={accentHex + '40'} strokeWidth="1.5" />
+          <rect x="22" y="20" width="136" height="90" rx="10" fill="#0a0814" stroke={accentHex + '50'} strokeWidth="1.5" />
+          {/* Window glare */}
+          <rect x="24" y="22" width="40" height="6" rx="3" fill="rgba(255,255,255,0.06)" />
           {/* Left reel */}
-          <motion.g animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.2, ease: 'linear' }} style={{ originX: '52px', originY: '58px' }}>
-            <circle cx="52" cy="58" r="20" fill="#0d0d18" stroke={accentHex + '50'} strokeWidth="1.5" />
-            <circle cx="52" cy="58" r="12" fill="none" stroke={accentHex + '30'} strokeWidth="1" />
-            <line x1="52" y1="38" x2="52" y2="46" stroke={accentHex} strokeWidth="2" strokeLinecap="round" />
-            <line x1="52" y1="70" x2="52" y2="78" stroke={accentHex} strokeWidth="2" strokeLinecap="round" />
-            <line x1="32" y1="58" x2="40" y2="58" stroke={accentHex} strokeWidth="2" strokeLinecap="round" />
-            <line x1="64" y1="58" x2="72" y2="58" stroke={accentHex} strokeWidth="2" strokeLinecap="round" />
-            <circle cx="52" cy="58" r="5" fill={accentHex} />
+          <motion.g animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.4, ease: 'linear' }} style={{ originX: '55px', originY: '65px' }}>
+            <circle cx="55" cy="65" r="26" fill="#12101e" stroke={accentHex + '50'} strokeWidth="1.5" />
+            <circle cx="55" cy="65" r="18" fill="none" stroke={accentHex + '30'} strokeWidth="1" />
+            {/* 4 spokes */}
+            {[0, 90, 180, 270].map((a, i) => (
+              <line key={i}
+                x1={55 + 10 * Math.cos(a * Math.PI / 180)}
+                y1={65 + 10 * Math.sin(a * Math.PI / 180)}
+                x2={55 + 22 * Math.cos(a * Math.PI / 180)}
+                y2={65 + 22 * Math.sin(a * Math.PI / 180)}
+                stroke={accentHex + '70'} strokeWidth="2" strokeLinecap="round"
+              />
+            ))}
+            <circle cx="55" cy="65" r="7" fill={accentHex} opacity="0.8" />
+            <circle cx="55" cy="65" r="3" fill="#0a0814" />
           </motion.g>
           {/* Right reel */}
-          <motion.g animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.2, ease: 'linear' }} style={{ originX: '108px', originY: '58px' }}>
-            <circle cx="108" cy="58" r="20" fill="#0d0d18" stroke={accentHex2 + '50'} strokeWidth="1.5" />
-            <circle cx="108" cy="58" r="12" fill="none" stroke={accentHex2 + '30'} strokeWidth="1" />
-            <line x1="108" y1="38" x2="108" y2="46" stroke={accentHex2} strokeWidth="2" strokeLinecap="round" />
-            <line x1="108" y1="70" x2="108" y2="78" stroke={accentHex2} strokeWidth="2" strokeLinecap="round" />
-            <line x1="88" y1="58" x2="96" y2="58" stroke={accentHex2} strokeWidth="2" strokeLinecap="round" />
-            <line x1="120" y1="58" x2="128" y2="58" stroke={accentHex2} strokeWidth="2" strokeLinecap="round" />
-            <circle cx="108" cy="58" r="5" fill={accentHex2} />
+          <motion.g animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.4, ease: 'linear' }} style={{ originX: '125px', originY: '65px' }}>
+            <circle cx="125" cy="65" r="26" fill="#12101e" stroke={accentHex2 + '50'} strokeWidth="1.5" />
+            <circle cx="125" cy="65" r="18" fill="none" stroke={accentHex2 + '30'} strokeWidth="1" />
+            {[0, 90, 180, 270].map((a, i) => (
+              <line key={i}
+                x1={125 + 10 * Math.cos(a * Math.PI / 180)}
+                y1={65 + 10 * Math.sin(a * Math.PI / 180)}
+                x2={125 + 22 * Math.cos(a * Math.PI / 180)}
+                y2={65 + 22 * Math.sin(a * Math.PI / 180)}
+                stroke={accentHex2 + '70'} strokeWidth="2" strokeLinecap="round"
+              />
+            ))}
+            <circle cx="125" cy="65" r="7" fill={accentHex2} opacity="0.8" />
+            <circle cx="125" cy="65" r="3" fill="#0a0814" />
           </motion.g>
           {/* Tape path */}
-          <path d="M 52 78 Q 80 88 108 78" fill="none" stroke={accentHex + '60'} strokeWidth="1.5" />
-          {/* Display */}
-          <rect x="28" y="102" width="104" height="28" rx="4" fill="#050510" stroke={accentHex + '30'} strokeWidth="1" />
-          <motion.text x="80" y="121" textAnchor="middle" fill={accentHex} fontSize="9" fontFamily="monospace"
+          <path d="M 55 91 Q 90 100 125 91" fill="none" stroke={accentHex + '60'} strokeWidth="1.5" />
+          {/* Playhead */}
+          <rect x="84" y="96" width="12" height="8" rx="2" fill="#2a2040" stroke={accentHex + '80'} strokeWidth="1" />
+          {/* LCD Display */}
+          <rect x="22" y="118" width="136" height="32" rx="5" fill="#050510" stroke={accentHex + '40'} strokeWidth="1" />
+          <motion.text x="90" y="138" textAnchor="middle" fill={accentHex} fontSize="10" fontFamily="monospace" fontWeight="bold"
             animate={{ opacity: [1, 0.4, 1] }} transition={{ repeat: Infinity, duration: 1.5 }}>
             ♪ SONICPULSE ♪
           </motion.text>
-          {/* Buttons row */}
-          {[35, 55, 75, 95, 115].map((x, i) => (
+          {/* Transport buttons */}
+          {[22, 50, 78, 106, 134].map((x, i) => (
             <g key={i}>
-              <rect x={x} y="140" width="16" height="12" rx="3" fill="#2a2040" stroke={i === 2 ? accentHex : accentHex + '30'} strokeWidth="1" />
-              {i === 0 && <text x={x + 8} y="150" textAnchor="middle" fill={accentHex + '80'} fontSize="7">⏮</text>}
-              {i === 1 && <text x={x + 8} y="150" textAnchor="middle" fill={accentHex + '80'} fontSize="7">⏪</text>}
-              {i === 2 && <motion.text x={x + 8} y="150" textAnchor="middle" fill={accentHex} fontSize="8" animate={{ opacity: [1, 0.5, 1] }} transition={{ repeat: Infinity, duration: 0.8 }}>▶</motion.text>}
-              {i === 3 && <text x={x + 8} y="150" textAnchor="middle" fill={accentHex + '80'} fontSize="7">⏩</text>}
-              {i === 4 && <text x={x + 8} y="150" textAnchor="middle" fill={accentHex + '80'} fontSize="7">⏭</text>}
+              <rect x={x} y="160" width="22" height="16" rx="4" fill="#2a2040" stroke={i === 2 ? accentHex : accentHex + '25'} strokeWidth="1" />
+              {i === 0 && <text x={x + 11} y="172" textAnchor="middle" fill={accentHex + '80'} fontSize="8">⏮</text>}
+              {i === 1 && <text x={x + 11} y="172" textAnchor="middle" fill={accentHex + '80'} fontSize="8">⏪</text>}
+              {i === 2 && <motion.text x={x + 11} y="172" textAnchor="middle" fill={accentHex} fontSize="10" animate={{ opacity: [1, 0.5, 1] }} transition={{ repeat: Infinity, duration: 0.8 }}>▶</motion.text>}
+              {i === 3 && <text x={x + 11} y="172" textAnchor="middle" fill={accentHex + '80'} fontSize="8">⏩</text>}
+              {i === 4 && <text x={x + 11} y="172" textAnchor="middle" fill={accentHex + '80'} fontSize="8">⏭</text>}
             </g>
           ))}
-          {/* Headphone jack */}
-          <circle cx="80" cy="175" r="5" fill="#0a0814" stroke={accentHex + '60'} strokeWidth="1.5" />
           {/* Volume wheel */}
-          <motion.g animate={{ rotate: [0, 30, 0] }} transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}>
-            <circle cx="135" cy="175" r="10" fill="#2a2040" stroke={accentHex2 + '60'} strokeWidth="1.5" />
-            <line x1="135" y1="165" x2="135" y2="170" stroke={accentHex2} strokeWidth="2" strokeLinecap="round" />
+          <motion.g animate={{ rotate: [0, 25, 0] }} transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut' }} style={{ originX: '145px', originY: '200px' }}>
+            <circle cx="145" cy="200" r="14" fill="#2a2040" stroke={accentHex2 + '60'} strokeWidth="1.5" />
+            <line x1="145" y1="186" x2="145" y2="193" stroke={accentHex2} strokeWidth="2.5" strokeLinecap="round" />
           </motion.g>
-          {/* LED */}
-          <motion.circle cx="80" cy="200" r="4" fill={accentHex} animate={{ opacity: [1, 0.1, 1] }} transition={{ repeat: Infinity, duration: 0.6 }} style={{ filter: `drop-shadow(0 0 4px ${accentHex})` }} />
+          <text x="145" y="222" textAnchor="middle" fill={accentHex2 + '60'} fontSize="6" fontFamily="monospace">VOL</text>
+          {/* Headphone jack */}
+          <circle cx="90" cy="220" r="6" fill="#0a0814" stroke={accentHex + '60'} strokeWidth="1.5" />
+          {/* LED indicator */}
+          <motion.circle cx="35" cy="200" r="5" fill={accentHex}
+            animate={{ opacity: [1, 0.1, 1] }}
+            transition={{ repeat: Infinity, duration: 0.6 }}
+            style={{ filter: `drop-shadow(0 0 5px ${accentHex})` }}
+          />
+          <text x="44" y="204" fill={accentHex + '80'} fontSize="6" fontFamily="monospace">PLAY</text>
         </svg>
       </div>
       <div className="flex items-center gap-2">
@@ -752,52 +791,63 @@ const AnimVariantWalkman = ({ accentHex, accentHex2, glowColor }: { accentHex: s
 const AnimVariantGramophone = ({ accentHex, accentHex2, glowColor }: { accentHex: string; accentHex2: string; glowColor: string }) => {
   return (
     <>
-      <div className="relative" style={{ width: 200, height: 200 }}>
-        <svg width="200" height="200" viewBox="0 0 200 200">
-          {/* Base */}
-          <ellipse cx="85" cy="185" rx="55" ry="10" fill={accentHex + '20'} />
-          <rect x="55" y="165" width="60" height="20" rx="4" fill="#2a1a10" stroke={accentHex + '40'} strokeWidth="1" />
-          {/* Pedestal */}
-          <rect x="78" y="130" width="14" height="38" rx="3" fill="#3a2a18" stroke={accentHex + '30'} strokeWidth="1" />
+      <div className="relative" style={{ width: 240, height: 240 }}>
+        <svg width="240" height="240" viewBox="0 0 240 240">
+          <defs>
+            <linearGradient id="gph-horn" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor={accentHex2} stopOpacity="0.7" />
+              <stop offset="100%" stopColor={accentHex} stopOpacity="0.4" />
+            </linearGradient>
+          </defs>
+          {/* Shadow */}
+          <ellipse cx="95" cy="232" rx="60" ry="7" fill={glowColor} opacity="0.25" />
+          {/* Cabinet base */}
+          <rect x="45" y="200" width="100" height="28" rx="6" fill="#2a1a10" stroke={accentHex + '50'} strokeWidth="1.5" />
+          <rect x="45" y="200" width="100" height="8" rx="4" fill="#3a2a18" />
+          {/* Pedestal column */}
+          <rect x="86" y="155" width="18" height="48" rx="4" fill="#3a2a18" stroke={accentHex + '30'} strokeWidth="1" />
           {/* Platter */}
-          <motion.g animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 4, ease: 'linear' }} style={{ originX: '85px', originY: '118px' }}>
-            <circle cx="85" cy="118" r="32" fill="#0d0d18" stroke={accentHex + '40'} strokeWidth="1.5" />
-            <circle cx="85" cy="118" r="26" fill="none" stroke={accentHex + '20'} strokeWidth="1" />
-            <circle cx="85" cy="118" r="20" fill="none" stroke={accentHex + '15'} strokeWidth="1" />
-            <circle cx="85" cy="118" r="14" fill="none" stroke={accentHex + '10'} strokeWidth="1" />
-            <circle cx="85" cy="118" r="7" fill={accentHex2} opacity="0.8" />
-            <circle cx="85" cy="118" r="3" fill="#0d0d18" />
+          <motion.g animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 3.5, ease: 'linear' }} style={{ originX: '95px', originY: '138px' }}>
+            <circle cx="95" cy="138" r="42" fill="#0d0d18" stroke={accentHex + '50'} strokeWidth="2" />
+            <circle cx="95" cy="138" r="35" fill="none" stroke={accentHex + '25'} strokeWidth="1" />
+            <circle cx="95" cy="138" r="28" fill="none" stroke={accentHex + '18'} strokeWidth="1" />
+            <circle cx="95" cy="138" r="21" fill="none" stroke={accentHex + '12'} strokeWidth="1" />
+            <circle cx="95" cy="138" r="12" fill={accentHex2} opacity="0.7" />
+            <circle cx="95" cy="138" r="4" fill="#0d0d18" />
           </motion.g>
-          {/* Tonearm */}
-          <line x1="85" y1="118" x2="115" y2="88" stroke={accentHex + '80'} strokeWidth="2" strokeLinecap="round" />
-          {/* Horn / Trichter - large bell shape */}
-          <motion.g animate={{ rotate: [-3, 3, -3] }} transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }} style={{ originX: '130px', originY: '75px' }}>
-            {/* Horn tube */}
-            <path d="M 115 88 Q 125 78 130 75" fill="none" stroke={accentHex} strokeWidth="3" strokeLinecap="round" />
-            {/* Bell opening */}
-            <path d="M 130 75 Q 155 45 185 30 Q 195 25 190 35 Q 175 55 155 70 Q 145 78 135 82 Z" fill={`url(#horn)`} stroke={accentHex + '60'} strokeWidth="1" />
-            <defs>
-              <linearGradient id="horn" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor={accentHex2} stopOpacity="0.6" />
-                <stop offset="100%" stopColor={accentHex} stopOpacity="0.3" />
-              </linearGradient>
-            </defs>
-            {/* Sound waves from horn */}
-            {[0, 1, 2].map((i) => (
-              <motion.ellipse key={i}
-                cx="185" cy="32" rx={8 + i * 10} ry={5 + i * 6}
+          {/* Tonearm – connects platter to horn */}
+          <line x1="95" y1="138" x2="120" y2="105" stroke={accentHex + '90'} strokeWidth="2.5" strokeLinecap="round" />
+          {/* Horn – large bell pointing upper-right */}
+          <motion.g
+            animate={{ rotate: [-2, 2, -2] }}
+            transition={{ repeat: Infinity, duration: 3.5, ease: 'easeInOut' }}
+            style={{ originX: '120px', originY: '105px' }}
+          >
+            {/* Neck tube */}
+            <path d="M 120 105 C 130 95 138 85 142 78" fill="none" stroke={accentHex} strokeWidth="4" strokeLinecap="round" />
+            {/* Bell – wide flare to the right */}
+            <path d="M 142 78 C 158 58 185 38 210 22 C 220 16 218 28 210 38 C 195 55 172 70 155 82 C 148 87 140 88 136 86 Z"
+              fill="url(#gph-horn)" stroke={accentHex + '70'} strokeWidth="1.5" />
+            {/* Sound waves emanating from bell opening */}
+            {[0, 1, 2, 3].map((i) => (
+              <motion.path key={i}
+                d={`M ${210 + i * 6} ${30 - i * 4} Q ${215 + i * 8} ${40 - i * 2} ${208 + i * 6} ${50 + i * 2}`}
                 fill="none" stroke={accentHex}
-                strokeWidth="1"
-                animate={{ opacity: [0, 0.6, 0], scale: [0.8, 1.2, 0.8] }}
-                transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.5, ease: 'easeOut' }}
-                style={{ transformOrigin: '185px 32px' }}
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                animate={{ opacity: [0, 0.7, 0] }}
+                transition={{ repeat: Infinity, duration: 1.2, delay: i * 0.3, ease: 'easeOut' }}
               />
             ))}
           </motion.g>
-          {/* Crank handle */}
-          <motion.g animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: 'linear' }} style={{ originX: '55px', originY: '130px' }}>
-            <line x1="55" y1="130" x2="45" y2="120" stroke={accentHex2} strokeWidth="2" strokeLinecap="round" />
-            <circle cx="45" cy="120" r="4" fill={accentHex2} />
+          {/* Crank on side of cabinet */}
+          <motion.g
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 1.8, ease: 'linear' }}
+            style={{ originX: '45px', originY: '175px' }}
+          >
+            <line x1="45" y1="175" x2="32" y2="162" stroke={accentHex2} strokeWidth="2.5" strokeLinecap="round" />
+            <circle cx="32" cy="162" r="5" fill={accentHex2} />
           </motion.g>
         </svg>
       </div>
@@ -1951,67 +2001,96 @@ export default function Home() {
                             ref={idx === 0 ? resultsRef : undefined}
                             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.1 }}
-                            className="feature-card overflow-hidden flex flex-col group"
+                            className="overflow-hidden flex flex-col group rounded-[28px] border"
+                            style={{
+                              background: isLightMode ? 'rgba(30,18,40,0.96)' : 'rgba(18,10,28,0.92)',
+                              borderColor: isLightMode ? 'rgba(235,81,139,0.25)' : 'rgba(235,81,139,0.15)',
+                              boxShadow: isLightMode
+                                ? '0 8px 40px rgba(235,81,139,0.18), 0 2px 12px rgba(0,0,0,0.25)'
+                                : '0 8px 40px rgba(235,81,139,0.12), 0 2px 12px rgba(0,0,0,0.5)',
+                              backdropFilter: 'blur(20px)',
+                            }}
                           >
+                            {/* ── Artist Photo + Overlay ── */}
                             <div className="relative aspect-[16/10] overflow-hidden rounded-t-[28px]">
                               {song.enriched?.image
-                                ? <img src={song.enriched.image} alt={song.artist} className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110 opacity-70 group-hover:opacity-90" />
+                                ? <img src={song.enriched.image} alt={song.artist} className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110" style={{ opacity: 0.75 }} />
                                 : <AnimatedArtistFallback artistName={song.artist} accentColor="rose" className="w-full h-full" />
                               }
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                              <div className="absolute bottom-0 left-0 p-6 w-full">
-                                <div className="mb-2">
-                                  <p className="text-[9px] uppercase tracking-widest font-medium mb-1 drop-shadow" style={{ color: 'var(--pink-rose)' }}>Now Playing</p>
-                                  <SpotifyLink url={song.trackUrl ?? song.enriched?.url} className="group/name flex items-start gap-2 text-white hover:text-[var(--pink-rose)] transition-colors text-left">
-                                    <div>
-                                      <h3 className="text-xl font-semibold tracking-tight drop-shadow-md leading-tight">{song.title}</h3>
-                                      <p className="text-sm text-white/70 font-light mt-0.5 drop-shadow">{song.artist}</p>
+                              {/* Strong gradient so text is always readable */}
+                              <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.55) 45%, rgba(0,0,0,0.15) 100%)' }} />
+                              {/* NOW PLAYING badge – top left */}
+                              <div className="absolute top-4 left-4">
+                                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full" style={{ background: 'rgba(235,81,139,0.85)', backdropFilter: 'blur(8px)' }}>
+                                  <motion.div
+                                    animate={{ scale: [1, 1.4, 1] }}
+                                    transition={{ repeat: Infinity, duration: 0.8, ease: 'easeInOut' }}
+                                    className="w-1.5 h-1.5 rounded-full bg-white"
+                                  />
+                                  <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-white">Now Playing</span>
+                                </div>
+                              </div>
+                              {/* Song title + artist – bottom */}
+                              <div className="absolute bottom-0 left-0 p-5 w-full">
+                                <SpotifyLink url={song.trackUrl ?? song.enriched?.url} className="group/name flex items-start gap-2 text-white hover:text-[var(--pink-rose)] transition-colors text-left">
+                                  <div className="flex-1 min-w-0">
+                                    <h3 className="text-xl font-bold tracking-tight leading-tight text-white" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>{song.title}</h3>
+                                    <p className="text-sm font-medium mt-0.5" style={{ color: 'rgba(255,255,255,0.75)', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{song.artist}</p>
+                                  </div>
+                                  {(song.trackUrl ?? song.enriched?.url) && (
+                                    <div className="p-1.5 rounded-full mt-0.5 shrink-0 opacity-70 group-hover/name:opacity-100 transition-all" style={{ background: 'rgba(235,81,139,0.3)', color: 'white' }}>
+                                      <ExternalLink size={11} />
                                     </div>
-                                    {(song.trackUrl ?? song.enriched?.url) && (
-                                      <div className="p-1 rounded-full opacity-0 group-hover/name:opacity-100 transition-all mt-1 shrink-0" style={{ background: 'rgba(235,81,139,0.1)', color: 'var(--pink-hot)' }}>
-                                        <ExternalLink size={11} />
-                                      </div>
-                                    )}
-                                  </SpotifyLink>
-                                </div>
-                                <span className="tag tag-pink">{song.genre}</span>
-                              </div>
-                            </div>
-
-                            <div className="p-6 flex-1 flex flex-col">
-                              <div className="flex items-start gap-2 mb-4">
-                                <motion.div
-                                  animate={{ y: [0, -4, 0], rotate: [0, 10, -10, 0] }}
-                                  transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                                  className="mt-0.5 shrink-0" style={{ color: 'var(--pink-hot)' }}
-                                >
-                                  <Music size={14} />
-                                </motion.div>
-                                <p className={cn("font-light leading-relaxed text-xs line-clamp-3", isLightMode ? "text-zinc-600" : "text-white/60")}>{song.emotionalBridge}</p>
-                              </div>
-                              {song.lyricMoment && (
-                                <div className="flex gap-1.5 mb-4">
-                                  <Quote size={9} className="shrink-0 mt-0.5" style={{ color: 'rgba(235,81,139,0.3)' }} />
-                                  <p className={cn("text-[10px] italic font-light leading-relaxed line-clamp-2", isLightMode ? "text-zinc-500" : "text-white/45")}>{song.lyricMoment}</p>
-                                </div>
-                              )}
-                              <div className={cn("mt-auto pt-4 border-t space-y-3", isLightMode ? "border-zinc-100" : "border-white/5")}>
-                                <div className="flex items-center gap-2 flex-wrap">
+                                  )}
+                                </SpotifyLink>
+                                <div className="mt-2 flex items-center gap-2">
+                                  <span className="tag tag-pink">{song.genre}</span>
                                   {song.listeners != null && song.listeners > 0 && (
-                                    <span className={cn("text-[8px] uppercase tracking-widest", isLightMode ? "text-zinc-400" : "text-white/35")}>
-                                      {song.listeners.toLocaleString()} listeners
+                                    <span className="text-[9px] font-medium" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                                      {song.listeners >= 1_000_000
+                                        ? `${(song.listeners / 1_000_000).toFixed(1)}M`
+                                        : song.listeners >= 1_000
+                                        ? `${Math.round(song.listeners / 1_000)}K`
+                                        : song.listeners.toLocaleString()} listeners
                                     </span>
                                   )}
                                 </div>
+                              </div>
+                            </div>
+
+                            {/* ── Card Body ── */}
+                            <div className="p-5 flex-1 flex flex-col gap-4">
+                              {/* Emotional description */}
+                              <div className="flex items-start gap-2">
+                                <motion.div
+                                  animate={{ y: [0, -3, 0], rotate: [0, 8, -8, 0] }}
+                                  transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }}
+                                  className="mt-0.5 shrink-0" style={{ color: 'var(--pink-hot)' }}
+                                >
+                                  <Music size={13} />
+                                </motion.div>
+                                <p className="font-light leading-relaxed text-xs line-clamp-3" style={{ color: 'rgba(255,255,255,0.72)' }}>{song.emotionalBridge}</p>
+                              </div>
+                              {/* Lyric quote */}
+                              {song.lyricMoment && (
+                                <div className="flex gap-1.5 px-3 py-2 rounded-xl" style={{ background: 'rgba(235,81,139,0.08)', borderLeft: '2px solid rgba(235,81,139,0.4)' }}>
+                                  <p className="text-[10px] italic font-light leading-relaxed line-clamp-2" style={{ color: 'rgba(255,255,255,0.6)' }}>{song.lyricMoment}</p>
+                                </div>
+                              )}
+                              {/* YouTube embed */}
+                              <div className="mt-auto">
                                 {song.youtubeId ? (
-                                  <YouTubeEmbedCard
-                                    videoId={song.youtubeId}
-                                    label={`${song.title} – ${song.artist}`}
-                                    accentColor="rose"
-                                    defaultOpen={true}
-                                  />
+                                  <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(235,81,139,0.2)' }}>
+                                    <YouTubeEmbedCard
+                                      videoId={song.youtubeId}
+                                      label={`${song.title} – ${song.artist}`}
+                                      accentColor="rose"
+                                      defaultOpen={true}
+                                      compact={true}
+                                    />
+                                  </div>
                                 ) : (
-                                  <div className={cn("flex items-center gap-2 px-4 py-3 rounded-xl text-xs", isLightMode ? "bg-zinc-100 text-zinc-400" : "bg-white/5 text-white/30")}>
+                                  <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-xs" style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.3)' }}>
                                     <CircleSlash size={12} />
                                     No video found for this song
                                   </div>
@@ -2021,7 +2100,8 @@ export default function Home() {
                                     href={song.trackUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium transition-all w-full justify-center mt-2 bg-[#1DB954]/10 text-[#1DB954] hover:bg-[#1DB954]/20 border border-[#1DB954]/20"
+                                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all w-full justify-center mt-3"
+                                    style={{ background: 'rgba(29,185,84,0.15)', color: '#1DB954', border: '1px solid rgba(29,185,84,0.3)' }}
                                   >
                                     <SpotifyLogo size={12} />
                                     Listen on Spotify
