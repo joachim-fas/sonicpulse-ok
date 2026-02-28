@@ -372,3 +372,13 @@
 ## Autocomplete Dropdown Light Mode Fix (Feb 28)
 - [x] Dropdown: Hintergrund im Light Mode dunkel/kontrastreich machen (text sichtbar)
 - [x] Dropdown: Warnung erst nach blur anzeigen, nicht während Dropdown offen
+
+## Loading Animation Redesign (Feb 28)
+- [ ] Spektakuläre Reasoning-Animation mit Waveform/Equalizer-Visualisierung
+- [ ] Texte klar lesbar (weißer Text mit Hintergrund-Kontrast)
+- [ ] Animierte Vinyl/Disc Visualisierung mit Orbit-Partikeln
+
+## Loading Animation Redesign (Feb 28)
+- [ ] Spektakulaere Reasoning-Animation mit Waveform/Equalizer-Visualisierung
+- [ ] Texte klar lesbar (weisser Text mit Hintergrund-Kontrast)
+- [ ] Animierte Vinyl/Disc Visualisierung mit Orbit-Partikeln
