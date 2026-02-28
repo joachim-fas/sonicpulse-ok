@@ -401,383 +401,295 @@ const LoadingProgressBar = ({ accentHex, accentHex2, glowColor }: { accentHex: s
 
 
 // ─────────────────────────────────────────────────────────────────────────────
-// LOADING ANIMATIONS  (5 variants, clean & bold)
+// LOADING ANIMATIONS  –  5 abstract audio visualisations
 // ─────────────────────────────────────────────────────────────────────────────
 
 type AnimProps = { accentHex: string; accentHex2: string; glowColor: string };
 
-// ── 1. Waveform ───────────────────────────────────────────────────────────────
-// Symmetric sine-wave bars that breathe in a wave pattern
-const AnimVariantWaveform = ({ accentHex, accentHex2 }: AnimProps) => {
-  const BARS = 20;
-  // Heights follow a bell curve so centre bars are tallest
-  const heights = Array.from({ length: BARS }, (_, i) => {
+// ── 1. Classic Bars EQ ────────────────────────────────────────────────────────
+// 12 tall bars, staggered wave motion, gradient fill
+const AnimVar1 = ({ accentHex, accentHex2 }: AnimProps) => {
+  const BARS = 12;
+  // bell-curve target heights
+  const targets = Array.from({ length: BARS }, (_, i) => {
     const t = (i / (BARS - 1)) * Math.PI;
-    return 0.25 + 0.75 * Math.sin(t);
+    return 0.3 + 0.7 * Math.sin(t);
   });
+  const durations = [1.0, 0.8, 1.1, 0.75, 0.9, 1.2, 0.85, 1.0, 0.7, 0.95, 1.15, 0.8];
+  const W = 260, maxH = 140, baseline = 150;
+
   return (
-    <>
-      <svg width="300" height="160" viewBox="0 0 300 160">
-        <defs>
-          <linearGradient id="wf-grad" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stopColor={accentHex2} />
-            <stop offset="100%" stopColor={accentHex} />
-          </linearGradient>
-        </defs>
-        {heights.map((h, i) => {
-          const barH = h * 120;
-          const x = 10 + i * 14;
-          const y = 80 - barH / 2;
-          return (
-            <motion.rect
-              key={i}
-              x={x} y={y}
-              width={8} height={barH}
-              rx={4}
-              fill="url(#wf-grad)"
+    <svg width={W} height={160} viewBox={`0 0 ${W} 160`}>
+      <defs>
+        <linearGradient id="v1-g" x1="0%" y1="100%" x2="0%" y2="0%">
+          <stop offset="0%" stopColor={accentHex2} stopOpacity="0.9" />
+          <stop offset="100%" stopColor={accentHex} />
+        </linearGradient>
+      </defs>
+      {targets.map((t, i) => {
+        const bW = 14, gap = 8;
+        const totalW = BARS * (bW + gap) - gap;
+        const x = (W - totalW) / 2 + i * (bW + gap);
+        const h = t * maxH;
+        return (
+          <motion.rect key={i}
+            x={x} y={baseline - h} width={bW} height={h} rx={3}
+            fill="url(#v1-g)"
+            animate={{
+              height: [h * 0.15, h, h * 0.4, h * 0.85, h * 0.15],
+              y: [baseline - h * 0.15, baseline - h, baseline - h * 0.4, baseline - h * 0.85, baseline - h * 0.15],
+            }}
+            transition={{ repeat: Infinity, duration: durations[i], delay: i * 0.08, ease: 'easeInOut' }}
+          />
+        );
+      })}
+    </svg>
+  );
+};
+
+// ── 2. Symmetric Waveform ─────────────────────────────────────────────────────
+// 24 thin bars mirrored top/bottom, ripple from centre
+const AnimVar2 = ({ accentHex, accentHex2 }: AnimProps) => {
+  const BARS = 24;
+  const W = 300, CY = 80;
+  const maxH = 60;
+  const bW = 7, gap = 5;
+  const totalW = BARS * (bW + gap) - gap;
+  const startX = (W - totalW) / 2;
+
+  return (
+    <svg width={W} height={160} viewBox={`0 0 ${W} 160`}>
+      <defs>
+        <linearGradient id="v2-g" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor={accentHex2} />
+          <stop offset="50%" stopColor={accentHex} />
+          <stop offset="100%" stopColor={accentHex2} />
+        </linearGradient>
+      </defs>
+      {/* Centre line */}
+      <line x1={startX} y1={CY} x2={startX + totalW} y2={CY} stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+      {Array.from({ length: BARS }, (_, i) => {
+        const x = startX + i * (bW + gap);
+        // distance from centre → shorter bars at edges
+        const dist = Math.abs(i - (BARS - 1) / 2) / ((BARS - 1) / 2);
+        const h = maxH * (1 - dist * 0.55);
+        const delay = Math.abs(i - (BARS - 1) / 2) * 0.04;
+        return (
+          <motion.g key={i}>
+            {/* top half */}
+            <motion.rect x={x} y={CY - h} width={bW} height={h} rx={2}
+              fill="url(#v2-g)" opacity={0.9}
+              animate={{ scaleY: [0.08, 1, 0.3, 0.75, 0.08] }}
+              transition={{ repeat: Infinity, duration: 1.1, delay, ease: 'easeInOut' }}
+              style={{ originX: `${x + bW / 2}px`, originY: `${CY}px` }}
+            />
+            {/* bottom mirror */}
+            <motion.rect x={x} y={CY} width={bW} height={h} rx={2}
+              fill="url(#v2-g)" opacity={0.4}
+              animate={{ scaleY: [0.08, 1, 0.3, 0.75, 0.08] }}
+              transition={{ repeat: Infinity, duration: 1.1, delay, ease: 'easeInOut' }}
+              style={{ originX: `${x + bW / 2}px`, originY: `${CY}px` }}
+            />
+          </motion.g>
+        );
+      })}
+    </svg>
+  );
+};
+
+// ── 3. Spectrum Analyser ──────────────────────────────────────────────────────
+// 32 narrow bars with realistic spectrum shape (bass → treble rolloff)
+const AnimVar3 = ({ accentHex, accentHex2 }: AnimProps) => {
+  const BARS = 32;
+  const W = 300, maxH = 130, baseline = 140;
+  const bW = 5, gap = 4;
+  const totalW = BARS * (bW + gap) - gap;
+  const startX = (W - totalW) / 2;
+  // Spectrum shape: rises in bass, peaks at ~1/3, rolls off in treble
+  const shape = Array.from({ length: BARS }, (_, i) => {
+    const x = i / (BARS - 1);
+    return 0.2 + 0.8 * Math.exp(-3 * (x - 0.25) ** 2) + 0.15 * Math.exp(-8 * (x - 0.7) ** 2);
+  });
+
+  return (
+    <svg width={W} height={150} viewBox={`0 0 ${W} 150`}>
+      <defs>
+        <linearGradient id="v3-g" x1="0%" y1="100%" x2="0%" y2="0%">
+          <stop offset="0%" stopColor={accentHex2} />
+          <stop offset="60%" stopColor={accentHex} />
+          <stop offset="90%" stopColor="#f59e0b" />
+          <stop offset="100%" stopColor="#ef4444" />
+        </linearGradient>
+      </defs>
+      {shape.map((s, i) => {
+        const x = startX + i * (bW + gap);
+        const h = s * maxH;
+        const dur = 0.6 + (i % 5) * 0.12;
+        const delay = i * 0.03;
+        return (
+          <motion.g key={i}>
+            <motion.rect x={x} y={baseline - h} width={bW} height={h} rx={1}
+              fill="url(#v3-g)"
               animate={{
-                scaleY: [0.15, 1, 0.3, 0.8, 0.15],
-                opacity: [0.5, 1, 0.6, 0.9, 0.5],
+                height: [h * 0.1, h * 1.05, h * 0.35, h * 0.8, h * 0.1],
+                y: [baseline - h * 0.1, baseline - h * 1.05, baseline - h * 0.35, baseline - h * 0.8, baseline - h * 0.1],
               }}
+              transition={{ repeat: Infinity, duration: dur, delay, ease: 'easeInOut' }}
+            />
+            {/* peak dot */}
+            <motion.rect x={x} y={baseline - h * 1.08} width={bW} height={2} rx={1}
+              fill={accentHex}
+              animate={{ opacity: [1, 0.1, 1] }}
+              transition={{ repeat: Infinity, duration: dur * 1.6, delay: delay + 0.2 }}
+            />
+          </motion.g>
+        );
+      })}
+    </svg>
+  );
+};
+
+// ── 4. Pulse Rings ────────────────────────────────────────────────────────────
+// Concentric rings that expand outward like a sound pulse
+const AnimVar4 = ({ accentHex, accentHex2, glowColor }: AnimProps) => {
+  const RINGS = 5;
+  const CX = 150, CY = 80;
+
+  return (
+    <svg width="300" height="160" viewBox="0 0 300 160">
+      <defs>
+        <radialGradient id="v4-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor={glowColor} stopOpacity="0.6" />
+          <stop offset="100%" stopColor={glowColor} stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      {/* Background glow */}
+      <motion.ellipse cx={CX} cy={CY} rx={60} ry={60}
+        fill="url(#v4-glow)"
+        animate={{ rx: [40, 70, 40], ry: [40, 70, 40], opacity: [0.4, 0.1, 0.4] }}
+        transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut' }}
+      />
+      {/* Expanding rings */}
+      {Array.from({ length: RINGS }, (_, i) => (
+        <motion.circle key={i}
+          cx={CX} cy={CY} r={20}
+          fill="none"
+          stroke={i % 2 === 0 ? accentHex : accentHex2}
+          strokeWidth={2.5 - i * 0.3}
+          animate={{
+            r: [20, 90],
+            opacity: [0.9, 0],
+            strokeWidth: [2.5, 0.5],
+          }}
+          transition={{
+            repeat: Infinity,
+            duration: 2.2,
+            delay: i * 0.44,
+            ease: 'easeOut',
+          }}
+        />
+      ))}
+      {/* Centre dot */}
+      <motion.circle cx={CX} cy={CY} r={10}
+        fill={accentHex}
+        animate={{ r: [8, 13, 8], opacity: [0.8, 1, 0.8] }}
+        transition={{ repeat: Infinity, duration: 1.1, ease: 'easeInOut' }}
+        style={{ filter: `drop-shadow(0 0 8px ${accentHex})` }}
+      />
+      {/* Inner bars (mini EQ inside the dot) */}
+      {[-6, -2, 2, 6].map((dx, i) => (
+        <motion.rect key={i}
+          x={CX + dx - 1.5} y={CY - 5} width={3} height={10} rx={1}
+          fill="white" opacity={0.8}
+          animate={{ scaleY: [0.2, 1, 0.4, 0.8, 0.2] }}
+          transition={{ repeat: Infinity, duration: 0.7, delay: i * 0.1, ease: 'easeInOut' }}
+          style={{ originX: `${CX + dx}px`, originY: `${CY}px` }}
+        />
+      ))}
+    </svg>
+  );
+};
+
+// ── 5. Horizontal Wave Scan ───────────────────────────────────────────────────
+// Sine wave that scrolls left, with glowing scan line
+const AnimVar5 = ({ accentHex, accentHex2 }: AnimProps) => {
+  const BARS = 28;
+  const W = 300, CY = 80;
+  const bW = 6, gap = 4;
+  const totalW = BARS * (bW + gap) - gap;
+  const startX = (W - totalW) / 2;
+
+  return (
+    <svg width={W} height={160} viewBox={`0 0 ${W} 160`}>
+      <defs>
+        <linearGradient id="v5-g" x1="0%" y1="100%" x2="0%" y2="0%">
+          <stop offset="0%" stopColor={accentHex2} stopOpacity="0.7" />
+          <stop offset="100%" stopColor={accentHex} />
+        </linearGradient>
+        <linearGradient id="v5-scan" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="transparent" />
+          <stop offset="50%" stopColor={accentHex} stopOpacity="0.6" />
+          <stop offset="100%" stopColor="transparent" />
+        </linearGradient>
+      </defs>
+
+      {/* Bars — each bar's height follows a sine wave offset by position */}
+      {Array.from({ length: BARS }, (_, i) => {
+        const x = startX + i * (bW + gap);
+        // sine envelope: taller in the middle
+        const env = 0.35 + 0.65 * Math.sin((i / (BARS - 1)) * Math.PI);
+        const maxH = 55 * env;
+        // phase offset creates travelling wave effect
+        const phase = (i / BARS) * Math.PI * 2;
+        return (
+          <motion.g key={i}>
+            <motion.rect x={x} y={CY - maxH} width={bW} height={maxH} rx={2}
+              fill="url(#v5-g)" opacity={0.85}
+              animate={{ scaleY: [0.1, 1, 0.2, 0.9, 0.1] }}
               transition={{
                 repeat: Infinity,
-                duration: 1.6,
-                delay: i * 0.07,
+                duration: 1.4,
+                delay: (i / BARS) * 0.7,
                 ease: 'easeInOut',
               }}
-              style={{ originX: `${x + 4}px`, originY: '80px' }}
+              style={{ originX: `${x + bW / 2}px`, originY: `${CY}px` }}
             />
-          );
-        })}
-      </svg>
-      <span className="text-xs font-bold uppercase tracking-widest" style={{ color: accentHex }}>
-        Reading the Signal
-      </span>
-    </>
-  );
-};
-
-// ── 2. Graphic Equalizer ──────────────────────────────────────────────────────
-// 10 bold EQ bands with peak-hold dots, clean rack look
-const AnimVariantEqualizer = ({ accentHex, accentHex2 }: AnimProps) => {
-  const BANDS = 10;
-  const targets = [0.7, 0.85, 0.65, 0.5, 0.4, 0.55, 0.75, 0.8, 0.6, 0.45];
-  const durations = [0.9, 0.75, 1.0, 0.85, 1.1, 0.8, 0.7, 0.95, 1.05, 0.88];
-  const W = 280, H = 180;
-  const barW = 20, gap = 8;
-  const maxH = 120, baseline = 145;
-  const startX = (W - (BANDS * (barW + gap) - gap)) / 2;
-
-  return (
-    <>
-      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}>
-        <defs>
-          <linearGradient id="eq2-grad" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stopColor={accentHex2} />
-            <stop offset="75%" stopColor={accentHex} />
-            <stop offset="100%" stopColor="#f59e0b" />
-          </linearGradient>
-        </defs>
-        {/* Baseline */}
-        <line x1="10" y1={baseline} x2={W - 10} y2={baseline} stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
-        {/* Bands */}
-        {targets.map((t, i) => {
-          const x = startX + i * (barW + gap);
-          const fullH = t * maxH;
-          return (
-            <motion.g key={i}>
-              <motion.rect
-                x={x} y={baseline - fullH}
-                width={barW} height={fullH}
-                rx={3}
-                fill="url(#eq2-grad)"
-                animate={{
-                  height: [fullH * 0.2, fullH, fullH * 0.45, fullH * 0.85, fullH * 0.2],
-                  y: [baseline - fullH * 0.2, baseline - fullH, baseline - fullH * 0.45, baseline - fullH * 0.85, baseline - fullH * 0.2],
-                }}
-                transition={{ repeat: Infinity, duration: durations[i], delay: i * 0.05, ease: 'easeInOut' }}
-              />
-              {/* Peak dot */}
-              <motion.circle
-                cx={x + barW / 2} cy={baseline - fullH - 6}
-                r={3}
-                fill={accentHex}
-                animate={{ opacity: [1, 0.2, 1] }}
-                transition={{ repeat: Infinity, duration: durations[i] * 1.4, delay: i * 0.05 + 0.15 }}
-              />
-            </motion.g>
-          );
-        })}
-        {/* Label */}
-        <text x={W / 2} y={H - 4} textAnchor="middle" fill="rgba(255,255,255,0.2)" fontSize="7" fontFamily="monospace" letterSpacing="2">GRAPHIC EQ</text>
-      </svg>
-      <span className="text-xs font-bold uppercase tracking-widest" style={{ color: accentHex }}>
-        Analyzing Frequencies
-      </span>
-    </>
-  );
-};
-
-// ── 3. Cassette ───────────────────────────────────────────────────────────────
-// Clean cassette body, two spinning reels, tape path
-const AnimVariantCassette = ({ accentHex, accentHex2 }: AnimProps) => {
-  const spokes = [0, 72, 144, 216, 288];
-  return (
-    <>
-      <svg width="280" height="170" viewBox="0 0 280 170">
-        <defs>
-          <linearGradient id="cas-body" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#1e1428" />
-            <stop offset="100%" stopColor="#120c1c" />
-          </linearGradient>
-        </defs>
-
-        {/* Body */}
-        <rect x="8" y="10" width="264" height="148" rx="14" fill="url(#cas-body)" stroke={accentHex + '55'} strokeWidth="2" />
-
-        {/* Label strip */}
-        <rect x="20" y="20" width="240" height="56" rx="8" fill={accentHex + '12'} stroke={accentHex + '30'} strokeWidth="1" />
-        <text x="140" y="42" textAnchor="middle" fill={accentHex} fontSize="12" fontFamily="monospace" fontWeight="bold" letterSpacing="5">SONICPULSE</text>
-        <text x="140" y="56" textAnchor="middle" fill={accentHex + '60'} fontSize="7" fontFamily="monospace" letterSpacing="2">TYPE II · CHROME</text>
-
-        {/* Tape window */}
-        <rect x="72" y="82" width="136" height="50" rx="8" fill="#06040e" stroke={accentHex + '35'} strokeWidth="1.5" />
-
-        {/* Tape path */}
-        <path d="M 97 107 L 104 118 L 176 118 L 183 107" fill="none" stroke={accentHex + 'aa'} strokeWidth="2.5" strokeLinecap="round" />
-
-        {/* Playhead */}
-        <rect x="130" y="114" width="20" height="12" rx="3" fill="#1a1228" stroke={accentHex + '80'} strokeWidth="1.5" />
-        <motion.rect x="133" y="116" width="14" height="8" rx="2"
-          fill={accentHex} opacity="0"
-          animate={{ opacity: [0, 0.4, 0] }}
-          transition={{ repeat: Infinity, duration: 0.7 }}
-        />
-
-        {/* Left reel */}
-        <motion.g animate={{ rotate: -360 }} transition={{ repeat: Infinity, duration: 2.8, ease: 'linear' }} style={{ originX: '97px', originY: '107px' }}>
-          <circle cx="97" cy="107" r="26" fill="#0e0b18" stroke={accentHex + '50'} strokeWidth="1.5" />
-          {spokes.map((a, i) => (
-            <line key={i}
-              x1={97 + 9 * Math.cos(a * Math.PI / 180)} y1={107 + 9 * Math.sin(a * Math.PI / 180)}
-              x2={97 + 20 * Math.cos(a * Math.PI / 180)} y2={107 + 20 * Math.sin(a * Math.PI / 180)}
-              stroke={accentHex + '90'} strokeWidth="2.5" strokeLinecap="round"
+            <motion.rect x={x} y={CY} width={bW} height={maxH} rx={2}
+              fill="url(#v5-g)" opacity={0.3}
+              animate={{ scaleY: [0.1, 1, 0.2, 0.9, 0.1] }}
+              transition={{
+                repeat: Infinity,
+                duration: 1.4,
+                delay: (i / BARS) * 0.7,
+                ease: 'easeInOut',
+              }}
+              style={{ originX: `${x + bW / 2}px`, originY: `${CY}px` }}
             />
-          ))}
-          <circle cx="97" cy="107" r="9" fill="#1a1228" stroke={accentHex + '60'} strokeWidth="1.5" />
-          <circle cx="97" cy="107" r="3.5" fill="#060410" />
-        </motion.g>
-
-        {/* Right reel */}
-        <motion.g animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2.0, ease: 'linear' }} style={{ originX: '183px', originY: '107px' }}>
-          <circle cx="183" cy="107" r="26" fill="#0e0b18" stroke={accentHex2 + '50'} strokeWidth="1.5" />
-          {spokes.map((a, i) => (
-            <line key={i}
-              x1={183 + 9 * Math.cos(a * Math.PI / 180)} y1={107 + 9 * Math.sin(a * Math.PI / 180)}
-              x2={183 + 20 * Math.cos(a * Math.PI / 180)} y2={107 + 20 * Math.sin(a * Math.PI / 180)}
-              stroke={accentHex2 + '90'} strokeWidth="2.5" strokeLinecap="round"
-            />
-          ))}
-          <circle cx="183" cy="107" r="9" fill="#1a1228" stroke={accentHex2 + '60'} strokeWidth="1.5" />
-          <circle cx="183" cy="107" r="3.5" fill="#060410" />
-        </motion.g>
-
-        {/* Status */}
-        <motion.text x="140" y="158" textAnchor="middle" fill={accentHex} fontSize="8" fontFamily="monospace" fontWeight="bold"
-          animate={{ opacity: [1, 0.4, 1] }} transition={{ repeat: Infinity, duration: 1.2 }}
-        >▶ PLAYING</motion.text>
-      </svg>
-      <span className="text-xs font-bold uppercase tracking-widest" style={{ color: accentHex }}>
-        Tape Running
-      </span>
-    </>
-  );
-};
-
-// ── 4. Reel-to-Reel (Revox-Stil) ─────────────────────────────────────────────
-// Two large open reels with triangular cutouts, tape path, VU meters
-const AnimVariantReel = ({ accentHex, accentHex2 }: AnimProps) => {
-  const cutouts = [0, 120, 240];
-  const LX = 88, RX = 232, RY = 95, REEL = 70;
-
-  return (
-    <>
-      <svg width="320" height="240" viewBox="0 0 320 240">
-        <defs>
-          <linearGradient id="rl-body" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#282828" />
-            <stop offset="100%" stopColor="#1a1a1a" />
-          </linearGradient>
-          <clipPath id="rl-cl"><circle cx={LX} cy={RY} r={REEL} /></clipPath>
-          <clipPath id="rl-cr"><circle cx={RX} cy={RY} r={REEL} /></clipPath>
-        </defs>
-
-        {/* Machine body */}
-        <rect x="4" y="4" width="312" height="232" rx="10" fill="url(#rl-body)" stroke="#404040" strokeWidth="1.5" />
-
-        {/* Deck area */}
-        <rect x="12" y="12" width="296" height="148" rx="6" fill="#222" />
-
-        {/* reVOX label */}
-        <text x="160" y="26" textAnchor="middle" fill="#888" fontSize="10" fontFamily="Arial, sans-serif" fontWeight="bold" letterSpacing="4">reVOX</text>
-
-        {/* Left reel */}
-        <motion.g animate={{ rotate: -360 }} transition={{ repeat: Infinity, duration: 3.2, ease: 'linear' }} style={{ originX: `${LX}px`, originY: `${RY}px` }}>
-          <circle cx={LX} cy={RY} r={REEL} fill="#2e2e2e" stroke="#555" strokeWidth="2" />
-          {cutouts.map((a, i) => (
-            <g key={i} transform={`rotate(${a}, ${LX}, ${RY})`}>
-              <rect x={LX - 14} y={RY - REEL + 4} width={28} height={40} rx={5} fill="#1a1a1a" clipPath="url(#rl-cl)" />
-            </g>
-          ))}
-          <circle cx={LX} cy={RY} r={18} fill="#3a3a3a" stroke="#777" strokeWidth="1.5" />
-          <circle cx={LX} cy={RY} r={6} fill="#1a1a1a" />
-        </motion.g>
-
-        {/* Right reel */}
-        <motion.g animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2.5, ease: 'linear' }} style={{ originX: `${RX}px`, originY: `${RY}px` }}>
-          <circle cx={RX} cy={RY} r={REEL} fill="#2e2e2e" stroke="#555" strokeWidth="2" />
-          {cutouts.map((a, i) => (
-            <g key={i} transform={`rotate(${a}, ${RX}, ${RY})`}>
-              <rect x={RX - 14} y={RY - REEL + 4} width={28} height={40} rx={5} fill="#1a1a1a" clipPath="url(#rl-cr)" />
-            </g>
-          ))}
-          <circle cx={RX} cy={RY} r={18} fill="#3a3a3a" stroke="#777" strokeWidth="1.5" />
-          <circle cx={RX} cy={RY} r={6} fill="#1a1a1a" />
-        </motion.g>
-
-        {/* Tape path */}
-        <path d={`M ${LX + 16} ${RY + 58} Q 120 168 128 172`} fill="none" stroke={accentHex + '99'} strokeWidth="2.5" strokeLinecap="round" />
-        <line x1="128" y1="172" x2="192" y2="172" stroke={accentHex + 'cc'} strokeWidth="2.5" strokeLinecap="round" />
-        <path d={`M 192 172 Q 200 168 ${RX - 16} ${RY + 58}`} fill="none" stroke={accentHex2 + '99'} strokeWidth="2.5" strokeLinecap="round" />
-
-        {/* Head block */}
-        <rect x="148" y="166" width="24" height="14" rx="4" fill="#2a2a2a" stroke="#555" strokeWidth="1" />
-        <motion.rect x="152" y="168" width="16" height="10" rx="2"
-          fill={accentHex} opacity="0"
-          animate={{ opacity: [0, 0.35, 0] }}
-          transition={{ repeat: Infinity, duration: 0.65 }}
-          style={{ filter: 'blur(2px)' }}
-        />
-
-        {/* Counter */}
-        <rect x="138" y="150" width="44" height="14" rx="3" fill="#0a1a0a" stroke="#333" strokeWidth="1" />
-        <motion.text x="160" y="160" textAnchor="middle" fill="#00e676" fontSize="9" fontFamily="monospace" fontWeight="bold"
-          animate={{ opacity: [1, 0.6, 1] }} transition={{ repeat: Infinity, duration: 1.5 }}
-        >03:45.0</motion.text>
-
-        {/* Front panel */}
-        <rect x="12" y="164" width="296" height="68" rx="4" fill="#1e1e1e" stroke="#333" strokeWidth="1" />
-
-        {/* VU meter left */}
-        <rect x="188" y="172" width="52" height="34" rx="4" fill="#001a0a" stroke="#333" strokeWidth="1" />
-        <motion.g animate={{ rotate: [-25, 20, -10, 30, -20, 15, -25] }} transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' }} style={{ originX: '214px', originY: '200px' }}>
-          <line x1="214" y1="200" x2="214" y2="178" stroke="#ff5722" strokeWidth="1.5" strokeLinecap="round" />
-        </motion.g>
-        <motion.rect x="190" y="174" width="48" height="30" rx="3" fill="#00e676" opacity="0" animate={{ opacity: [0.03, 0.1, 0.03] }} transition={{ repeat: Infinity, duration: 1.8 }} />
-        <text x="214" y="212" textAnchor="middle" fill="#444" fontSize="6" fontFamily="monospace">L</text>
-
-        {/* VU meter right */}
-        <rect x="248" y="172" width="52" height="34" rx="4" fill="#001a0a" stroke="#333" strokeWidth="1" />
-        <motion.g animate={{ rotate: [-20, 28, -8, 22, -15, 25, -20] }} transition={{ repeat: Infinity, duration: 1.9, ease: 'easeInOut', delay: 0.3 }} style={{ originX: '274px', originY: '200px' }}>
-          <line x1="274" y1="200" x2="274" y2="178" stroke="#ff5722" strokeWidth="1.5" strokeLinecap="round" />
-        </motion.g>
-        <motion.rect x="250" y="174" width="48" height="30" rx="3" fill="#00e676" opacity="0" animate={{ opacity: [0.03, 0.08, 0.03] }} transition={{ repeat: Infinity, duration: 2.0, delay: 0.4 }} />
-        <text x="274" y="212" textAnchor="middle" fill="#444" fontSize="6" fontFamily="monospace">R</text>
-
-        {/* Play button */}
-        <rect x="148" y="176" width="32" height="18" rx="4" fill={accentHex + '20'} stroke={accentHex + '80'} strokeWidth="1.5" />
-        <text x="164" y="188" textAnchor="middle" fill={accentHex} fontSize="10" fontFamily="monospace">▶</text>
-        <motion.rect x="148" y="176" width="32" height="18" rx="4" fill={accentHex} opacity="0"
-          animate={{ opacity: [0, 0.15, 0] }} transition={{ repeat: Infinity, duration: 1.0 }}
-          style={{ filter: 'blur(4px)' }}
-        />
-
-        {/* Power LED */}
-        <motion.circle cx="24" cy="218" r="4" fill={accentHex}
-          animate={{ opacity: [1, 0.3, 1] }} transition={{ repeat: Infinity, duration: 1.2 }}
-          style={{ filter: `drop-shadow(0 0 5px ${accentHex})` }}
-        />
-      </svg>
-      <span className="text-xs font-bold uppercase tracking-widest" style={{ color: accentHex }}>
-        Tape Rolling
-      </span>
-    </>
-  );
-};
-
-// ── 5. Vinyl ──────────────────────────────────────────────────────────────────
-// Large spinning record with grooves, tonearm, label
-const AnimVariantVinyl = ({ accentHex, accentHex2, glowColor }: AnimProps) => {
-  return (
-    <>
-      <div className="relative flex items-center justify-center" style={{ width: 220, height: 220 }}>
-        {/* Glow */}
-        <motion.div
-          className="absolute inset-0 rounded-full"
-          style={{ background: `radial-gradient(circle, ${glowColor}, transparent 65%)` }}
-          animate={{ opacity: [0.3, 0.7, 0.3] }}
-          transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut' }}
-        />
-
-        {/* Spinning record */}
-        <motion.div
-          className="absolute"
-          style={{ width: 200, height: 200 }}
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 4, ease: 'linear' }}
-        >
-          <svg width="200" height="200" viewBox="0 0 200 200">
-            <defs>
-              <radialGradient id="vn-disc" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#1a1a1a" />
-                <stop offset="100%" stopColor="#0a0a0a" />
-              </radialGradient>
-            </defs>
-            {/* Disc */}
-            <circle cx="100" cy="100" r="96" fill="url(#vn-disc)" stroke="#333" strokeWidth="1" />
-            {/* Grooves */}
-            {[82, 72, 62, 52, 42, 34].map((r, i) => (
-              <circle key={i} cx="100" cy="100" r={r} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1.5" />
-            ))}
-            {/* Label */}
-            <circle cx="100" cy="100" r="28" fill={accentHex + '22'} stroke={accentHex + '50'} strokeWidth="1.5" />
-            <text x="100" y="97" textAnchor="middle" fill={accentHex} fontSize="7" fontFamily="monospace" fontWeight="bold" letterSpacing="1">SONIC</text>
-            <text x="100" y="107" textAnchor="middle" fill={accentHex + '80'} fontSize="6" fontFamily="monospace">PULSE</text>
-            {/* Spindle */}
-            <circle cx="100" cy="100" r="5" fill="#222" stroke="#555" strokeWidth="1" />
-          </svg>
-        </motion.div>
-
-        {/* Tonearm (static, overlaid) */}
-        <svg className="absolute" width="200" height="200" viewBox="0 0 200 200" style={{ pointerEvents: 'none' }}>
-          <motion.g
-            animate={{ rotate: [-8, 2, -8] }}
-            transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
-            style={{ originX: '168px', originY: '32px' }}
-          >
-            {/* Arm */}
-            <line x1="168" y1="32" x2="110" y2="108" stroke="#aaa" strokeWidth="3" strokeLinecap="round" />
-            {/* Headshell */}
-            <rect x="103" y="104" width="14" height="8" rx="2" fill="#888" stroke="#aaa" strokeWidth="1" />
-            {/* Stylus */}
-            <line x1="110" y1="112" x2="110" y2="118" stroke={accentHex} strokeWidth="1.5" strokeLinecap="round" />
-            {/* Pivot */}
-            <circle cx="168" cy="32" r="6" fill="#555" stroke="#888" strokeWidth="1.5" />
           </motion.g>
-        </svg>
-      </div>
+        );
+      })}
 
-      <span className="text-xs font-bold uppercase tracking-widest" style={{ color: accentHex }}>
-        Spinning Up
-      </span>
-    </>
+      {/* Travelling scan line */}
+      <motion.rect y={0} width={40} height={160} fill="url(#v5-scan)"
+        animate={{ x: [startX - 40, startX + totalW + 40] }}
+        transition={{ repeat: Infinity, duration: 2.0, ease: 'linear' }}
+      />
+    </svg>
   );
 };
+
+// ── Wrapper: adds label below each variant ────────────────────────────────────
+const LABELS = [
+  'Reading the Signal',
+  'Mapping the Spectrum',
+  'Analyzing Frequencies',
+  'Sending Pulse',
+  'Scanning Waveform',
+];
+
+const ANIM_COMPONENTS = [AnimVar1, AnimVar2, AnimVar3, AnimVar4, AnimVar5] as const;
 
 // ── MusicLoadingBar: Random Variant Selector ─────────────────────────────────
-const ANIM_VARIANTS = [AnimVariantWaveform, AnimVariantEqualizer, AnimVariantCassette, AnimVariantReel, AnimVariantVinyl] as const;
-
-
 const MusicLoadingBar = ({
   mode,
   discoveryLevel = "underground",
@@ -794,8 +706,9 @@ const MusicLoadingBar = ({
       : MOOD_UNDERGROUND_MESSAGES;
 
   // Random variant selected once per mount
-  const [variantIdx] = useState(() => Math.floor(Math.random() * ANIM_VARIANTS.length));
-  const ChosenVariant = ANIM_VARIANTS[variantIdx];
+  const [variantIdx] = useState(() => Math.floor(Math.random() * ANIM_COMPONENTS.length));
+  const ChosenAnim = ANIM_COMPONENTS[variantIdx];
+  const label = LABELS[variantIdx];
 
   const accentHex = mode === "explore" ? "#a855f7" : "#ec4899";
   const accentHex2 = mode === "explore" ? "#6366f1" : "#f43f5e";
@@ -807,9 +720,10 @@ const MusicLoadingBar = ({
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.4 }}
-      className="flex flex-col items-center gap-10 py-16 px-4 w-full"
+      className="flex flex-col items-center gap-8 py-16 px-4 w-full"
     >
-      <ChosenVariant accentHex={accentHex} accentHex2={accentHex2} glowColor={glowColor} />
+      <ChosenAnim accentHex={accentHex} accentHex2={accentHex2} glowColor={glowColor} />
+      <span className="text-xs font-bold uppercase tracking-widest" style={{ color: accentHex }}>{label}</span>
       <LoadingMessageCard messages={messages} accentHex={accentHex} />
       <LoadingProgressBar accentHex={accentHex} accentHex2={accentHex2} glowColor={glowColor} />
     </motion.div>
