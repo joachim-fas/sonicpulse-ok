@@ -455,20 +455,21 @@
   }
 
   [data-theme="light"] {
+    /* Stärkerer Rahmen für Inputs im Light Mode */
     --bg-primary:    #f8f7f4;
     --bg-secondary:  #efede9;
     --bg-tertiary:   #e6e4df;
-    --bg-elevated:   rgba(0,0,0,0.03);
-    --bg-elevated-hover: rgba(0,0,0,0.06);
+    --bg-elevated:   rgba(255,255,255,0.7);
+    --bg-elevated-hover: rgba(255,255,255,0.9);
     --bg-glass:      rgba(255,255,255,0.65);
     --bg-glass-strong: rgba(255,255,255,0.85);
     --text-primary:  #18182e;
     --text-secondary: rgba(24,24,46,0.6);
-    --text-muted:    rgba(24,24,46,0.3);
+    --text-muted:    rgba(24,24,46,0.35);
     --text-inverse:  #f0f0f5;
-    --border-subtle: rgba(0,0,0,0.06);
-    --border-default: rgba(0,0,0,0.1);
-    --border-strong: rgba(0,0,0,0.18);
+    --border-subtle: rgba(0,0,0,0.14);
+    --border-default: rgba(0,0,0,0.2);
+    --border-strong: rgba(0,0,0,0.28);
     --shadow-md:     0 8px 32px rgba(0,0,0,0.08);
     --shadow-lg:     0 24px 64px rgba(0,0,0,0.12);
     --shadow-glow-pink:   0 0 40px rgba(235,81,139,0.15);

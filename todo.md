@@ -353,3 +353,9 @@
 - [x] Backend: Wikidata-Suche mit normalisiertem Namen (ohne Sonderzeichen) als zusätzlicher Fallback
 - [x] Backend: Autocomplete-Suche auf Last.fm umstellen (MusicBrainz blockiert)
 - [x] Frontend: "Search on Spotify" Badge nur noch als absoluter Fallback (sollte kaum noch erscheinen)
+
+## UI Design Fixes (Feb 28)
+- [x] Explore Mode: Autocomplete-Dropdown überlagert Discovery-Toggle (z-index fix)
+- [x] Explore Mode: Autocomplete zeigt "GB"/"ARTIST" statt Listener-Anzahl (disambiguation text)
+- [x] Mood Mode: Textarea-Rahmen kaum sichtbar im Light Mode
+- [x] Mood Mode: Discovery-Buttons inkonsistentes Styling (aktiver Button abgeschnitten)

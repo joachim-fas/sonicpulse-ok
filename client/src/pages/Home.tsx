@@ -76,7 +76,7 @@ interface EmotionalProfile {
   emotionalNote: string;
 }
 
-interface MBSuggestion { id: string; name: string; country?: string | null; }
+interface MBSuggestion { id: string; name: string; country?: string | null; disambiguation?: string | null; }
 
 // ─── Spotify Session ID ───────────────────────────────────────────────────────
 function getOrCreateSessionId(): string {
@@ -542,7 +542,7 @@ const ArtistInput = ({
         {open && suggestions.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-            className="absolute z-20 left-0 right-0 mt-1 rounded-xl overflow-hidden shadow-2xl border border-white/10" style={{ background: 'var(--bg-elevated)' }}
+            className="absolute z-50 left-0 right-0 mt-1 rounded-xl overflow-hidden shadow-2xl border border-white/10" style={{ background: 'var(--bg-elevated, #1a1a2e)', backdropFilter: 'blur(20px)' }}
             onMouseDown={() => { mouseDownOnDropdown.current = true; }}
             onMouseUp={() => { mouseDownOnDropdown.current = false; }}
             onMouseLeave={() => { mouseDownOnDropdown.current = false; }}
@@ -557,7 +557,7 @@ const ArtistInput = ({
                 className="w-full px-4 py-2 text-left transition-colors flex justify-between items-center border-b last:border-0 hover:bg-white/5 border-white/5 text-white"
               >
                 <span className="text-xs font-light">{s.name}</span>
-                <span className="text-[8px] uppercase tracking-widest text-white/40">{s.country ?? "Artist"}</span>
+                <span className="text-[8px] uppercase tracking-widest text-white/40">{s.disambiguation ?? (s.country ? s.country : null)}</span>
               </button>
             ))}
           </motion.div>
@@ -1183,7 +1183,7 @@ export default function Home() {
                   {/* ── Explore ── */}
                   {mode === "explore" && (
                     <div className="space-y-8">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto relative z-10">
                         {exploreBands.map((band, idx) => (
                           <ArtistInput
                             key={idx}
