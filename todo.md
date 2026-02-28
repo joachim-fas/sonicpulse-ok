@@ -359,3 +359,8 @@
 - [x] Explore Mode: Autocomplete zeigt "GB"/"ARTIST" statt Listener-Anzahl (disambiguation text)
 - [x] Mood Mode: Textarea-Rahmen kaum sichtbar im Light Mode
 - [x] Mood Mode: Discovery-Buttons inkonsistentes Styling (aktiver Button abgeschnitten)
+
+## Mood Mode Light Mode Präzise Fixes (Feb 28)
+- [x] Textarea: Rahmen im Light Mode deutlich sichtbarer machen (spezifische Klasse)
+- [x] Discovery Pill: Container-Breite anpassen (nur so breit wie nötig)
+- [x] "Find My Songs" Button: Klarer Button-Stil im Light Mode (Hintergrund + Schatten)

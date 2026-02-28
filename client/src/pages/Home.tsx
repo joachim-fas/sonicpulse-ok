@@ -1203,8 +1203,8 @@ export default function Home() {
                         <div className="flex flex-col gap-1.5 items-center sm:items-start">
                           <span className={cn("text-[8px] uppercase tracking-widest", isLightMode ? "text-zinc-500" : "text-white/40")}>Discovery</span>
                           <div className={cn(
-                            "flex items-center gap-1 p-1 rounded-full border",
-                            isLightMode ? "bg-white border-zinc-200" : "bg-black/30 border-white/8"
+                            "inline-flex items-center gap-0.5 p-1 rounded-full border w-fit",
+                            isLightMode ? "bg-white border-zinc-300 shadow-sm" : "bg-black/30 border-white/8"
                           )}>
                             {(["mainstream", "underground", "exotics"] as const).map((level) => (
                               <button
@@ -1253,7 +1253,10 @@ export default function Home() {
                           placeholder={moodPlaceholder}
                           rows={4}
                           maxLength={1000}
-                          className="form-input w-full rounded-2xl resize-none leading-relaxed"
+                          className={cn(
+                            "form-input w-full rounded-2xl resize-none leading-relaxed",
+                            isLightMode && "bg-white border-zinc-300 shadow-sm"
+                          )}
                         />
                         <div className={cn("absolute bottom-3 right-4 text-[9px] uppercase tracking-widest", isLightMode ? "text-zinc-400" : "text-white/20")}>
                           {moodPrompt.length}/1000
@@ -1268,8 +1271,8 @@ export default function Home() {
                         <div className="flex flex-col gap-1.5 items-center sm:items-start">
                           <span className={cn("text-[8px] uppercase tracking-widest", isLightMode ? "text-zinc-400" : "text-white/20")}>Discovery</span>
                           <div className={cn(
-                            "flex items-center gap-1 p-1 rounded-full border",
-                            isLightMode ? "bg-white border-zinc-200" : "bg-black/30 border-white/8"
+                            "inline-flex items-center gap-0.5 p-1 rounded-full border w-fit",
+                            isLightMode ? "bg-white border-zinc-300 shadow-sm" : "bg-black/30 border-white/8"
                           )}>
                             {(["mainstream", "underground", "exotic"] as const).map((f) => (
                               <button

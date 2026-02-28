@@ -736,16 +736,16 @@
   .btn-ghost:hover, .sp-btn-ghost:hover {
     border-color: var(--text-primary); background: var(--bg-elevated); transform: translateY(-3px);
   }
-  .btn-violet, .sp-btn-mood {
+  .btn-violet, .btn-mood, .sp-btn-mood {
     padding: 14px 32px; background: var(--violet); color: white;
     border-radius: 9999px; font-size: 0.85rem; border: none; cursor: pointer;
     font-family: var(--font-body); font-weight: 600;
     transition: all var(--dur-base) var(--ease-out-expo);
   }
-  .btn-violet:hover, .sp-btn-mood:hover:not(:disabled) {
+  .btn-violet:hover, .btn-mood:hover:not(:disabled), .sp-btn-mood:hover:not(:disabled) {
     background: #a85cc0; box-shadow: var(--shadow-glow-violet); transform: translateY(-3px);
   }
-  .sp-btn-primary:disabled, .sp-btn-mood:disabled { opacity: 0.4; cursor: not-allowed; }
+  .sp-btn-primary:disabled, .btn-mood:disabled, .sp-btn-mood:disabled { opacity: 0.4; cursor: not-allowed; }
   .btn-sm { padding: 10px 22px !important; font-size: 0.75rem !important; }
   .btn-lg { padding: 18px 40px !important; font-size: 0.95rem !important; }
   .btn-icon {
