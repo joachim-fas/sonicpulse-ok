@@ -329,3 +329,20 @@
 - [x] Fix: Mehrere Fallback-Queries in Prioritätsreihenfolge
 - [x] Tests: 7 neue YouTube-Validierungstests (inkl. C.O.F.F.I.N Regression-Test)
 - [x] Alle 93 Tests bestehen
+
+## Spotify-Erkennung Qualitätsfixes
+- [ ] Spotify-Suche: Sonderzeichen-Normalisierung (C.O.F.F.I.N, A.F.I, P!nk)
+- [ ] Spotify-Suche: Fuzzy-Matching wenn exakte Suche kein Ergebnis liefert
+- [ ] MusicBrainz: Mehrere Query-Varianten (mit/ohne Sonderzeichen)
+- [ ] Wikidata: Verbesserte SPARQL-Query für Sonderzeichen-Namen
+- [ ] Logging: Detaillierte Logs welche Stufe für welchen Künstler greift
+
+## Robuste Spotify-Auflösung für ALLE Künstler (Priorität)
+- [x] MusicBrainz: Retry auf 1 reduzieren (ECONNRESET = sofort weiter, kein Retry)
+- [x] Wikidata: 5 Kandidaten prüfen statt nur 1, Musik-Priorisierung (wikidata.ts verbessert)
+- [x] Wikidata: Retry auf 2 reduzieren (schneller)
+- [x] Neue Stufe 4: Spotify-Suche-Link als Fallback (source="search", direct_link = Suche-URL)
+- [x] Frontend: Für Künstler mit source="search" Badge "Auf Spotify suchen" anzeigen
+- [x] Frontend: Spotify-Suche-Link öffnet Spotify-Suche im Browser/App
+- [x] Tests: Neue Tests für verbesserte Wikidata-Suche (5 Kandidaten)
+- [x] Tests: Tests für Spotify-Suche-Fallback

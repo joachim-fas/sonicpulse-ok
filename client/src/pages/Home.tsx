@@ -1586,10 +1586,16 @@ export default function Home() {
                                     </span>
                                   )}
                                   {!rec.enriched?.spotifyId && !extractSpotifyArtistId(rec.enriched?.url) && !rec.enriched?.url && (
-                                    <span className={cn("flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] uppercase tracking-widest border", isLightMode ? "bg-zinc-100 border-zinc-200 text-zinc-500" : "bg-white/5 border-white/8 text-white/30")}>
-                                      <CircleSlash size={8} />
-                                      Not on Spotify
-                                    </span>
+                                    <a
+                                      href={`https://open.spotify.com/search/${encodeURIComponent(rec.artist)}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className={cn("flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] uppercase tracking-widest border transition-colors", isLightMode ? "bg-zinc-50 border-zinc-200 text-zinc-400 hover:bg-[#1DB954]/10 hover:border-[#1DB954]/30 hover:text-[#1DB954]" : "bg-white/5 border-white/8 text-white/30 hover:bg-[#1DB954]/10 hover:border-[#1DB954]/30 hover:text-[#1DB954]")}
+                                      title={`Search for ${rec.artist} on Spotify`}
+                                    >
+                                      <SpotifyLogo size={8} />
+                                      Search on Spotify
+                                    </a>
                                   )}
                                 </div>
                               </div>
