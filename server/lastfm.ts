@@ -171,6 +171,49 @@ export async function getTopTracks(artistName: string, limit = 3): Promise<Lastf
   }
 }
 
+export interface LastfmArtistSearchResult {
+  name: string;
+  listeners: number;
+  mbid: string | null;
+  url: string;
+}
+
+/**
+ * Search artists by name (autocomplete).
+ * Returns up to `limit` matching artists sorted by relevance.
+ */
+export async function searchArtists(query: string, limit = 5): Promise<LastfmArtistSearchResult[]> {
+  try {
+    const data = await lastfmFetch({
+      method: "artist.search",
+      artist: query,
+      limit: String(limit),
+    }) as {
+      results?: {
+        artistmatches?: {
+          artist?: Array<{
+            name: string;
+            listeners: string;
+            mbid: string;
+            url: string;
+          }>;
+        };
+      };
+      error?: number;
+    };
+
+    const artists = data.results?.artistmatches?.artist ?? [];
+    return artists.map((a) => ({
+      name: a.name,
+      listeners: parseInt(a.listeners ?? "0", 10),
+      mbid: a.mbid || null,
+      url: a.url,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 /**
  * Validate that the API key works by fetching info for a well-known artist.
  */

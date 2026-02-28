@@ -346,3 +346,10 @@
 - [x] Frontend: Spotify-Suche-Link öffnet Spotify-Suche im Browser/App
 - [x] Tests: Neue Tests für verbesserte Wikidata-Suche (5 Kandidaten)
 - [x] Tests: Tests für Spotify-Suche-Fallback
+
+## Explore Mode: Nur Spotify-bestätigte Künstler (Feb 28)
+- [x] Backend: Explore Mode filtert Künstler ohne echte Spotify-ID heraus (spotify_id muss vorhanden sein)
+- [x] Backend: Wenn weniger als 5 Spotify-bestätigte Künstler gefunden, LLM erneut befragen (bis zu 2 Runden)
+- [x] Backend: Wikidata-Suche mit normalisiertem Namen (ohne Sonderzeichen) als zusätzlicher Fallback
+- [x] Backend: Autocomplete-Suche auf Last.fm umstellen (MusicBrainz blockiert)
+- [x] Frontend: "Search on Spotify" Badge nur noch als absoluter Fallback (sollte kaum noch erscheinen)

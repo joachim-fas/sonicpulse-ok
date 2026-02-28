@@ -1,10 +1,10 @@
 import { z } from "zod";
 import { publicProcedure, router } from "../_core/trpc";
 import { invokeLLM } from "../_core/llm";
-import { resolveArtist, resolveMultipleArtists } from "../artistService";
+import { resolveArtist, resolveMultipleArtists, type ArtistProfile } from "../artistService";
 import { getSpotifyToken } from "../spotify";
 import { searchYouTubeVideoId } from "../youtube";
-import { getSimilarArtists, getTopTracks, getArtistInfo } from "../lastfm";
+import { getSimilarArtists, getTopTracks, getArtistInfo, searchArtists } from "../lastfm";
 
 /**
  * SonicPulse Router
@@ -16,24 +16,20 @@ import { getSimilarArtists, getTopTracks, getArtistInfo } from "../lastfm";
 export const sonicpulseRouter = router({
 
   /**
-   * MusicBrainz Artist-Autocomplete
-   * Gibt bis zu 5 Treffer mit Name und Land zurück.
+   * Artist Autocomplete via Last.fm artist.search
+   * Ersetzt MusicBrainz (blockiert in dieser Umgebung).
+   * Gibt bis zu 5 Treffer mit Name und Listener-Anzahl zurück.
    */
   musicbrainzSearch: publicProcedure
     .input(z.object({ query: z.string().min(2).max(100) }))
     .query(async ({ input }) => {
       try {
-        const url = `https://musicbrainz.org/ws/2/artist?query=${encodeURIComponent(input.query)}&limit=5&fmt=json`;
-        const res = await fetch(url, {
-          headers: { "User-Agent": "SonicPulse/1.0 (contact@sonicpulse.app)" },
-        });
-        if (!res.ok) return [];
-        const data = await res.json() as { artists?: Array<{ id: string; name: string; country?: string; disambiguation?: string }> };
-        return (data.artists ?? []).map((a) => ({
-          id: a.id,
+        const results = await searchArtists(input.query, 5);
+        return results.map((a) => ({
+          id: a.mbid ?? a.name, // mbid als ID falls vorhanden, sonst Name
           name: a.name,
-          country: a.country ?? null,
-          disambiguation: a.disambiguation ?? null,
+          country: null,
+          disambiguation: a.listeners > 0 ? `${a.listeners.toLocaleString()} listeners` : null,
         }));
       } catch {
         return [];
@@ -151,17 +147,101 @@ export const sonicpulseRouter = router({
         return { recommendations: [] };
       }
 
-      // Alle Künstler gegen echte Spotify-IDs validieren
-      const profiles = await resolveMultipleArtists(rawRecs.map((r) => r.artist));
+      // ── Spotify-Validierung mit Retry-Schleife ────────────────────────────────
+      // Ziel: 5 Künstler mit echter Spotify-ID.
+      // Wenn weniger als 5 gefunden, LLM erneut befragen (max. 2 Runden).
+      const allExcluded = new Set<string>(input.exclude ?? []);
+      type RawRec = { artist: string; reason: string; genre: string; similarTo: string };
+      let confirmedRecs: RawRec[] = [];
+      let confirmedProfiles: (ArtistProfile | null)[] = [];
 
-      // YouTube-Fallback: für Künstler ohne Spotify-ID parallel suchen
+      // Runde 1: initiale Empfehlungen validieren
+      const profiles1 = await resolveMultipleArtists(rawRecs.map((r) => r.artist));
+      for (let i = 0; i < rawRecs.length; i++) {
+        const p = profiles1[i];
+        const hasSpotify = p?.spotify_id && p.spotify_id !== "";
+        if (hasSpotify) {
+          confirmedRecs.push(rawRecs[i]);
+          confirmedProfiles.push(p);
+        } else {
+          // Nicht gefundene Künstler für nächste Runde ausschließen
+          allExcluded.add(rawRecs[i].artist);
+          console.info(`[Explore] "${rawRecs[i].artist}" – kein Spotify-Profil, wird übersprungen`);
+        }
+      }
+
+      // Runde 2: Fehlende Slots auffüllen wenn nötig
+      if (confirmedRecs.length < 5) {
+        const needed = 5 - confirmedRecs.length;
+        const excludeList = Array.from(allExcluded).join(", ");
+        try {
+          const retryResponse = await invokeLLM({
+            temperature: 1.3,
+            messages: [
+              {
+                role: "system",
+                content: "You are a music expert with encyclopedic knowledge of global music across all eras. Be creative and diverse in your recommendations. Respond only with valid JSON. No explanations.",
+              },
+              {
+                role: "user",
+                content: `Based on these artists: ${artistList}, suggest exactly ${needed} more bands or artists I might like.\nThe user prefers ${discoveryText} artists.\nIMPORTANT: These artists MUST be on Spotify. Only suggest well-known or moderately known artists that definitely have a Spotify presence.\nDo NOT suggest any of these: ${excludeList}\nRespond with a JSON object containing an "items" array of objects with keys: artist, reason, genre, similarTo.`,
+              },
+            ],
+            response_format: {
+              type: "json_schema",
+              json_schema: {
+                name: "recommendations",
+                strict: true,
+                schema: {
+                  type: "object",
+                  properties: {
+                    items: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          artist:    { type: "string" },
+                          reason:    { type: "string" },
+                          genre:     { type: "string" },
+                          similarTo: { type: "string" },
+                        },
+                        required: ["artist", "reason", "genre", "similarTo"],
+                        additionalProperties: false,
+                      },
+                    },
+                  },
+                  required: ["items"],
+                  additionalProperties: false,
+                },
+              },
+            },
+          });
+          const retryContent = retryResponse.choices[0]?.message?.content;
+          if (typeof retryContent === "string") {
+            const retryParsed = JSON.parse(retryContent) as { items: RawRec[] };
+            const retryRecs = retryParsed.items?.slice(0, needed) ?? [];
+            const retryProfiles = await resolveMultipleArtists(retryRecs.map((r) => r.artist));
+            for (let i = 0; i < retryRecs.length; i++) {
+              const p = retryProfiles[i];
+              const hasSpotify = p?.spotify_id && p.spotify_id !== "";
+              if (hasSpotify && confirmedRecs.length < 5) {
+                confirmedRecs.push(retryRecs[i]);
+                confirmedProfiles.push(p);
+              }
+            }
+          }
+        } catch (e) {
+          console.warn("[Explore] Retry-Runde fehlgeschlagen:", e);
+        }
+      }
+
+      // Finale Listen
+      const profiles: (ArtistProfile | null)[] = confirmedProfiles;
+      rawRecs = confirmedRecs;
+
+      // YouTube-IDs: nur für Künstler mit Spotify-Profil (alle haben jetzt Spotify)
       const youtubeIds = await Promise.all(
-        rawRecs.map(async (rec, i) => {
-          const profile = profiles[i];
-          const hasSpotify = profile?.spotify_id && profile.spotify_id !== "";
-          if (hasSpotify) return null; // Spotify vorhanden – kein YouTube nötig
-          return searchYouTubeVideoId(rec.artist).catch(() => null);
-        })
+        rawRecs.map(() => null as null) // kein YouTube nötig – alle haben Spotify
       );
 
       // Last.fm: Similarity Scores – alle Input-Künstler als Referenz nutzen, bester Score gewinnt
