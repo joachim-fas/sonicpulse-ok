@@ -21,7 +21,6 @@ import {
   CircleSlash,
   Moon,
   Sun,
-  Settings,
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -29,7 +28,6 @@ import { trpc } from "@/lib/trpc";
 import { SpotifyEmbedCard } from "@/components/SpotifyEmbedCard";
 import { YouTubeEmbedCard } from "@/components/YouTubeEmbedCard";
 import { AnimatedArtistFallback } from "@/components/AnimatedArtistFallback";
-import { Link } from "wouter";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -1066,13 +1064,6 @@ export default function Home() {
                 ))}
               </div>
           )}
-
-          {/* Design Customizer Link (v3.html: btn-icon) */}
-          <Link href="/design">
-            <button title="Design Customizer" className="btn-icon">
-              <Settings size={14} />
-            </button>
-          </Link>
 
           {/* Light/Dark Toggle (v3.html: btn-icon) */}
           <button

@@ -284,13 +284,13 @@
 - [ ] Blob-Hintergrund (CSS-Animationen, 7 Blobs, Pulse-Rings, Wave-Lines, Grain)
 - [ ] Home.tsx: Glassmorphismus-Karten, neue Typografie, Buttons, Inputs
 - [ ] Navbar: v3-Stil (Glasmorphismus, Clash Display Logo, Theme-Toggle)
-- [ ] Design-Customizer-Seite (/design) mit Live-Playground
+- [x] Design-Customizer-Seite (/design) mit Live-Playground
 - [ ] Playground: Animation-Typ (Blobs/Waves/Particles/Rings/Aurora/Mesh)
 - [ ] Playground: Farbschema (Violet/Rose/Ocean/Sunset/Mono/Neon)
 - [ ] Playground: Hintergrundfarbe (10 Optionen)
 - [ ] Playground: Speed/Intensity/Blur Slider
 - [ ] Playground: Einstellungen in localStorage persistieren
-- [ ] Route /design in App.tsx registrieren
+- [x] Route /design in App.tsx registrieren
 
 ## v3 Design-System (finales Design, Feb 28)
 - [x] Liquid Orb und Aura Themes vollständig entfernt (Komponenten, State, CSS)
