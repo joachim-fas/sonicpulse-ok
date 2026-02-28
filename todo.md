@@ -403,3 +403,11 @@
 - [x] Artist Preview Button: klarer CTA mit Spotify-Grün-Akzent
 - [x] Karten-Schatten im Light Mode: tiefere Schatten für mehr Tiefe
 - [x] Genre-Badge: auf Foto besser lesbar (dunklerer Hintergrund)
+
+## Neue Music Device Animations (Feb 28)
+- [x] Variante 6: Turntable (Plattenspieler mit Tonarm, rotierender Platte, Rillen)
+- [x] Variante 7: Cassette Player (Walkman-Gehäuse, Tasten, Kassette sichtbar)
+- [x] Variante 8: Grammophon (Trichter, Platte, Kurbelarm)
+- [x] Variante 9: Tape Machine (zwei große Spulen, Bandlauf, VU-Meter)
+- [x] Variante 10: iPod (Clickwheel, Display, Menü-Animation)
+- [x] ANIM_VARIANTS Array auf 10 Varianten erweitern
