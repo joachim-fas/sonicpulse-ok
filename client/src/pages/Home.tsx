@@ -519,8 +519,9 @@ const ArtistInput = ({
     }
   };
 
-  // Zeige Warnung wenn Wert vorhanden aber nicht bestätigt
-  const showWarning = value.trim().length > 0 && !confirmed;
+  // Warnung erst nach blur anzeigen (nicht während Dropdown offen ist)
+  const [touched, setTouched] = useState(false);
+  const showWarning = touched && value.trim().length > 0 && !confirmed && !open;
 
   return (
     <div className="relative">
@@ -529,7 +530,7 @@ const ArtistInput = ({
           type="text"
           value={value}
           onChange={(e) => handleChange(e.target.value)}
-          onBlur={handleBlur}
+          onBlur={() => { setTouched(true); handleBlur(); }}
           onFocus={() => suggestions.length > 0 && setOpen(true)}
           placeholder={placeholder}
           className={cn(
@@ -561,7 +562,7 @@ const ArtistInput = ({
         {open && suggestions.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-            className="absolute z-50 left-0 right-0 mt-1 rounded-xl overflow-hidden shadow-2xl border border-white/10" style={{ background: 'var(--bg-elevated, #1a1a2e)', backdropFilter: 'blur(20px)' }}
+            className="absolute z-50 left-0 right-0 mt-1 rounded-xl overflow-hidden shadow-2xl border border-white/10" style={{ background: '#1a1a2e', backdropFilter: 'blur(20px)' }}
             onMouseDown={() => { mouseDownOnDropdown.current = true; }}
             onMouseUp={() => { mouseDownOnDropdown.current = false; }}
             onMouseLeave={() => { mouseDownOnDropdown.current = false; }}
@@ -573,7 +574,7 @@ const ArtistInput = ({
                   e.preventDefault();
                   handleSelect(s.name);
                 }}
-                className="w-full px-4 py-2 text-left transition-colors flex justify-between items-center border-b last:border-0 hover:bg-white/5 border-white/5 text-white"
+                className="w-full px-4 py-2 text-left transition-colors flex justify-between items-center border-b last:border-0 hover:bg-white/10 border-white/10 text-white"
               >
                 <span className="text-xs font-light">{s.name}</span>
                 <span className="text-[8px] uppercase tracking-widest text-white/40">{s.disambiguation ?? (s.country ? s.country : null)}</span>

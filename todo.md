@@ -368,3 +368,7 @@
 ## Typografie + Autocomplete Fixes (Feb 28)
 - [x] Schriftbild: Font-Imports in index.html korrigiert (Clash Display + Satoshi + DM Serif Display statt Inter)
 - [x] Explore Mode: Pflicht-Auswahl aus Dropdown (confirmed-State, Warnung bei freier Eingabe, Submit blockiert)
+
+## Autocomplete Dropdown Light Mode Fix (Feb 28)
+- [x] Dropdown: Hintergrund im Light Mode dunkel/kontrastreich machen (text sichtbar)
+- [x] Dropdown: Warnung erst nach blur anzeigen, nicht während Dropdown offen
