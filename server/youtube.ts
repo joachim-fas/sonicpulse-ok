@@ -73,6 +73,31 @@ function isValidArtistResult(
 }
 
 /**
+ * Prüft ob ein YouTube-Video musikrelevant ist.
+ * Filtert News, Politik, Sport, Gaming etc. heraus.
+ */
+function isMusicVideo(
+  videoTitle?: string,
+  channelTitle?: string
+): boolean {
+  if (!videoTitle && !channelTitle) return true; // kein Filter wenn keine Daten
+  const text = `${videoTitle ?? ""} ${channelTitle ?? ""}`.toLowerCase();
+
+  // Bekannte Nicht-Musik-Indikatoren
+  const nonMusicPatterns = [
+    /\bnews\b/, /\bspeech\b/, /\binterview\b/, /\bpodcast\b/,
+    /\bpolitics\b/, /\belection\b/, /\bprime minister\b/, /\bpresident\b/,
+    /\bfootball\b/, /\bsoccer\b/, /\bsports\b/, /\bgaming\b/,
+    /\btrailer\b.*\bmovie\b/, /\bfilm\b.*\btrailer\b/,
+    /cnn|bbc|nbc|abc news|fox news|msnbc|sky news|reuters/,
+  ];
+  for (const pattern of nonMusicPatterns) {
+    if (pattern.test(text)) return false;
+  }
+  return true;
+}
+
+/**
  * Sucht die YouTube-Video-ID für einen Künstler (Artist Preview / Top Track).
  * Validiert Ergebnisse gegen den Bandnamen um falsche Treffer zu verhindern.
  * Gibt die Video-ID zurück oder null wenn nichts Passendes gefunden.
@@ -82,13 +107,15 @@ export async function searchYouTubeVideoId(
   trackTitle?: string
 ): Promise<string | null> {
   // Mehrere Queries in Prioritätsreihenfolge – spezifischste zuerst
+  // Bei Song-Suche: explizit "music video" oder "official audio" anhängen
   const queries = trackTitle
     ? [
-        `"${artistName}" "${trackTitle}" official`,
-        `${artistName} ${trackTitle} official`,
+        `${artistName} ${trackTitle} official music video`,
+        `${artistName} ${trackTitle} official audio`,
+        `${artistName} ${trackTitle} lyrics`,
       ]
     : [
-        `"${artistName}" band official music video`,
+        `"${artistName}" official music video`,
         `${artistName} official music video`,
         `${artistName} band music`,
       ];
@@ -105,6 +132,11 @@ export async function searchYouTubeVideoId(
       for (const item of contents) {
         if (item.type === "video" && item.video?.videoId) {
           const { videoId, title, channelTitle } = item.video;
+          // Erst Musik-Relevanz prüfen (filtert News, Politik etc.)
+          if (!isMusicVideo(title, channelTitle)) {
+            console.info(`[YouTube] Übersprungen (kein Musik-Video): "${title}" (${channelTitle})`);
+            continue;
+          }
           if (isValidArtistResult(artistName, title, channelTitle)) {
             console.info(`[YouTube] Valider Treffer für "${artistName}": "${title}" (${channelTitle})`);
             return videoId!;

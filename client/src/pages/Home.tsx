@@ -1791,7 +1791,7 @@ export default function Home() {
                       }
                     </div>
 
-                          {moodSongs.length > 0 && (
+                          {moodSongs.length > 0 && isSpotifyLoggedIn && (
                             <FloatingSaveButton
                               tracks={moodSongs.map((s) => ({ title: s.title, artist: s.artist }))}
                               playlistName={moodPlaylistName}

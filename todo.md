@@ -441,3 +441,8 @@
 - [x] Neue Equalizer-Animation (alt, ersetzt): 300×200 SVG, 16 Bänder mit realistischer EQ-Kurve (Bass-Boost, Mid-Scoop), Rack-Mount-Ohren mit Schrauben, dB-Skala, Peak-Hold-Dots, VU-Meter-Streifen, Frequenz-Labels (32Hz–16kHz), Power-LED
 - [x] ANIM_VARIANTS auf [AnimVariantCassette, AnimVariantEqualizer] reduziert
 - [x] Ungenutzte Imports (Radio, Waves, Network, Zap) entfernt
+
+## Mood Mode Bugfixes – Mar 18
+- [x] YouTube-Suchquery verbessert: explizit "official music video" / "official audio" / "lyrics" als Suffix
+- [x] isMusicVideo()-Filter eingebaut: News, Politik, Sport, Gaming, Nachrichtenkanäle werden herausgefiltert
+- [x] "Connect Spotify" FloatingSaveButton im Mood Mode nur noch sichtbar wenn Nutzer bereits eingeloggt ist
